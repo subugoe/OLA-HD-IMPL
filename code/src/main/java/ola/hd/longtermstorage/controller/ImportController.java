@@ -1,5 +1,6 @@
 package ola.hd.longtermstorage.controller;
 
+import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.service.ImportService;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,13 +26,11 @@ public class ImportController {
     }
 
     @PostMapping(value = "/bag", produces = "application/json")
-    public ResponseEntity<String> importData(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> importData(@RequestParam("file") MultipartFile file) {
 
         String result = "";
 
-        InputStream fileStream;
-        try {
-            fileStream = file.getInputStream();
+        try (InputStream fileStream = file.getInputStream()) {
             File targetFile = new File("tmp/" + file.getOriginalFilename());
             FileUtils.copyInputStreamToFile(fileStream, targetFile);
 
@@ -39,6 +38,8 @@ public class ImportController {
 
         } catch (IOException e) {
             e.printStackTrace();
+
+            return new ResponseEntity<>(new ResponseMessage(500, "Internal Server Error"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         return new ResponseEntity<>(result, HttpStatus.OK);

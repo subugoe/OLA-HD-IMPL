@@ -26,22 +26,18 @@ public class CdstarService implements ImportService {
     private String archiveVault;
 
     public String importZipFile(File file) throws IOException {
-        String fullUrl = url + mainVault + "?exclude=*.tif";
+        String fullUrl = url + mainVault;
         String result = "";
         Response response = null;
 
         try {
             OkHttpClient client = new OkHttpClient();
-            RequestBody formBody = new MultipartBody.Builder()
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart("/" + file.getName(), file.getName(),
-                            RequestBody.create(MediaType.parse("application/zip"), file))
-                    .build();
 
             Request request = new Request.Builder()
                     .url(fullUrl)
                     .addHeader("Authorization", Credentials.basic(username, password))
-                    .post(formBody)
+                    .addHeader("Content-Type", "application/zip")
+                    .post(RequestBody.create(MediaType.parse("application/zip"), file))
                     .build();
             response = client.newCall(request).execute();
 
