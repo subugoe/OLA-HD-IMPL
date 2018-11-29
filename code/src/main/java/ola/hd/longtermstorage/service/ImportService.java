@@ -4,5 +4,5 @@ import java.io.File;
 import java.io.IOException;
 
 public interface ImportService {
-    String importZipFile(File file) throws IOException;
+    void importZipFile(File file) throws IOException;
 }
