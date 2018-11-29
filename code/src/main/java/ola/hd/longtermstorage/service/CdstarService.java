@@ -40,6 +40,8 @@ public class CdstarService implements ImportService {
     }
 
     private void sendToMainVault(File file) throws IOException {
+
+        // TODO: exclude tif files (*.tiff, *.tif)
         String fullUrl = url + mainVault;
 
         OkHttpClient client = new OkHttpClient.Builder()

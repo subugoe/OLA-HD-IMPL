@@ -53,7 +53,7 @@ public class ImportController {
         UUID uuid = UUID.randomUUID();
 
         try (InputStream fileStream = file.getInputStream()) {
-            File targetFile = new File("tmp/" + uuid + "-" + originalName);
+            File targetFile = new File("tmp/" + uuid + "/" + originalName);
             FileUtils.copyInputStreamToFile(fileStream, targetFile);
 
             importService.importZipFile(targetFile);
