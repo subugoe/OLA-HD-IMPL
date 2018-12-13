@@ -1,5 +1,9 @@
 package ola.hd.longtermstorage.controller;
 
+import gov.loc.repository.bagit.domain.Bag;
+import gov.loc.repository.bagit.reader.BagReader;
+import gov.loc.repository.bagit.verify.BagVerifier;
+import net.lingala.zip4j.core.ZipFile;
 import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.service.ImportService;
 import org.apache.commons.io.FileUtils;
@@ -15,8 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 @RestController
@@ -47,26 +52,45 @@ public class ImportController {
                     HttpStatus.UNSUPPORTED_MEDIA_TYPE);
         }
 
-        // TODO: check the file structure?
-
-        // For a unique file name
+        // For a unique directory name for each uploaded file
         UUID uuid = UUID.randomUUID();
 
         try (InputStream fileStream = file.getInputStream()) {
-            File targetFile = new File("tmp/" + uuid + "/" + originalName);
+
+            // Save the uploaded file to the temp folder
+            // Use file stream to prevent memory overflowed due to the huge file size
+            File targetFile = new File("tmp" + File.separator + uuid + File.separator + originalName);
             FileUtils.copyInputStreamToFile(fileStream, targetFile);
+
+            // Extract zip file
+            ZipFile zipFile = new ZipFile(targetFile);
+            String destination = targetFile.getParentFile().getPath();
+            zipFile.extractAll(destination);
+
+            // Check the directory structure using BagIt API
+            String pathToExtractedDir = targetFile.getParent() + File.separator + FilenameUtils.getBaseName(targetFile.getName());
+            Path rootDir = Paths.get(pathToExtractedDir);
+            BagReader reader = new BagReader();
+            Bag bag = reader.read(rootDir);
+
+            BagVerifier verifier = new BagVerifier();
+            verifier.isValid(bag, true);
+            verifier.isComplete(bag, true);
+            if (BagVerifier.canQuickVerify(bag)) {
+                BagVerifier.quicklyVerify(bag);
+            }
 
             importService.importZipFile(targetFile);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             logger.info(e.getMessage(), e);
 
             return new ResponseEntity<>(
-                    new ResponseMessage(500, "Internal Server Error"),
+                    new ResponseMessage(500, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(new ResponseMessage(200, "Your file was uploaded"), HttpStatus.OK);
+        return new ResponseEntity<>(new ResponseMessage(200, "Your file was successfully uploaded"), HttpStatus.OK);
     }
 }

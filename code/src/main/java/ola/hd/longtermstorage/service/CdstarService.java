@@ -35,6 +35,9 @@ public class CdstarService implements ImportService {
 
         // TODO: Extract meta-data
 
+        // TODO: get the URL from the archive vault and put in meta-data
+        //       of the main vault
+
         sendToMainVault(file);
         sendToArchiveVault(file);
     }
