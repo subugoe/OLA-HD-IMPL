@@ -47,11 +47,11 @@ public class ImportController {
         // Not a zip file
         if (extension == null) {
             return new ResponseEntity<>(
-                    new ResponseMessage(415, "The input must be a zip file"),
+                    new ResponseMessage(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "The input must be a zip file"),
                     HttpStatus.UNSUPPORTED_MEDIA_TYPE);
         } else if (!extension.equals("zip")) {
             return new ResponseEntity<>(
-                    new ResponseMessage(415, "The input must be a zip file"),
+                    new ResponseMessage(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "The input must be a zip file"),
                     HttpStatus.UNSUPPORTED_MEDIA_TYPE);
         }
 
@@ -76,7 +76,7 @@ public class ImportController {
             logger.info(e.getMessage(), e);
 
             return new ResponseEntity<>(
-                    new ResponseMessage(500, e.getMessage()),
+                    new ResponseMessage(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -108,17 +108,19 @@ public class ImportController {
             logger.info(e.getMessage(), e);
 
             return new ResponseEntity<>(
-                    new ResponseMessage(422, e.getMessage()),
+                    new ResponseMessage(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage()),
                     HttpStatus.UNPROCESSABLE_ENTITY);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             logger.info(e.getMessage(), e);
 
             return new ResponseEntity<>(
-                    new ResponseMessage(500, e.getMessage()),
+                    new ResponseMessage(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(new ResponseMessage(200, "Your file was successfully uploaded"), HttpStatus.OK);
+        return new ResponseEntity<>(
+                new ResponseMessage(HttpStatus.OK, "Your file was successfully uploaded"),
+                HttpStatus.OK);
     }
 }
