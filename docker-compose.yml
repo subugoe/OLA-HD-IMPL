@@ -1,0 +1,75 @@
+version: '2.2'
+services:
+
+  redis:
+    image: redis:4.0
+    command: redis-server --appendonly yes
+    restart: always
+    ports:
+      - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"
+    volumes:
+      - redisdata/:/data/
+      #- ./data:/data/
+    mem_limit: 2GB
+    env_file:
+      - ./.env
+    environment:
+      - JAVA_OPTS=$REDIS_JAVA_OPTS
+
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.0
+    ports:
+      - "$ES_EXTERNAL_PORT_1:$ES_PORT_1"
+      - "$ES_EXTERNAL_PORT_2:$ES_PORT_2"
+    mem_limit: 2GB
+
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.4.3
+    ports:
+      - "$KIBANA_EXTERNAL_PORT:$KIBANA_PORT"
+    environment:
+      #- ELASTICSEARCH_URL="https://<ip>:<port>"
+      #- ELASTICSEARCH_USERNAME="<user>"
+      #- ELASTICSEARCH_PASSWORD="<password>"
+      - ELASTICSEARCH_URL="http://$ES_HOST:$ES_EXTERNAL_PORT_1"
+    mem_limit: 1GB
+
+
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - "$MONGO_EXTERNAL_PORT:$MONGO_PORT"
+    env_file:
+      - ./.env
+
+
+  ola-hd:
+    build:
+      context: docker/ola-hd_service
+      args:
+        app_env: ${APP_ENV}
+    command: java -jar target/long-term-storage-0.0.1-SNAPSHOT.jar
+    mem_limit: 6GB
+    memswap_limit: 6G
+    ports:
+      - "$OLA_HD_EXTERNAL_PORT:$OLA_HD_PORT"
+    volumes:
+      - ./data:/path/to/cdstar/data
+    working_dir: /ola-hd/code
+    env_file:
+      - ./.env
+
+
+
+#  # todo: add indexer
+#  # ...
+
+
+volumes:
+  redisdata:
+
+
+
