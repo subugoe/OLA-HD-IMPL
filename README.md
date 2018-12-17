@@ -12,15 +12,8 @@ To build and run the application you need to install:
 
 ##### Preparation: open ports
 
-* To visualize and explore the data in ElasticSearch open the port for the Kibana services
-```
-In the dev environment we use the default port: 5601 (see .env)
-``` 
-
-* To import/export ZIP files, open the port to the OLA-HD service
-```
-In the dev environment we use the default port: 8080 (see .env)
-```
+* To visualize and explore the data in ElasticSearch open the port for the Kibana services. In the dev environment we use the default port: 5601 (see .env).
+* To import/export ZIP files, open the port to the OLA-HD service. In the dev environment we use the default port: 8080 (see .env).
 
 
 ##### Preparation: set environment variables 
@@ -30,18 +23,14 @@ In the dev environment we use the default port: 8080 (see .env)
 $> cd /path/to/project/root
 ```  
 
-* Modify the environment variables in .env as needed
-```
-In the dev environment at least we have to change <host_ip> to the docker host ip address 
-```
+* Modify the environment variables in .env as needed. In the dev environment at least we have to change <host_ip> to the docker host ip address. 
+
 
 ##### (Re-)Build and start the docker images (Console)
 
 ```
 $> ./build.sh
 ```
- 
-In web image will be constructed in the build process, this will take a few minutes.
 
 
 ##### See service log output (Console)
