@@ -1,5 +1,11 @@
 package ola.hd.longtermstorage.controller;
 
+import gov.loc.repository.bagit.domain.Bag;
+import gov.loc.repository.bagit.exceptions.*;
+import gov.loc.repository.bagit.reader.BagReader;
+import gov.loc.repository.bagit.verify.BagVerifier;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.service.ImportService;
 import org.apache.commons.io.FileUtils;
@@ -17,6 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 @RestController
@@ -39,34 +47,80 @@ public class ImportController {
         // Not a zip file
         if (extension == null) {
             return new ResponseEntity<>(
-                    new ResponseMessage(415, "The input must be a zip file"),
+                    new ResponseMessage(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "The input must be a zip file"),
                     HttpStatus.UNSUPPORTED_MEDIA_TYPE);
         } else if (!extension.equals("zip")) {
             return new ResponseEntity<>(
-                    new ResponseMessage(415, "The input must be a zip file"),
+                    new ResponseMessage(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "The input must be a zip file"),
                     HttpStatus.UNSUPPORTED_MEDIA_TYPE);
         }
 
-        // TODO: check the file structure?
-
-        // For a unique file name
+        // For a unique directory name for each uploaded file
         UUID uuid = UUID.randomUUID();
 
+        // Save the uploaded file to the temp folder
+        File targetFile = new File("tmp" + File.separator + uuid + File.separator + originalName);
+
         try (InputStream fileStream = file.getInputStream()) {
-            File targetFile = new File("tmp/" + uuid + "/" + originalName);
+
+            // Use file stream to prevent memory overflowed due to the huge file size
             FileUtils.copyInputStreamToFile(fileStream, targetFile);
 
-            importService.importZipFile(targetFile);
+            // Extract zip file
+            ZipFile zipFile = new ZipFile(targetFile);
+            String destination = targetFile.getParentFile().getPath();
+            zipFile.extractAll(destination);
 
-        } catch (IOException e) {
+        } catch (IOException | ZipException e) {
             e.printStackTrace();
             logger.info(e.getMessage(), e);
 
             return new ResponseEntity<>(
-                    new ResponseMessage(500, "Internal Server Error"),
+                    new ResponseMessage(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(new ResponseMessage(200, "Your file was uploaded"), HttpStatus.OK);
+        // Create the path to the extracted directory
+        String pathToExtractedDir = targetFile.getParent() + File.separator + FilenameUtils.getBaseName(targetFile.getName());
+        Path rootDir = Paths.get(pathToExtractedDir);
+
+        BagReader reader = new BagReader();
+        try {
+            // Create a bag from an existing directory
+            Bag bag = reader.read(rootDir);
+
+            // Verify the bag
+            BagVerifier verifier = new BagVerifier();
+            verifier.isValid(bag, true);
+            verifier.isComplete(bag, true);
+            if (BagVerifier.canQuickVerify(bag)) {
+                BagVerifier.quicklyVerify(bag);
+            }
+
+            // Upload the zip file to CDSTAR
+            importService.importZipFile(targetFile);
+
+        } catch (MissingPayloadManifestException | CorruptChecksumException | UnsupportedAlgorithmException |
+                MaliciousPathException | InvalidPayloadOxumException | MissingPayloadDirectoryException |
+                FileNotInPayloadDirectoryException | UnparsableVersionException | InvalidBagitFileFormatException |
+                MissingBagitFileException | VerificationException e) {
+            e.printStackTrace();
+            logger.info(e.getMessage(), e);
+
+            return new ResponseEntity<>(
+                    new ResponseMessage(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage()),
+                    HttpStatus.UNPROCESSABLE_ENTITY);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            logger.info(e.getMessage(), e);
+
+            return new ResponseEntity<>(
+                    new ResponseMessage(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>(
+                new ResponseMessage(HttpStatus.OK, "Your file was successfully uploaded"),
+                HttpStatus.OK);
     }
 }

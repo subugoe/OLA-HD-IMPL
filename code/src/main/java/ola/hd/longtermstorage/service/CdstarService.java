@@ -35,6 +35,9 @@ public class CdstarService implements ImportService {
 
         // TODO: Extract meta-data
 
+        // TODO: get the URL from the archive vault and put in meta-data
+        //       of the main vault
+
         sendToMainVault(file);
         sendToArchiveVault(file);
     }
@@ -45,7 +48,8 @@ public class CdstarService implements ImportService {
         String fullUrl = url + mainVault;
 
         OkHttpClient client = new OkHttpClient.Builder()
-                .readTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.MINUTES)
+                .writeTimeout(5, TimeUnit.MINUTES)
                 .build();
 
         Request request = new Request.Builder()
@@ -61,7 +65,6 @@ public class CdstarService implements ImportService {
 
                 // TODO: update the management database
                 logger.info(result);
-
             }
         }
     }
