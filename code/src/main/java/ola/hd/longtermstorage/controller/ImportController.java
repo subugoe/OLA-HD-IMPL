@@ -6,7 +6,11 @@ import gov.loc.repository.bagit.reader.BagReader;
 import gov.loc.repository.bagit.verify.BagVerifier;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
+import ola.hd.longtermstorage.domain.Action;
 import ola.hd.longtermstorage.domain.ResponseMessage;
+import ola.hd.longtermstorage.domain.Status;
+import ola.hd.longtermstorage.domain.TrackingInfo;
+import ola.hd.longtermstorage.repository.MongoDbRepo;
 import ola.hd.longtermstorage.service.ImportService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -25,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.UUID;
 
 @RestController
@@ -34,22 +39,30 @@ public class ImportController {
 
     private ImportService importService;
 
+    private MongoDbRepo mongoDbRepo;
+
     @Autowired
-    public ImportController(ImportService importService) {
+    public ImportController(ImportService importService, MongoDbRepo mongoDbRepo) {
         this.importService = importService;
+        this.mongoDbRepo = mongoDbRepo;
     }
 
     @PostMapping(value = "/bag", produces = "application/json")
     public ResponseEntity<?> importData(@RequestParam("file") MultipartFile file) {
+
         String originalName = file.getOriginalFilename();
         String extension = FilenameUtils.getExtension(originalName);
 
+        // A file was uploaded
+        TrackingInfo info = new TrackingInfo("user", Action.CREATE, originalName, new Date(), Status.PROCESSING, "");
+        mongoDbRepo.save(info);
+
         // Not a zip file
-        if (extension == null) {
-            return new ResponseEntity<>(
-                    new ResponseMessage(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "The input must be a zip file"),
-                    HttpStatus.UNSUPPORTED_MEDIA_TYPE);
-        } else if (!extension.equals("zip")) {
+        if (extension == null || !extension.equals("zip")) {
+            info.setStatus(Status.FAILED);
+            info.setMessage("The input must be a zip file");
+            mongoDbRepo.save(info);
+
             return new ResponseEntity<>(
                     new ResponseMessage(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "The input must be a zip file"),
                     HttpStatus.UNSUPPORTED_MEDIA_TYPE);
@@ -74,6 +87,10 @@ public class ImportController {
         } catch (IOException | ZipException e) {
             e.printStackTrace();
             logger.info(e.getMessage(), e);
+
+            info.setStatus(Status.FAILED);
+            info.setMessage(e.getMessage());
+            mongoDbRepo.save(info);
 
             return new ResponseEntity<>(
                     new ResponseMessage(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
@@ -107,6 +124,10 @@ public class ImportController {
             e.printStackTrace();
             logger.info(e.getMessage(), e);
 
+            info.setStatus(Status.FAILED);
+            info.setMessage(e.getMessage());
+            mongoDbRepo.save(info);
+
             return new ResponseEntity<>(
                     new ResponseMessage(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage()),
                     HttpStatus.UNPROCESSABLE_ENTITY);
@@ -114,10 +135,19 @@ public class ImportController {
             e.printStackTrace();
             logger.info(e.getMessage(), e);
 
+            info.setStatus(Status.FAILED);
+            info.setMessage(e.getMessage());
+            mongoDbRepo.save(info);
+
             return new ResponseEntity<>(
                     new ResponseMessage(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
+        // Save success information
+        info.setStatus(Status.FAILED);
+        info.setMessage("Your file was successfully uploaded");
+        mongoDbRepo.save(info);
 
         return new ResponseEntity<>(
                 new ResponseMessage(HttpStatus.OK, "Your file was successfully uploaded"),
