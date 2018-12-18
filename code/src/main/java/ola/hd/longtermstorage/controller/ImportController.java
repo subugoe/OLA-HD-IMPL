@@ -41,6 +41,8 @@ public class ImportController {
 
     private MongoDbRepo mongoDbRepo;
 
+    // TODO: Use ExecutorService to parallelized the code
+
     @Autowired
     public ImportController(ImportService importService, MongoDbRepo mongoDbRepo) {
         this.importService = importService;
@@ -54,7 +56,7 @@ public class ImportController {
         String extension = FilenameUtils.getExtension(originalName);
 
         // A file was uploaded
-        TrackingInfo info = new TrackingInfo("user", Action.CREATE, originalName, new Date(), Status.PROCESSING, "");
+        TrackingInfo info = new TrackingInfo("user", Action.CREATE, originalName, new Date(), Status.PROCESSING);
         mongoDbRepo.save(info);
 
         // Not a zip file

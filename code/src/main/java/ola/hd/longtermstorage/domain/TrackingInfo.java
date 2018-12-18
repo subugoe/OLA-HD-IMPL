@@ -30,13 +30,18 @@ public class TrackingInfo {
     // The message goes with the status (e.g. reason of failure)
     private String message;
 
-    public TrackingInfo(String username, Action action, String fileName, Date timestamp, Status status, String message) {
+    // Where the file is stored (e.g. CDSTAR URL)
+    private String storageUrl;
+
+    // The PID of the file
+    private String pid;
+
+    public TrackingInfo(String username, Action action, String fileName, Date timestamp, Status status) {
         this.username = username;
         this.action = action;
         this.fileName = fileName;
         this.timestamp = timestamp;
         this.status = status;
-        this.message = message;
     }
 
     public String getId() {
@@ -93,6 +98,22 @@ public class TrackingInfo {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getStorageUrl() {
+        return storageUrl;
+    }
+
+    public void setStorageUrl(String storageUrl) {
+        this.storageUrl = storageUrl;
+    }
+
+    public String getPid() {
+        return pid;
+    }
+
+    public void setPid(String pid) {
+        this.pid = pid;
     }
 }
 
