@@ -10,7 +10,7 @@ import ola.hd.longtermstorage.domain.Action;
 import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.domain.Status;
 import ola.hd.longtermstorage.domain.TrackingInfo;
-import ola.hd.longtermstorage.repository.MongoDbRepo;
+import ola.hd.longtermstorage.repository.TrackingRepository;
 import ola.hd.longtermstorage.service.ImportService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -39,14 +39,14 @@ public class ImportController {
 
     private ImportService importService;
 
-    private MongoDbRepo mongoDbRepo;
+    private TrackingRepository trackingRepository;
 
     // TODO: Use ExecutorService to parallelized the code
 
     @Autowired
-    public ImportController(ImportService importService, MongoDbRepo mongoDbRepo) {
+    public ImportController(ImportService importService, TrackingRepository trackingRepository) {
         this.importService = importService;
-        this.mongoDbRepo = mongoDbRepo;
+        this.trackingRepository = trackingRepository;
     }
 
     @PostMapping(value = "/bag", produces = "application/json")
@@ -57,13 +57,13 @@ public class ImportController {
 
         // A file was uploaded
         TrackingInfo info = new TrackingInfo("user", Action.CREATE, originalName, new Date(), Status.PROCESSING);
-        mongoDbRepo.save(info);
+        trackingRepository.save(info);
 
         // Not a zip file
         if (extension == null || !extension.equals("zip")) {
             info.setStatus(Status.FAILED);
             info.setMessage("The input must be a zip file");
-            mongoDbRepo.save(info);
+            trackingRepository.save(info);
 
             return new ResponseEntity<>(
                     new ResponseMessage(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "The input must be a zip file"),
@@ -92,7 +92,7 @@ public class ImportController {
 
             info.setStatus(Status.FAILED);
             info.setMessage(e.getMessage());
-            mongoDbRepo.save(info);
+            trackingRepository.save(info);
 
             return new ResponseEntity<>(
                     new ResponseMessage(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
@@ -108,27 +108,28 @@ public class ImportController {
             // Create a bag from an existing directory
             Bag bag = reader.read(rootDir);
 
-            // Verify the bag
             BagVerifier verifier = new BagVerifier();
+
+            // Check for the validity and completeness of a bag
             verifier.isValid(bag, true);
-            verifier.isComplete(bag, true);
+
             if (BagVerifier.canQuickVerify(bag)) {
                 BagVerifier.quicklyVerify(bag);
             }
 
-            // Upload the zip file to CDSTAR
-            importService.importZipFile(targetFile);
+            // TODO: Upload the zip file to CDSTAR
+            //importService.importZipFile(targetFile);
 
-        } catch (MissingPayloadManifestException | CorruptChecksumException | UnsupportedAlgorithmException |
-                MaliciousPathException | InvalidPayloadOxumException | MissingPayloadDirectoryException |
-                FileNotInPayloadDirectoryException | UnparsableVersionException | InvalidBagitFileFormatException |
-                MissingBagitFileException | VerificationException e) {
+        } catch (MissingPayloadManifestException | UnsupportedAlgorithmException | MaliciousPathException |
+                InvalidPayloadOxumException | MissingPayloadDirectoryException | FileNotInPayloadDirectoryException |
+                UnparsableVersionException | InvalidBagitFileFormatException | MissingBagitFileException |
+                CorruptChecksumException | VerificationException e) {
             e.printStackTrace();
             logger.info(e.getMessage(), e);
 
             info.setStatus(Status.FAILED);
             info.setMessage(e.getMessage());
-            mongoDbRepo.save(info);
+            trackingRepository.save(info);
 
             return new ResponseEntity<>(
                     new ResponseMessage(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage()),
@@ -139,7 +140,7 @@ public class ImportController {
 
             info.setStatus(Status.FAILED);
             info.setMessage(e.getMessage());
-            mongoDbRepo.save(info);
+            trackingRepository.save(info);
 
             return new ResponseEntity<>(
                     new ResponseMessage(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
@@ -147,9 +148,9 @@ public class ImportController {
         }
 
         // Save success information
-        info.setStatus(Status.FAILED);
+        info.setStatus(Status.SUCCESS);
         info.setMessage("Your file was successfully uploaded");
-        mongoDbRepo.save(info);
+        trackingRepository.save(info);
 
         return new ResponseEntity<>(
                 new ResponseMessage(HttpStatus.OK, "Your file was successfully uploaded"),

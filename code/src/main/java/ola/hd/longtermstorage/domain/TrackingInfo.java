@@ -12,6 +12,7 @@ public class TrackingInfo {
     @Id
     private String id;
 
+    // TODO: Maybe a @DBRef is needed here later
     // Who perform the action
     private String username;
 
