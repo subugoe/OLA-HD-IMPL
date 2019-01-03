@@ -148,7 +148,7 @@ public class ImportController {
             logger.error(message, e);
 
             info.setStatus(Status.FAILED);
-            info.setMessage(e.getMessage());
+            info.setMessage(message);
             trackingRepository.save(info);
         }
 
