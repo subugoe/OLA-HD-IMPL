@@ -37,6 +37,12 @@ public class TrackingInfo {
     // The PID of the file
     private String pid;
 
+    // URL to the online data
+    private String onlineUrl;
+
+    // URL to the offline data
+    private String offlineUrl;
+
     /**
      * 0-args constructor for JPA
      */
@@ -122,6 +128,22 @@ public class TrackingInfo {
 
     public void setPid(String pid) {
         this.pid = pid;
+    }
+
+    public String getOnlineUrl() {
+        return onlineUrl;
+    }
+
+    public void setOnlineUrl(String onlineUrl) {
+        this.onlineUrl = onlineUrl;
+    }
+
+    public String getOfflineUrl() {
+        return offlineUrl;
+    }
+
+    public void setOfflineUrl(String offlineUrl) {
+        this.offlineUrl = offlineUrl;
     }
 }
 

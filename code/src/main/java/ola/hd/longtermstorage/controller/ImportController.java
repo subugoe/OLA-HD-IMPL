@@ -6,10 +6,8 @@ import gov.loc.repository.bagit.reader.BagReader;
 import gov.loc.repository.bagit.verify.BagVerifier;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
-import ola.hd.longtermstorage.domain.Action;
-import ola.hd.longtermstorage.domain.ResponseMessage;
-import ola.hd.longtermstorage.domain.Status;
-import ola.hd.longtermstorage.domain.TrackingInfo;
+import ola.hd.longtermstorage.domain.*;
+import ola.hd.longtermstorage.exception.ImportException;
 import ola.hd.longtermstorage.repository.TrackingRepository;
 import ola.hd.longtermstorage.service.ImportService;
 import org.apache.commons.io.FileUtils;
@@ -41,7 +39,7 @@ public class ImportController {
 
     private TrackingRepository trackingRepository;
 
-    // TODO: Use ExecutorService to parallelized the code
+    // TODO: Use ExecutorService to parallelize the code
 
     @Autowired
     public ImportController(ImportService importService, TrackingRepository trackingRepository) {
@@ -87,8 +85,7 @@ public class ImportController {
             zipFile.extractAll(destination);
 
         } catch (IOException | ZipException e) {
-            e.printStackTrace();
-            logger.info(e.getMessage(), e);
+            logger.error(e.getMessage(), e);
 
             info.setStatus(Status.FAILED);
             info.setMessage(e.getMessage());
@@ -104,6 +101,7 @@ public class ImportController {
         Path rootDir = Paths.get(pathToExtractedDir);
 
         BagReader reader = new BagReader();
+        ImportResult result = null;
         try {
             // Create a bag from an existing directory
             Bag bag = reader.read(rootDir);
@@ -117,15 +115,13 @@ public class ImportController {
                 BagVerifier.quicklyVerify(bag);
             }
 
-            // TODO: Upload the zip file to CDSTAR
-            importService.importZipFile(targetFile);
+            result = importService.importZipFile(targetFile);
 
         } catch (MissingPayloadManifestException | UnsupportedAlgorithmException | MaliciousPathException |
                 InvalidPayloadOxumException | MissingPayloadDirectoryException | FileNotInPayloadDirectoryException |
                 UnparsableVersionException | InvalidBagitFileFormatException | MissingBagitFileException |
                 CorruptChecksumException | VerificationException e) {
-            e.printStackTrace();
-            logger.info(e.getMessage(), e);
+            logger.error(e.getMessage(), e);
 
             info.setStatus(Status.FAILED);
             info.setMessage(e.getMessage());
@@ -135,8 +131,7 @@ public class ImportController {
                     new ResponseMessage(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage()),
                     HttpStatus.UNPROCESSABLE_ENTITY);
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            logger.info(e.getMessage(), e);
+            logger.error(e.getMessage(), e);
 
             info.setStatus(Status.FAILED);
             info.setMessage(e.getMessage());
@@ -145,12 +140,22 @@ public class ImportController {
             return new ResponseEntity<>(
                     new ResponseMessage(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (ImportException e) {
+            logger.error(e.getMessage(), e);
+
+            info.setStatus(Status.FAILED);
+            info.setMessage(e.getMessage());
+            trackingRepository.save(info);
         }
 
-        // Save success information
-        info.setStatus(Status.SUCCESS);
-        info.setMessage("Your file was successfully uploaded");
-        trackingRepository.save(info);
+        // Success! Result cannot be null
+        if (result != null) {
+            info.setStatus(Status.SUCCESS);
+            info.setMessage("The file is successfully stored in the system");
+            info.setOnlineUrl(result.getOnlineUrl());
+            info.setOfflineUrl(result.getOfflineUrl());
+            trackingRepository.save(info);
+        }
 
         return new ResponseEntity<>(
                 new ResponseMessage(HttpStatus.OK, "Your file was successfully uploaded"),
