@@ -115,7 +115,10 @@ public class ImportController {
                 BagVerifier.quicklyVerify(bag);
             }
 
+            // Import data to the archive storage
             result = importService.importZipFile(targetFile);
+
+            // TODO: get a PID
 
         } catch (MissingPayloadManifestException | UnsupportedAlgorithmException | MaliciousPathException |
                 InvalidPayloadOxumException | MissingPayloadDirectoryException | FileNotInPayloadDirectoryException |
@@ -141,7 +144,8 @@ public class ImportController {
                     new ResponseMessage(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (ImportException e) {
-            logger.error(e.getMessage(), e);
+            String message = String.format("%s. %d - %s", e.getMessage(), e.getHttpStatusCode(), e.getHttpMessage());
+            logger.error(message, e);
 
             info.setStatus(Status.FAILED);
             info.setMessage(e.getMessage());
