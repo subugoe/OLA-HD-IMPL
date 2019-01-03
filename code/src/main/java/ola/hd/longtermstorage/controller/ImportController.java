@@ -118,7 +118,7 @@ public class ImportController {
             }
 
             // TODO: Upload the zip file to CDSTAR
-            //importService.importZipFile(targetFile);
+            importService.importZipFile(targetFile);
 
         } catch (MissingPayloadManifestException | UnsupportedAlgorithmException | MaliciousPathException |
                 InvalidPayloadOxumException | MissingPayloadDirectoryException | FileNotInPayloadDirectoryException |

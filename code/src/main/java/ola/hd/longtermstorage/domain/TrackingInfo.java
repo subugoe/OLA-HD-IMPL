@@ -37,6 +37,13 @@ public class TrackingInfo {
     // The PID of the file
     private String pid;
 
+    /**
+     * 0-args constructor for JPA
+     */
+    public TrackingInfo() {
+
+    }
+
     public TrackingInfo(String username, Action action, String fileName, Date timestamp, Status status) {
         this.username = username;
         this.action = action;

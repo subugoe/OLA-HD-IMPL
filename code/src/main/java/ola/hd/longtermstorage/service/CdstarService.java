@@ -22,11 +22,11 @@ public class CdstarService implements ImportService {
     @Value("${cdstar.password}")
     private String password;
 
-    @Value("${cdstar.mainVault}")
-    private String mainVault;
+    @Value("${cdstar.vault}")
+    private String vault;
 
-    @Value("${cdstar.archiveVault}")
-    private String archiveVault;
+    @Value("${cdstar.offlineProfile}")
+    private String offlineProfile;
 
     private static final Logger logger = LoggerFactory.getLogger(CdstarService.class);
     private static final MediaType MEDIA_TYPE_ZIP = MediaType.parse("application/zip");
@@ -35,17 +35,17 @@ public class CdstarService implements ImportService {
 
         // TODO: Extract meta-data
 
-        // TODO: get the URL from the archive vault and put in meta-data
-        //       of the main vault
+        // TODO: Use transaction to upload files
+        uploadOnlineData(file);
+        uploadOfflineData(file);
 
-        sendToMainVault(file);
-        sendToArchiveVault(file);
+        // TODO: Assign PID
     }
 
-    private void sendToMainVault(File file) throws IOException {
+    private void uploadOnlineData(File file) throws IOException {
 
         // TODO: exclude tif files (*.tiff, *.tif)
-        String fullUrl = url + mainVault;
+        String fullUrl = url + vault;
 
         OkHttpClient client = new OkHttpClient.Builder()
                 .readTimeout(5, TimeUnit.MINUTES)
@@ -60,17 +60,18 @@ public class CdstarService implements ImportService {
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            if (response.body() != null) {
-                String result = response.body().string();
+            if (response.isSuccessful()) {
 
                 // TODO: update the management database
-                logger.info(result);
+                logger.info(response.header("Location"));
             }
         }
+
+        // TODO: update the location of the offline data? Or link them through PID
     }
 
-    private void sendToArchiveVault(File file) throws IOException {
-        String fullUrl = url + archiveVault;
+    private void uploadOfflineData(File file) throws IOException {
+        String fullUrl = url + vault;
 
         OkHttpClient client = new OkHttpClient();
 
@@ -78,6 +79,7 @@ public class CdstarService implements ImportService {
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("/" + file.getName(), file.getName(),
                         RequestBody.create(MEDIA_TYPE_ZIP, file))
+                .addFormDataPart("profile", offlineProfile)
                 .build();
 
         Request request = new Request.Builder()
@@ -88,12 +90,13 @@ public class CdstarService implements ImportService {
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            if (response.body() != null) {
-                String result = response.body().string();
+            if (response.isSuccessful()) {
 
+                // TODO: update the management database, get the file location
+                logger.info(response.header("Location"));
+            } else {
                 // TODO: update the management database
-                logger.info(result);
-
+                logger.info(response.message());
             }
         }
     }
