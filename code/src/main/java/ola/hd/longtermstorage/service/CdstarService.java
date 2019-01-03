@@ -167,7 +167,7 @@ public class CdstarService implements ImportService {
         Request request = new Request.Builder()
                 .url(txUrl)
                 .addHeader("Authorization", Credentials.basic(username, password))
-                .post(null)
+                .post(RequestBody.create(null, ""))
                 .build();
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {

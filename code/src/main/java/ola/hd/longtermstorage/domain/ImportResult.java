@@ -1,7 +1,5 @@
 package ola.hd.longtermstorage.domain;
 
-import org.springframework.http.HttpStatus;
-
 public class ImportResult {
 
     private String onlineUrl;

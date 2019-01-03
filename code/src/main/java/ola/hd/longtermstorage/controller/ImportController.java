@@ -158,6 +158,9 @@ public class ImportController {
             info.setMessage("The file is successfully stored in the system");
             info.setOnlineUrl(result.getOnlineUrl());
             info.setOfflineUrl(result.getOfflineUrl());
+
+            // TODO: set PID
+
             trackingRepository.save(info);
         }
 
