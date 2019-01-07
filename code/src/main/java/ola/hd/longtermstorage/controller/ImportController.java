@@ -35,9 +35,9 @@ public class ImportController {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportController.class);
 
-    private ImportService importService;
+    private final ImportService importService;
 
-    private TrackingRepository trackingRepository;
+    private final TrackingRepository trackingRepository;
 
     // TODO: Use ExecutorService to parallelize the code
 
@@ -108,12 +108,12 @@ public class ImportController {
 
             BagVerifier verifier = new BagVerifier();
 
-            // Check for the validity and completeness of a bag
-            verifier.isValid(bag, true);
-
             if (BagVerifier.canQuickVerify(bag)) {
                 BagVerifier.quicklyVerify(bag);
             }
+
+            // Check for the validity and completeness of a bag
+            verifier.isValid(bag, true);
 
             // Import data to the archive storage
             result = importService.importZipFile(targetFile);

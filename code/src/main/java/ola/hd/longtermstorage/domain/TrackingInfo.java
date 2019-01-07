@@ -43,11 +43,9 @@ public class TrackingInfo {
     // URL to the offline data
     private String offlineUrl;
 
-    /**
-     * 0-args constructor for JPA
-     */
-    public TrackingInfo() {
-
+    protected TrackingInfo() {
+        // no-args constructor required by JPA spec
+        // this one is protected since it shouldn't be used directly
     }
 
     public TrackingInfo(String username, Action action, String fileName, Date timestamp, Status status) {
