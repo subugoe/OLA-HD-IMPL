@@ -24,19 +24,16 @@ public class ImportException extends Exception {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 
-    public int getHttpStatusCode() {
-        return httpStatusCode;
-    }
-
     public void setHttpStatusCode(int httpStatusCode) {
         this.httpStatusCode = httpStatusCode;
     }
 
-    public String getHttpMessage() {
-        return httpMessage;
-    }
-
     public void setHttpMessage(String httpMessage) {
         this.httpMessage = httpMessage;
+    }
+
+    @Override
+    public String getMessage() {
+        return String.format("%s. %d - %s", super.getMessage(), httpStatusCode, httpMessage);
     }
 }

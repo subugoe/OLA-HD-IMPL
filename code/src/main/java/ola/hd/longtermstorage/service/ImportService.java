@@ -7,5 +7,5 @@ import java.io.File;
 import java.io.IOException;
 
 public interface ImportService {
-    ImportResult importZipFile(File file) throws IOException, ImportException;
+    ImportResult importZipFile(File file) throws Exception;
 }
