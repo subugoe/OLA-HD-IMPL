@@ -71,7 +71,7 @@ public class ImportController {
             UUID uuid = UUID.randomUUID();
 
             // Save the uploaded file to the temp folder
-            File targetFile = new File("tmp" + File.separator + uuid + File.separator + originalName);
+            File targetFile = new File("upload-temp" + File.separator + uuid + File.separator + originalName);
 
             // Is the file successfully extracted?
             boolean isExtracted = false;
@@ -163,6 +163,8 @@ public class ImportController {
         }
 
         trackingRepository.save(info);
+
+        // TODO: clean up the temp
 
         return new ResponseEntity<>(
                 new ResponseMessage(HttpStatus.OK, "Your file was successfully uploaded"),

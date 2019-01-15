@@ -41,54 +41,46 @@ public class CdstarService implements ImportService {
 
         // TODO: Extract meta-data
 
-        ImportResult importResult = null;
-        final String[] txId = {null};
+        ImportResult importResult;
+        String txId = null;
 
         try {
             // Get the transaction ID
-            OperationHelper.doWithRetry(3, new Operation() {
+            txId = OperationHelper.doWithRetry(3, new Operation() {
                 @Override
-                public void run() throws IOException, ImportException {
-                    txId[0] = getTransactionId();
+                public String run() throws IOException, ImportException {
+                    return getTransactionId();
                 }
             });
 
-            // Create archives for online and offline data
-            String onlineArchive = createArchive("default", txId[0]);
-            String offlineArchive = createArchive(offlineProfile, txId[0]);
-
-            System.out.println(onlineArchive + " --- " + offlineArchive);
-
-            // Upload data
-            String finalTxId = txId[0];
-
-            // Upload offline data
-            OperationHelper.doWithRetry(3, new Operation() {
-                @Override
-                public void run() throws IOException, ImportException {
-                    uploadOfflineData(file, offlineArchive, finalTxId);
-                }
-            });
+            final String finalTxId = txId;
 
             // Upload online data
-            OperationHelper.doWithRetry(3, new Operation() {
+            String onlineArchive = OperationHelper.doWithRetry(3, new Operation() {
                 @Override
-                public void run() throws IOException, ImportException {
-                    uploadOnlineData(file, onlineArchive, finalTxId);
+                public String run() throws IOException, ImportException {
+                    return uploadOnlineData(file, finalTxId);
                 }
             });
+            System.out.println("Online archive: " + onlineArchive);
 
-            //String offlineUrl = uploadOfflineData(file, offlineArchive, txId);
-            //String onlineUrl = uploadOnlineData(file, onlineArchive, txId);
+            // Upload offline data
+            String offlineArchive = OperationHelper.doWithRetry(3, new Operation() {
+                @Override
+                public String run() throws IOException, ImportException {
+                    return uploadOfflineData(file, finalTxId);
+                }
+            });
+            System.out.println("Offline archive: " + offlineArchive);
 
             // Commit the transaction
-            commitTransaction(txId[0]);
+            commitTransaction(txId);
 
             importResult = new ImportResult(onlineArchive, offlineArchive);
 
         } catch (Exception e) {
-            if (txId[0] != null) {
-                rollbackTransaction(txId[0]);
+            if (txId != null) {
+                rollbackTransaction(txId);
             }
             throw e;
         }
@@ -135,11 +127,10 @@ public class CdstarService implements ImportService {
         }
     }
 
-    private String uploadOnlineData(File file, String archive, String txId) throws IOException, ImportException {
-        System.out.println("Starting to upload online data...");
+    private String uploadOnlineData(File file, String txId) throws IOException, ImportException {
 
         // Exclude tif files (*.tiff, *.tif)
-        String fullUrl = url + vault + "/" + archive + "?exclude=" + offlineFileTypes;
+        String fullUrl = url + vault + "?exclude=" + offlineFileTypes;
 
         OkHttpClient client = new OkHttpClient.Builder()
                 .readTimeout(5, TimeUnit.MINUTES)
@@ -156,11 +147,8 @@ public class CdstarService implements ImportService {
 
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
-                System.out.println("Online data was uploaded");
                 return response.header("Location");
             }
-
-            System.out.println("Something is wrong. Cannot upload online data");
 
             // Something is wrong, throw the exception
             ImportException exception = new ImportException("Cannot upload online data");
@@ -171,10 +159,9 @@ public class CdstarService implements ImportService {
         }
     }
 
-    private String uploadOfflineData(File file, String archive, String txId) throws IOException, ImportException {
-        System.out.println("Starting to upload offline data...");
+    private String uploadOfflineData(File file, String txId) throws IOException, ImportException {
 
-        String fullUrl = url + vault + "/" + archive;
+        String fullUrl = url + vault;
 
         OkHttpClient client = new OkHttpClient.Builder()
                 .readTimeout(5, TimeUnit.MINUTES)
@@ -198,10 +185,8 @@ public class CdstarService implements ImportService {
 
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
-                System.out.println("Offline data was uploaded");
                 return response.header("Location");
             }
-            System.out.println("Something is wrong. Cannot upload offline data");
 
             // Something is wrong, throw the exception
             ImportException exception = new ImportException("Cannot upload offline data");
@@ -212,47 +197,7 @@ public class CdstarService implements ImportService {
         }
     }
 
-    private String createArchive(String profile, String txId) throws IOException, ImportException {
-        String fullUrl = url + vault;
-
-        OkHttpClient client = new OkHttpClient();
-
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("profile", profile)
-                .build();
-
-        Request request = new Request.Builder()
-                .url(fullUrl)
-                .addHeader("Authorization", Credentials.basic(username, password))
-                .addHeader("X-Transaction", txId)
-                .post(requestBody)
-                .build();
-
-        try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful()) {
-                if (response.body() != null) {
-                    String bodyString = response.body().string();
-
-                    // Parse the returned JSON
-                    JsonParser parser = new JsonParser();
-                    JsonObject jsonObject = parser.parse(bodyString).getAsJsonObject();
-
-                    return jsonObject.getAsJsonPrimitive("id").getAsString();
-                }
-            }
-
-            // Cannot get the transaction ID? Abort!
-            ImportException exception = new ImportException("Cannot create an archive");
-            exception.setHttpStatusCode(response.code());
-            exception.setHttpMessage(response.message());
-
-            throw exception;
-        }
-    }
-
     private void commitTransaction(String txId) throws IOException, ImportException {
-        System.out.println("Committing the transaction: " + txId);
 
         String txUrl = url + "_tx/" + txId;
 
@@ -274,11 +219,9 @@ public class CdstarService implements ImportService {
                 throw exception;
             }
         }
-        System.out.println("Transaction committed");
     }
 
     private void rollbackTransaction(String txId) throws IOException, ImportException {
-        System.out.println("Rolling back the transaction: " + txId);
 
         String txUrl = url + "_tx/" + txId;
 
@@ -300,6 +243,5 @@ public class CdstarService implements ImportService {
                 throw exception;
             }
         }
-        System.out.println("Roll back successfully");
     }
 }
