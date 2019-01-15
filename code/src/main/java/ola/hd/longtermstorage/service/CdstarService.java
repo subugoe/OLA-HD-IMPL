@@ -1,8 +1,12 @@
 package ola.hd.longtermstorage.service;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import okhttp3.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import ola.hd.longtermstorage.domain.ImportResult;
+import ola.hd.longtermstorage.exception.ImportException;
+import ola.hd.longtermstorage.helper.Operation;
+import ola.hd.longtermstorage.helper.OperationHelper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,78 +26,221 @@ public class CdstarService implements ImportService {
     @Value("${cdstar.password}")
     private String password;
 
-    @Value("${cdstar.mainVault}")
-    private String mainVault;
+    @Value("${cdstar.vault}")
+    private String vault;
 
-    @Value("${cdstar.archiveVault}")
-    private String archiveVault;
+    @Value("${cdstar.offlineProfile}")
+    private String offlineProfile;
 
-    private static final Logger logger = LoggerFactory.getLogger(CdstarService.class);
+    @Value("${offline.fileTypes}")
+    private String offlineFileTypes;
+
     private static final MediaType MEDIA_TYPE_ZIP = MediaType.parse("application/zip");
 
-    public void importZipFile(File file) throws IOException {
+    public ImportResult importZipFile(File file) throws Exception {
 
         // TODO: Extract meta-data
 
-        // TODO: get the URL from the archive vault and put in meta-data
-        //       of the main vault
+        ImportResult importResult;
+        String txId = null;
 
-        sendToMainVault(file);
-        sendToArchiveVault(file);
+        try {
+            // Get the transaction ID
+            txId = OperationHelper.doWithRetry(3, new Operation() {
+                @Override
+                public String run() throws IOException, ImportException {
+                    return getTransactionId();
+                }
+            });
+
+            final String finalTxId = txId;
+
+            // Upload online data
+            String onlineArchive = OperationHelper.doWithRetry(3, new Operation() {
+                @Override
+                public String run() throws IOException, ImportException {
+                    return uploadOnlineData(file, finalTxId);
+                }
+            });
+            System.out.println("Online archive: " + onlineArchive);
+
+            // Upload offline data
+            String offlineArchive = OperationHelper.doWithRetry(3, new Operation() {
+                @Override
+                public String run() throws IOException, ImportException {
+                    return uploadOfflineData(file, finalTxId);
+                }
+            });
+            System.out.println("Offline archive: " + offlineArchive);
+
+            // Commit the transaction
+            commitTransaction(txId);
+
+            importResult = new ImportResult(onlineArchive, offlineArchive);
+
+        } catch (Exception e) {
+            if (txId != null) {
+                rollbackTransaction(txId);
+            }
+            throw e;
+        }
+
+        return importResult;
     }
 
-    private void sendToMainVault(File file) throws IOException {
+    private String getTransactionId() throws ImportException, IOException {
 
-        // TODO: exclude tif files (*.tiff, *.tif)
-        String fullUrl = url + mainVault;
+        String transactionUrl = url + "_tx/";
+
+        OkHttpClient client = new OkHttpClient();
+
+        RequestBody txBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("timeout", "60")
+                .build();
+
+        Request request = new Request.Builder()
+                .url(transactionUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .post(txBody)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                if (response.body() != null) {
+                    String bodyString = response.body().string();
+
+                    // Parse the returned JSON
+                    JsonParser parser = new JsonParser();
+                    JsonObject jsonObject = parser.parse(bodyString).getAsJsonObject();
+
+                    return jsonObject.getAsJsonPrimitive("id").getAsString();
+                }
+            }
+
+            // Cannot get the transaction ID? Abort!
+            ImportException exception = new ImportException("Cannot start the upload transaction");
+            exception.setHttpStatusCode(response.code());
+            exception.setHttpMessage(response.message());
+
+            throw exception;
+        }
+    }
+
+    private String uploadOnlineData(File file, String txId) throws IOException, ImportException {
+
+        // Exclude tif files (*.tiff, *.tif)
+        String fullUrl = url + vault + "?exclude=" + offlineFileTypes;
 
         OkHttpClient client = new OkHttpClient.Builder()
                 .readTimeout(5, TimeUnit.MINUTES)
-                .writeTimeout(5, TimeUnit.MINUTES)
+                .writeTimeout(2, TimeUnit.MINUTES)
                 .build();
 
         Request request = new Request.Builder()
                 .url(fullUrl)
                 .addHeader("Authorization", Credentials.basic(username, password))
                 .addHeader("Content-Type", "application/zip")
+                .addHeader("X-Transaction", txId)
                 .post(RequestBody.create(MEDIA_TYPE_ZIP, file))
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            if (response.body() != null) {
-                String result = response.body().string();
-
-                // TODO: update the management database
-                logger.info(result);
+            if (response.isSuccessful()) {
+                return response.header("Location");
             }
+
+            // Something is wrong, throw the exception
+            ImportException exception = new ImportException("Cannot upload online data");
+            exception.setHttpStatusCode(response.code());
+            exception.setHttpMessage(response.message());
+
+            throw exception;
         }
     }
 
-    private void sendToArchiveVault(File file) throws IOException {
-        String fullUrl = url + archiveVault;
+    private String uploadOfflineData(File file, String txId) throws IOException, ImportException {
 
-        OkHttpClient client = new OkHttpClient();
+        String fullUrl = url + vault;
+
+        OkHttpClient client = new OkHttpClient.Builder()
+                .readTimeout(5, TimeUnit.MINUTES)
+                .writeTimeout(2, TimeUnit.MINUTES)
+                .build();
 
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("/" + file.getName(), file.getName(),
                         RequestBody.create(MEDIA_TYPE_ZIP, file))
+                .addFormDataPart("profile", offlineProfile)
                 .build();
 
         Request request = new Request.Builder()
                 .url(fullUrl)
                 .addHeader("Authorization", Credentials.basic(username, password))
                 .addHeader("Content-Type", "application/zip")
+                .addHeader("X-Transaction", txId)
                 .post(requestBody)
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            if (response.body() != null) {
-                String result = response.body().string();
+            if (response.isSuccessful()) {
+                return response.header("Location");
+            }
 
-                // TODO: update the management database
-                logger.info(result);
+            // Something is wrong, throw the exception
+            ImportException exception = new ImportException("Cannot upload offline data");
+            exception.setHttpStatusCode(response.code());
+            exception.setHttpMessage(response.message());
 
+            throw exception;
+        }
+    }
+
+    private void commitTransaction(String txId) throws IOException, ImportException {
+
+        String txUrl = url + "_tx/" + txId;
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(txUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .post(RequestBody.create(null, ""))
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+
+                // Something is wrong here
+                ImportException exception = new ImportException("Cannot commit the transaction");
+                exception.setHttpStatusCode(response.code());
+                exception.setHttpMessage(response.message());
+
+                throw exception;
+            }
+        }
+    }
+
+    private void rollbackTransaction(String txId) throws IOException, ImportException {
+
+        String txUrl = url + "_tx/" + txId;
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(txUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .delete()
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+
+                // Something is wrong here
+                ImportException exception = new ImportException("Error when rolling back the transaction");
+                exception.setHttpStatusCode(response.code());
+                exception.setHttpMessage(response.message());
+
+                throw exception;
             }
         }
     }
