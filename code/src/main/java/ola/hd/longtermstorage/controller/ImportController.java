@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.FileSystemUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -160,11 +161,12 @@ public class ImportController {
                     }
                 }
             }
+
+            // Clean up the temp
+            FileSystemUtils.deleteRecursively(targetFile.getParentFile());
         }
 
         trackingRepository.save(info);
-
-        // TODO: clean up the temp
 
         return new ResponseEntity<>(
                 new ResponseMessage(HttpStatus.OK, "Your file was successfully uploaded"),
