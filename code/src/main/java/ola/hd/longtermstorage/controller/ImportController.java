@@ -163,6 +163,8 @@ public class ImportController {
                             info.setMessage("The file is successfully stored in the system");
                             info.setPid(pid);
 
+                            System.out.println("PID: " + pid);
+
                         } catch (IOException e) {
                             logger.error(e.getMessage(), e);
 
