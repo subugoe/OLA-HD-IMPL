@@ -77,8 +77,8 @@ public class CdstarService implements ImportService {
             commitTransaction(txId);
 
             importResult = new ImportResult();
-            importResult.add("online_url", url + onlineArchive);
-            importResult.add("offline_url", url + offlineArchive);
+            importResult.add("online_url", url + vault + onlineArchive);
+            importResult.add("offline_url", url + vault + offlineArchive);
 
         } catch (Exception e) {
             if (txId != null) {
