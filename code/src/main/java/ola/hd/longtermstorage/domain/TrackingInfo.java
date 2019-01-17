@@ -31,17 +31,8 @@ public class TrackingInfo {
     // The message goes with the status (e.g. reason of failure)
     private String message;
 
-    // Where the file is stored (e.g. CDSTAR URL)
-    private String storageUrl;
-
     // The PID of the file
     private String pid;
-
-    // URL to the online data
-    private String onlineUrl;
-
-    // URL to the offline data
-    private String offlineUrl;
 
     protected TrackingInfo() {
         // no-args constructor required by JPA spec
@@ -112,36 +103,12 @@ public class TrackingInfo {
         this.message = message;
     }
 
-    public String getStorageUrl() {
-        return storageUrl;
-    }
-
-    public void setStorageUrl(String storageUrl) {
-        this.storageUrl = storageUrl;
-    }
-
     public String getPid() {
         return pid;
     }
 
     public void setPid(String pid) {
         this.pid = pid;
-    }
-
-    public String getOnlineUrl() {
-        return onlineUrl;
-    }
-
-    public void setOnlineUrl(String onlineUrl) {
-        this.onlineUrl = onlineUrl;
-    }
-
-    public String getOfflineUrl() {
-        return offlineUrl;
-    }
-
-    public void setOfflineUrl(String offlineUrl) {
-        this.offlineUrl = offlineUrl;
     }
 }
 

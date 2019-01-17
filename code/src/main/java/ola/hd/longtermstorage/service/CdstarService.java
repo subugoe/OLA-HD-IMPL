@@ -76,7 +76,9 @@ public class CdstarService implements ImportService {
             // Commit the transaction
             commitTransaction(txId);
 
-            importResult = new ImportResult(onlineArchive, offlineArchive);
+            importResult = new ImportResult();
+            importResult.add("online_url", url + onlineArchive);
+            importResult.add("offline_url", url + offlineArchive);
 
         } catch (Exception e) {
             if (txId != null) {
@@ -147,7 +149,8 @@ public class CdstarService implements ImportService {
 
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
-                return response.header("Location");
+                String location = response.header("Location");
+                return getArchiveId(location);
             }
 
             // Something is wrong, throw the exception
@@ -185,7 +188,8 @@ public class CdstarService implements ImportService {
 
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
-                return response.header("Location");
+                String location = response.header("Location");
+                return getArchiveId(location);
             }
 
             // Something is wrong, throw the exception
@@ -243,5 +247,15 @@ public class CdstarService implements ImportService {
                 throw exception;
             }
         }
+    }
+
+    private String getArchiveId(String location) {
+        String archive = "";
+        if (location != null) {
+            int lastSlashIndex = location.lastIndexOf('/');
+            archive = location.substring(lastSlashIndex + 1);
+        }
+
+        return archive;
     }
 }

@@ -7,9 +7,9 @@ import gov.loc.repository.bagit.verify.BagVerifier;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import ola.hd.longtermstorage.domain.*;
-import ola.hd.longtermstorage.exception.ImportException;
 import ola.hd.longtermstorage.repository.TrackingRepository;
 import ola.hd.longtermstorage.service.ImportService;
+import ola.hd.longtermstorage.service.PidService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -38,13 +38,16 @@ public class ImportController {
 
     private final ImportService importService;
 
+    private final PidService pidService;
+
     private final TrackingRepository trackingRepository;
 
     // TODO: Use ExecutorService to parallelize the code
 
     @Autowired
-    public ImportController(ImportService importService, TrackingRepository trackingRepository) {
+    public ImportController(ImportService importService, PidService pidService, TrackingRepository trackingRepository) {
         this.importService = importService;
+        this.pidService = pidService;
         this.trackingRepository = trackingRepository;
     }
 
@@ -150,14 +153,22 @@ public class ImportController {
 
                     // Successfully imported?
                     if (importResult != null) {
-                        // TODO: get a PID
 
-                        info.setStatus(Status.SUCCESS);
-                        info.setMessage("The file is successfully stored in the system");
-                        info.setOnlineUrl(importResult.getOnlineUrl());
-                        info.setOfflineUrl(importResult.getOfflineUrl());
+                        try {
 
-                        // TODO: set PID
+                            // Generate a PID
+                            String pid = pidService.createPid(importResult.getContent());
+
+                            info.setStatus(Status.SUCCESS);
+                            info.setMessage("The file is successfully stored in the system");
+                            info.setPid(pid);
+
+                        } catch (IOException e) {
+                            logger.error(e.getMessage(), e);
+
+                            info.setStatus(Status.FAILED);
+                            info.setMessage(e.getMessage());
+                        }
                     }
                 }
             }

@@ -1,20 +1,24 @@
 package ola.hd.longtermstorage.domain;
 
+import org.springframework.data.util.Pair;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class ImportResult {
 
-    private String onlineUrl;
-    private String offlineUrl;
+    private List<Pair<String, String>> content;
 
-    public ImportResult(String onlineUrl, String offlineUrl) {
-        this.onlineUrl = onlineUrl;
-        this.offlineUrl = offlineUrl;
+    public ImportResult() {
+        content = new ArrayList<>();
     }
 
-    public String getOnlineUrl() {
-        return onlineUrl;
+    public void add(String key, String value) {
+        Pair<String, String> pair = Pair.of(key, value);
+        content.add(pair);
     }
 
-    public String getOfflineUrl() {
-        return offlineUrl;
+    public List<Pair<String, String>> getContent() {
+        return content;
     }
 }
