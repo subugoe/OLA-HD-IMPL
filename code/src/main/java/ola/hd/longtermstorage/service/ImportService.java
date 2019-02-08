@@ -5,7 +5,8 @@ import ola.hd.longtermstorage.exception.ImportException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public interface ImportService {
-    ImportResult importZipFile(File file) throws Exception;
+    ImportResult importZipFile(File file, Path extractedDir) throws Exception;
 }
