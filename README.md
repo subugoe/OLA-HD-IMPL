@@ -12,8 +12,8 @@ To build and run the application you need to install:
 
 ##### Preparation: open ports
 
-* To visualize and explore the data in ElasticSearch open the port for the Kibana services. In the dev environment we use the default port: 5601 (see .env).
-* To import/export ZIP files, open the port to the OLA-HD service. In the dev environment we use the default port: 8080 (see .env).
+* To visualize and explore the data in ElasticSearch, open the port for the Kibana services. In the dev environment we use the default port 5601 (see .env).
+* To import/export ZIP files, open the port to the OLA-HD service. In the dev environment we use the default port 8080 (see .env).
 
 
 ##### Preparation: set environment variables 
