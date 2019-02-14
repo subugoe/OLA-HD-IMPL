@@ -142,7 +142,7 @@ public class ImportController {
                     try {
 
                         // Import data to the archive storage
-                        importResult = importService.importZipFile(targetFile);
+                        importResult = importService.importZipFile(targetFile, rootDir);
 
                     } catch (Exception e) {
                         logger.error(e.getMessage(), e);

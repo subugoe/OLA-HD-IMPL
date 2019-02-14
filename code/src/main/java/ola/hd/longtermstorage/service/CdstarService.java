@@ -5,14 +5,18 @@ import com.google.gson.JsonParser;
 import okhttp3.*;
 import ola.hd.longtermstorage.domain.ImportResult;
 import ola.hd.longtermstorage.exception.ImportException;
-import ola.hd.longtermstorage.helper.Operation;
-import ola.hd.longtermstorage.helper.OperationHelper;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class CdstarService implements ImportService {
@@ -32,53 +36,48 @@ public class CdstarService implements ImportService {
     @Value("${cdstar.offlineProfile}")
     private String offlineProfile;
 
-    @Value("${offline.fileTypes}")
-    private String offlineFileTypes;
+    @Value("${offline.mimeTypes}")
+    private String offlineMimeTypes;
 
-    private static final MediaType MEDIA_TYPE_ZIP = MediaType.parse("application/zip");
-
-    public ImportResult importZipFile(File file) throws Exception {
-
-        // TODO: Extract meta-data
+    public ImportResult importZipFile(File file, Path extractedDir) throws Exception {
 
         ImportResult importResult;
         String txId = null;
 
         try {
             // Get the transaction ID
-            txId = OperationHelper.doWithRetry(3, new Operation() {
-                @Override
-                public String run() throws IOException, ImportException {
-                    return getTransactionId();
-                }
-            });
+            txId = getTransactionId();
 
             final String finalTxId = txId;
 
-            // Upload online data
-            String onlineArchive = OperationHelper.doWithRetry(3, new Operation() {
-                @Override
-                public String run() throws IOException, ImportException {
-                    return uploadOnlineData(file, finalTxId);
-                }
-            });
-            System.out.println("Online archive: " + onlineArchive);
+            String onlineArchiveId = createArchive(txId, false);
+            String offlineArchiveId = createArchive(txId, true);
 
-            // Upload offline data
-            String offlineArchive = OperationHelper.doWithRetry(3, new Operation() {
-                @Override
-                public String run() throws IOException, ImportException {
-                    return uploadOfflineData(file, finalTxId);
-                }
-            });
-            System.out.println("Offline archive: " + offlineArchive);
+            // Upload online data
+            String ppn = getPPN(extractedDir);
+            System.out.println("PPN: " + ppn);
+
+            long start = System.currentTimeMillis();
+            uploadData(extractedDir, finalTxId, onlineArchiveId, offlineArchiveId);
+            long end = System.currentTimeMillis();
+            long elapsed = (end - start) / 1000;
+
+            // TODO: Send PPN to the indexer
 
             // Commit the transaction
             commitTransaction(txId);
 
+            System.out.println("Upload time: " + elapsed + " seconds");
+
+            System.out.println("Online archive: " + onlineArchiveId);
+            System.out.println("Offline archive: " + offlineArchiveId);
+
             importResult = new ImportResult();
-            importResult.add("online_url", onlineArchive);
-            importResult.add("offline_url", offlineArchive);
+            importResult.add("ONLINE_URL", url + vault + "/" + onlineArchiveId + "?with=files,meta");
+            importResult.add("OFFLINE_URL", url + vault + "/" + offlineArchiveId + "?with=files,meta");
+            if (!ppn.isEmpty()) {
+                importResult.add("PPN", ppn);
+            }
 
         } catch (Exception e) {
             if (txId != null) {
@@ -129,77 +128,92 @@ public class CdstarService implements ImportService {
         }
     }
 
-    private String uploadOnlineData(File file, String txId) throws IOException, ImportException {
+    private String getPPN(Path extractedDir) throws IOException {
 
-        // Exclude tif files (*.tiff, *.tif)
-        String fullUrl = url + vault + "?exclude=" + offlineFileTypes;
+        // Find the PPN
+        Path ppnPath = Files.walk(extractedDir)
+                .filter(path -> Files.isRegularFile(path) && path.getFileName().toString().startsWith("PPN"))
+                .findFirst()
+                .orElse(null);
 
-        OkHttpClient client = new OkHttpClient.Builder()
-                .readTimeout(5, TimeUnit.MINUTES)
-                .writeTimeout(2, TimeUnit.MINUTES)
-                .build();
-
-        Request request = new Request.Builder()
-                .url(fullUrl)
-                .addHeader("Authorization", Credentials.basic(username, password))
-                .addHeader("Content-Type", "application/zip")
-                .addHeader("X-Transaction", txId)
-                .post(RequestBody.create(MEDIA_TYPE_ZIP, file))
-                .build();
-
-        try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful()) {
-                String location = response.header("Location");
-                String archiveId = getArchiveId(location);
-                return url + vault + archiveId;
-            }
-
-            // Something is wrong, throw the exception
-            ImportException exception = new ImportException("Cannot upload online data");
-            exception.setHttpStatusCode(response.code());
-            exception.setHttpMessage(response.message());
-
-            throw exception;
+        String ppn = "";
+        if (ppnPath != null) {
+            File ppnFile = ppnPath.toFile();
+            ppn = FilenameUtils.getBaseName(ppnFile.getName());
         }
+        return ppn;
     }
 
-    private String uploadOfflineData(File file, String txId) throws IOException, ImportException {
+    private void uploadData(Path extractedDir, String txId, String onlineArchiveId, String offlineArchiveId) throws IOException {
 
-        String fullUrl = url + vault;
+        String onlineBaseUrl = url + vault + "/" + onlineArchiveId;
+        String offlineBaseUrl = url + vault + "/" + offlineArchiveId;
 
-        OkHttpClient client = new OkHttpClient.Builder()
-                .readTimeout(5, TimeUnit.MINUTES)
-                .writeTimeout(2, TimeUnit.MINUTES)
-                .build();
+        List<String> offlineTypes = Arrays.asList(offlineMimeTypes.split(";"));
 
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("/" + file.getName(), file.getName(),
-                        RequestBody.create(MEDIA_TYPE_ZIP, file))
-                .addFormDataPart("profile", offlineProfile)
-                .build();
+        Files.walk(extractedDir)
+                .filter(Files::isRegularFile)
+                .forEach(path -> {
+                    String onlineUrl = onlineBaseUrl + "/" +
+                            URLEncoder.encode(extractedDir.relativize(path).toString(), StandardCharsets.UTF_8);
+                    String offlineUrl = offlineBaseUrl + "/" +
+                            URLEncoder.encode(extractedDir.relativize(path).toString(), StandardCharsets.UTF_8);
+
+                    String mimeType;
+                    try {
+
+                        // Try to figure out the correct MIME type
+                        mimeType = Files.probeContentType(path);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    // If the MIME type is unrecognizable
+                    if (mimeType == null || mimeType.isEmpty()) {
+                        mimeType = "application/octet-stream";
+                    }
+
+                    File file = path.toFile();
+
+                    try {
+                        // Offline file?
+                        if (offlineTypes.contains(mimeType)) {
+
+                            // Only send to offline archive
+                            sendRquest(offlineUrl, txId, file, mimeType);
+                        } else {
+
+                            // For other files, send to both archives
+                            sendRquest(offlineUrl, txId, file, mimeType);
+                            sendRquest(onlineUrl, txId, file, mimeType);
+                        }
+                    } catch (ImportException | IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    private void sendRquest(String url, String txId, File file, String mimeType) throws IOException, ImportException {
+        OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()
-                .url(fullUrl)
+                .url(url)
                 .addHeader("Authorization", Credentials.basic(username, password))
-                .addHeader("Content-Type", "application/zip")
+                .addHeader("Content-Type", mimeType)
                 .addHeader("X-Transaction", txId)
-                .post(requestBody)
+                .put(RequestBody.create(MediaType.parse(mimeType), file))
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful()) {
-                String location = response.header("Location");
-                String archiveId = getArchiveId(location);
-                return url + vault + archiveId;
+            if (!response.isSuccessful()) {
+
+                // Something is wrong, throw the exception
+                ImportException exception = new ImportException("Cannot send data to CDSTAR. URL: " + url);
+                exception.setHttpStatusCode(response.code());
+                exception.setHttpMessage(response.message());
+
+                throw exception;
             }
-
-            // Something is wrong, throw the exception
-            ImportException exception = new ImportException("Cannot upload offline data");
-            exception.setHttpStatusCode(response.code());
-            exception.setHttpMessage(response.message());
-
-            throw exception;
         }
     }
 
@@ -248,6 +262,44 @@ public class CdstarService implements ImportService {
 
                 throw exception;
             }
+        }
+    }
+
+    private String createArchive(String txId, boolean isOffline) throws IOException, ImportException {
+        String fullUrl = url + vault;
+
+        OkHttpClient client = new OkHttpClient();
+
+        // To create an online archive, just send an empty body
+        RequestBody requestBody = RequestBody.create(null, "");
+
+        // To createa an offline archive, set an appropriate profile for it
+        if (isOffline) {
+            requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("profile", offlineProfile)
+                    .build();
+        }
+
+        Request request = new Request.Builder()
+                .url(fullUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .addHeader("X-Transaction", txId)
+                .post(requestBody)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String location = response.header("Location");
+                return getArchiveId(location);
+            }
+
+            // Something is wrong, throw the exception
+            ImportException exception = new ImportException("Cannot create archive");
+            exception.setHttpStatusCode(response.code());
+            exception.setHttpMessage(response.message());
+
+            throw exception;
         }
     }
 
