@@ -1,5 +1,6 @@
 package ola.hd.longtermstorage.service;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.*;
@@ -54,6 +55,7 @@ public class CdstarService implements ImportService, ExportService {
         String txId = null;
         String ppn, onlineArchiveId, offlineArchiveId;
 
+        long start = System.currentTimeMillis();
         try {
             // Get the transaction ID
             txId = getTransactionId();
@@ -67,11 +69,7 @@ public class CdstarService implements ImportService, ExportService {
             ppn = getPPN(extractedDir);
             System.out.println("PPN: " + ppn);
 
-            long start = System.currentTimeMillis();
             uploadData(extractedDir, finalTxId, onlineArchiveId, offlineArchiveId);
-            long end = System.currentTimeMillis();
-            long elapsed = (end - start) / 1000;
-            System.out.println("Upload time: " + elapsed + " seconds");
 
             // Commit the transaction
             commitTransaction(txId);
@@ -110,6 +108,9 @@ public class CdstarService implements ImportService, ExportService {
 //            importResult.add("PPN", ppn);
 //        }
 
+        long end = System.currentTimeMillis();
+        long elapsed = (end - start) / 1000;
+        System.out.println("Upload time: " + elapsed + " seconds");
         // TODO: Send PPN to the indexer
 
         return pid;
@@ -373,7 +374,89 @@ public class CdstarService implements ImportService, ExportService {
     }
 
     @Override
-    public byte[] export(String id, String idType) {
-        return new byte[0];
+    public byte[] export(String identifier) throws IOException, ImportException {
+        String archiveId = getArchiveIdFromIdentifier(identifier);
+        return exportArchive(archiveId);
+    }
+
+    private String getArchiveIdFromIdentifier(String identifier) throws IOException, ImportException {
+        String fullUrl = url + vault;
+
+        // Search for archive with specified identifier (PPN, PID) and has the dc:source value
+        String query = String.format("dcIdentifier:\"%s\" AND _exists_:dcSource", identifier);
+
+        // Sort by modified time in descending order
+        String order = "-modified";
+
+        // Number of the returned results
+        String limit = "1";
+
+        // Construct the URL
+        HttpUrl httpUrl = HttpUrl.parse(fullUrl).newBuilder()
+                .addQueryParameter("q", query)
+                .addQueryParameter("order", order)
+                .addQueryParameter("limit", limit)
+                .build();
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(httpUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .get()
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                if (response.body() != null) {
+                    String bodyString = response.body().string();
+
+                    // Parse the returned JSON
+                    JsonParser parser = new JsonParser();
+                    JsonObject jsonObject = parser.parse(bodyString).getAsJsonObject();
+                    JsonArray hits = jsonObject.getAsJsonArray("hits");
+
+                    return hits.get(0).getAsJsonObject().get("id").getAsString();
+                }
+            }
+
+            // Cannot get the archive ID? Throw the exception
+            ImportException exception = new ImportException("Cannot get the archive from its identifier");
+            exception.setHttpStatusCode(response.code());
+            exception.setHttpMessage(response.message());
+
+            throw exception;
+        }
+    }
+
+    private byte[] exportArchive(String archiveId) throws IOException, ImportException {
+        String fullUrl = url + vault + "/" + archiveId;
+
+        // Construct the URL
+        HttpUrl httpUrl = HttpUrl.parse(fullUrl).newBuilder()
+                .addQueryParameter("export", "zip")
+                .build();
+
+        Request request = new Request.Builder()
+                .url(httpUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .get()
+                .build();
+
+        OkHttpClient client = new OkHttpClient();
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                if (response.body() != null) {
+                    return response.body().bytes();
+                }
+            }
+
+            // Cannot get the archive ID? Throw the exception
+            ImportException exception = new ImportException("Cannot export archive");
+            exception.setHttpStatusCode(response.code());
+            exception.setHttpMessage(response.message());
+
+            throw exception;
+        }
     }
 }
