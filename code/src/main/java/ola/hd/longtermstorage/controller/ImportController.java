@@ -6,10 +6,12 @@ import gov.loc.repository.bagit.reader.BagReader;
 import gov.loc.repository.bagit.verify.BagVerifier;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
-import ola.hd.longtermstorage.domain.*;
+import ola.hd.longtermstorage.domain.Action;
+import ola.hd.longtermstorage.domain.ResponseMessage;
+import ola.hd.longtermstorage.domain.Status;
+import ola.hd.longtermstorage.domain.TrackingInfo;
 import ola.hd.longtermstorage.repository.TrackingRepository;
 import ola.hd.longtermstorage.service.ImportService;
-import ola.hd.longtermstorage.service.PidService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -38,16 +40,13 @@ public class ImportController {
 
     private final ImportService importService;
 
-    private final PidService pidService;
-
     private final TrackingRepository trackingRepository;
 
     // TODO: Use ExecutorService to parallelize the code
 
     @Autowired
-    public ImportController(ImportService importService, PidService pidService, TrackingRepository trackingRepository) {
+    public ImportController(ImportService importService, TrackingRepository trackingRepository) {
         this.importService = importService;
-        this.pidService = pidService;
         this.trackingRepository = trackingRepository;
     }
 
