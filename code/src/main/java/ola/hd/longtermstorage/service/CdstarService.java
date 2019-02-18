@@ -100,8 +100,8 @@ public class CdstarService implements ImportService, ExportService {
         System.out.println("PID: " + pid);
 
         // Update archive identifiers (with PPN and PID)
-        setArchiveIdentifier(onlineArchiveId, ppn, pid);
-        setArchiveIdentifier(offlineArchiveId, ppn, pid);
+        setArchiveIdentifier(onlineArchiveId, ppn, pid, offlineArchiveId);
+        setArchiveIdentifier(offlineArchiveId, ppn, pid, null);
 
 //        importResult = new ImportResult();
 //        importResult.add("ONLINE_URL", url + vault + "/" + onlineArchiveId + "?with=files,meta");
@@ -317,7 +317,15 @@ public class CdstarService implements ImportService, ExportService {
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
                 String location = response.header("Location");
-                return extractArchiveId(location);
+
+                // Extract the archive ID from the location string
+                String archive = "";
+                if (location != null) {
+                    int lastSlashIndex = location.lastIndexOf('/');
+                    archive = location.substring(lastSlashIndex + 1);
+                }
+
+                return archive;
             }
 
             // Something is wrong, throw the exception
@@ -329,24 +337,21 @@ public class CdstarService implements ImportService, ExportService {
         }
     }
 
-    private String extractArchiveId(String location) {
-        String archive = "";
-        if (location != null) {
-            int lastSlashIndex = location.lastIndexOf('/');
-            archive = location.substring(lastSlashIndex + 1);
-        }
-
-        return archive;
-    }
-
-    private void setArchiveIdentifier(String archiveId, String ppn, String pid) throws IOException, ImportException {
+    private void setArchiveIdentifier(String archiveId, String ppn, String pid, String source) throws IOException, ImportException {
         String fullUrl = url + vault + "/" + archiveId;
         OkHttpClient client = new OkHttpClient();
 
-        RequestBody requestBody = new MultipartBody.Builder()
+        MultipartBody.Builder builder = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("meta:dc:identifier", Arrays.toString(new String[]{ppn, pid}))
-                .build();
+                .addFormDataPart("meta:dc:identifier", ppn)
+                .addFormDataPart("meta:dc:identifier", pid);
+
+        // Link the online archive to the offline one
+        if (source != null) {
+            builder.addFormDataPart("meta:dc:source", source);
+        }
+
+        RequestBody requestBody = builder.build();
 
         Request request = new Request.Builder()
                 .url(fullUrl)
