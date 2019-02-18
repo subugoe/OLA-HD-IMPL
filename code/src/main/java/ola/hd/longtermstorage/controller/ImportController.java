@@ -138,11 +138,14 @@ public class ImportController {
                 // Only import valid bag
                 if (isValidBag) {
 
-                    ImportResult importResult = null;
                     try {
 
                         // Import data to the archive storage
-                        importResult = importService.importZipFile(targetFile, rootDir);
+                        String pid = importService.importZipFile(targetFile, rootDir);
+
+                        info.setStatus(Status.SUCCESS);
+                        info.setMessage("The file is successfully stored in the system");
+                        info.setPid(pid);
 
                     } catch (Exception e) {
                         logger.error(e.getMessage(), e);
@@ -152,26 +155,26 @@ public class ImportController {
                     }
 
                     // Successfully imported?
-                    if (importResult != null) {
-
-                        try {
-
-                            // Generate a PID
-                            String pid = pidService.createPid(importResult.getContent());
-
-                            info.setStatus(Status.SUCCESS);
-                            info.setMessage("The file is successfully stored in the system");
-                            info.setPid(pid);
-
-                            System.out.println("PID: " + pid);
-
-                        } catch (IOException e) {
-                            logger.error(e.getMessage(), e);
-
-                            info.setStatus(Status.FAILED);
-                            info.setMessage(e.getMessage());
-                        }
-                    }
+//                    if (importResult != null) {
+//
+//                        try {
+//
+//                            // Generate a PID
+//                            String pid = pidService.createPid(importResult.getContent());
+//
+//                            info.setStatus(Status.SUCCESS);
+//                            info.setMessage("The file is successfully stored in the system");
+//                            info.setPid(pid);
+//
+//                            System.out.println("PID: " + pid);
+//
+//                        } catch (IOException e) {
+//                            logger.error(e.getMessage(), e);
+//
+//                            info.setStatus(Status.FAILED);
+//                            info.setMessage(e.getMessage());
+//                        }
+//                    }
                 }
             }
 
