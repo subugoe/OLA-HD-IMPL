@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface PidService {
     String createPid(List<Pair<String, String>> data) throws IOException;
+    boolean updatePid(String pid, List<Pair<String, String>> data) throws IOException;
     void deletePid(String pid) throws IOException;
 }

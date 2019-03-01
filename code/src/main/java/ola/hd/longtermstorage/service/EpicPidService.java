@@ -60,6 +60,30 @@ public class EpicPidService implements PidService {
     }
 
     @Override
+    public boolean updatePid(String pid, List<Pair<String, String>> data) throws IOException {
+        String fullUrl = url + pid;
+        String payload = buildRequestPayload(data);
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(fullUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Accept", "application/json")
+                .put(RequestBody.create(MEDIA_TYPE_JSON, payload))
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
     public void deletePid(String pid) throws IOException {
         String fullUrl = url + pid;
 

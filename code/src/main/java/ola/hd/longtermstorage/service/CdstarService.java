@@ -5,7 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.*;
 import ola.hd.longtermstorage.exception.ImportException;
-import org.apache.commons.io.FilenameUtils;
+import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
@@ -17,9 +17,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class CdstarService implements ImportService, ExportService {
@@ -50,10 +48,10 @@ public class CdstarService implements ImportService, ExportService {
     }
 
     @Override
-    public String importZipFile(File file, Path extractedDir) throws Exception {
+    public void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws Exception {
 
         String txId = null;
-        String ppn, onlineArchiveId, offlineArchiveId;
+        String onlineArchiveId, offlineArchiveId;
 
         long start = System.currentTimeMillis();
         try {
@@ -65,11 +63,11 @@ public class CdstarService implements ImportService, ExportService {
             onlineArchiveId = createArchive(txId, false);
             offlineArchiveId = createArchive(txId, true);
 
-            // Upload online data
-            ppn = getPPN(extractedDir);
-            System.out.println("PPN: " + ppn);
-
             uploadData(extractedDir, finalTxId, onlineArchiveId, offlineArchiveId);
+
+            // Update archive identifiers (with PPN and PID)
+            setArchiveIdentifier(onlineArchiveId, metaData, pid, offlineArchiveId, txId);
+            setArchiveIdentifier(offlineArchiveId, metaData, pid, null, txId);
 
             // Commit the transaction
             commitTransaction(txId);
@@ -81,39 +79,18 @@ public class CdstarService implements ImportService, ExportService {
             throw e;
         }
 
-        System.out.println("Online archive: " + onlineArchiveId);
-        System.out.println("Offline archive: " + offlineArchiveId);
-        System.out.println("Generating PID...");
-
-        // Generate a PID
+        // Update data for the PID
         List<Pair<String, String>> pidData = new ArrayList<>();
         pidData.add(Pair.of("ONLINE_URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
         pidData.add(Pair.of("OFFLINE_URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
-        if (!ppn.isEmpty()) {
-            pidData.add(Pair.of("PPN", ppn));
-        }
 
-        String pid = pidService.createPid(pidData);
+        // TODO: Fix the update (append new data, not overwrite)
+        pidService.updatePid(pid, pidData);
 
-        System.out.println("PID: " + pid);
-
-        // Update archive identifiers (with PPN and PID)
-        setArchiveIdentifier(onlineArchiveId, ppn, pid, offlineArchiveId);
-        setArchiveIdentifier(offlineArchiveId, ppn, pid, null);
-
-//        importResult = new ImportResult();
-//        importResult.add("ONLINE_URL", url + vault + "/" + onlineArchiveId + "?with=files,meta");
-//        importResult.add("OFFLINE_URL", url + vault + "/" + offlineArchiveId + "?with=files,meta");
-//        if (!ppn.isEmpty()) {
-//            importResult.add("PPN", ppn);
-//        }
 
         long end = System.currentTimeMillis();
         long elapsed = (end - start) / 1000;
         System.out.println("Upload time: " + elapsed + " seconds");
-        // TODO: Send PPN to the indexer
-
-        return pid;
     }
 
     private String getTransactionId() throws ImportException, IOException {
@@ -155,28 +132,13 @@ public class CdstarService implements ImportService, ExportService {
         }
     }
 
-    private String getPPN(Path extractedDir) throws IOException {
-
-        // Find the PPN
-        Path ppnPath = Files.walk(extractedDir)
-                .filter(path -> Files.isRegularFile(path) && path.getFileName().toString().startsWith("PPN"))
-                .findFirst()
-                .orElse(null);
-
-        String ppn = "";
-        if (ppnPath != null) {
-            File ppnFile = ppnPath.toFile();
-            ppn = FilenameUtils.getBaseName(ppnFile.getName());
-        }
-        return ppn;
-    }
-
     private void uploadData(Path extractedDir, String txId, String onlineArchiveId, String offlineArchiveId) throws IOException {
 
         String onlineBaseUrl = url + vault + "/" + onlineArchiveId;
         String offlineBaseUrl = url + vault + "/" + offlineArchiveId;
 
         List<String> offlineTypes = Arrays.asList(offlineMimeTypes.split(";"));
+        Tika tika = new Tika();
 
         Files.walk(extractedDir)
                 .filter(Files::isRegularFile)
@@ -190,7 +152,8 @@ public class CdstarService implements ImportService, ExportService {
                     try {
 
                         // Try to figure out the correct MIME type
-                        mimeType = Files.probeContentType(path);
+                        //mimeType = Files.probeContentType(path);
+                        mimeType = tika.detect(path);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -338,13 +301,12 @@ public class CdstarService implements ImportService, ExportService {
         }
     }
 
-    private void setArchiveIdentifier(String archiveId, String ppn, String pid, String source) throws IOException, ImportException {
+    private void setArchiveIdentifier(String archiveId, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData, String pid, String source, String txId) throws IOException, ImportException {
         String fullUrl = url + vault + "/" + archiveId;
         OkHttpClient client = new OkHttpClient();
 
         MultipartBody.Builder builder = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("meta:dc:identifier", ppn)
                 .addFormDataPart("meta:dc:identifier", pid);
 
         // Link the online archive to the offline one
@@ -352,11 +314,14 @@ public class CdstarService implements ImportService, ExportService {
             builder.addFormDataPart("meta:dc:source", source);
         }
 
+        // TODO: add meta-data
+
         RequestBody requestBody = builder.build();
 
         Request request = new Request.Builder()
                 .url(fullUrl)
                 .addHeader("Authorization", Credentials.basic(username, password))
+                .addHeader("X-Transaction", txId)
                 .post(requestBody)
                 .build();
 

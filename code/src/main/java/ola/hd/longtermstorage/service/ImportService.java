@@ -1,8 +1,9 @@
 package ola.hd.longtermstorage.service;
 
-import java.io.File;
 import java.nio.file.Path;
+import java.util.AbstractMap;
+import java.util.List;
 
 public interface ImportService {
-    String importZipFile(File file, Path extractedDir) throws Exception;
+    void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws Exception;
 }
