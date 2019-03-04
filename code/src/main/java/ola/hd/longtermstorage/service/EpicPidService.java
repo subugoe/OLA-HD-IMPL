@@ -109,7 +109,7 @@ public class EpicPidService implements PidService {
 
         for (AbstractMap.SimpleImmutableEntry<String, String> pair: data) {
             ObjectNode node = mapper.createObjectNode();
-            node.put("type", pair.getKey());
+            node.put("type", pair.getKey().toUpperCase());
             node.put("parsed_data", pair.getValue());
 
             arrayNode.add(node);
