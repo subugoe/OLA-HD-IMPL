@@ -1,9 +1,10 @@
 package ola.hd.longtermstorage.service;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -51,10 +52,9 @@ public class EpicPidService implements PidService {
                     String bodyString = response.body().string();
 
                     // Parse the returned JSON
-                    JsonParser parser = new JsonParser();
-                    JsonObject jsonObject = parser.parse(bodyString).getAsJsonObject();
-
-                    return jsonObject.getAsJsonPrimitive("epic-pid").getAsString();
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode root = mapper.readTree(bodyString);
+                    return root.get("epic-pid").asText();
                 }
             }
         }
@@ -103,19 +103,18 @@ public class EpicPidService implements PidService {
         client.newCall(request).execute();
     }
 
-    private String buildRequestPayload(List<AbstractMap.SimpleImmutableEntry<String, String>> data) {
-
-        JsonArray jsonArray = new JsonArray();
+    private String buildRequestPayload(List<AbstractMap.SimpleImmutableEntry<String, String>> data) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode arrayNode = mapper.createArrayNode();
 
         for (AbstractMap.SimpleImmutableEntry<String, String> pair: data) {
-            JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("type", pair.getKey());
-            jsonObject.addProperty("parsed_data", pair.getValue());
+            ObjectNode node = mapper.createObjectNode();
+            node.put("type", pair.getKey());
+            node.put("parsed_data", pair.getValue());
 
-            jsonArray.add(jsonObject);
+            arrayNode.add(node);
         }
 
-        Gson gson = new Gson();
-        return gson.toJson(jsonArray);
+        return mapper.writeValueAsString(arrayNode);
     }
 }

@@ -1,8 +1,7 @@
 package ola.hd.longtermstorage.service;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import ola.hd.longtermstorage.exception.ImportException;
 import org.apache.tika.Tika;
@@ -122,10 +121,9 @@ public class CdstarService implements ImportService, ExportService {
                     String bodyString = response.body().string();
 
                     // Parse the returned JSON
-                    JsonParser parser = new JsonParser();
-                    JsonObject jsonObject = parser.parse(bodyString).getAsJsonObject();
-
-                    return jsonObject.getAsJsonPrimitive("id").getAsString();
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode root = mapper.readTree(bodyString);
+                    return root.get("id").asText();
                 }
             }
 
@@ -353,6 +351,7 @@ public class CdstarService implements ImportService, ExportService {
     private String getArchiveIdFromIdentifier(String identifier) throws IOException, ImportException {
         String fullUrl = url + vault;
 
+        // TODO: search based on the profile
         // Search for archive with specified identifier (PPN, PID) and has the dc:source value
         String query = String.format("dcIdentifier:\"%s\" AND _exists_:dcSource", identifier);
 
@@ -383,11 +382,10 @@ public class CdstarService implements ImportService, ExportService {
                     String bodyString = response.body().string();
 
                     // Parse the returned JSON
-                    JsonParser parser = new JsonParser();
-                    JsonObject jsonObject = parser.parse(bodyString).getAsJsonObject();
-                    JsonArray hits = jsonObject.getAsJsonArray("hits");
-
-                    return hits.get(0).getAsJsonObject().get("id").getAsString();
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode root = mapper.readTree(bodyString);
+                    JsonNode hits = root.get("hits");
+                    return hits.get(0).get("id").asText();
                 }
             }
 
