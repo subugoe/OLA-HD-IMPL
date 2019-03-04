@@ -18,7 +18,6 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -156,15 +155,13 @@ public class ImportController {
         verifier.isValid(bag, true);
 
         // Build meta-data for the PID
-        List<Pair<String, String>> data = new ArrayList<>();
-        data.add(Pair.of("ONLINE_URL", "This will be updated soon"));
-        data.add(Pair.of("OFFLINE_URL", "This will be updated soon"));
+        List<AbstractMap.SimpleImmutableEntry<String, String>> data = new ArrayList<>();
+        data.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE_URL", "This will be updated soon"));
+        data.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE_URL", "This will be updated soon"));
 
         // Get meta-data from bag-info.txt
         List<AbstractMap.SimpleImmutableEntry<String, String>> bagInfos = bag.getMetadata().getAll();
-        for (AbstractMap.SimpleImmutableEntry<String, String> info : bagInfos) {
-            data.add(Pair.of(info.getKey().toUpperCase(), info.getValue()));
-        }
+        data.addAll(bagInfos);
 
         // Get an empty PID
         String pid = pidService.createPid(data);
@@ -173,95 +170,10 @@ public class ImportController {
             // TODO: Import a new version of a bag
             System.out.println("Importing a new version");
         } else {
-            // TODO: Import a new bag
+            // Import an individual bag
             System.out.println("Importing an individual bag");
             importService.importZipFile(Paths.get(destination), pid, bagInfos);
         }
-
-        // Not a zip file
-//        if (extension == null || !extension.equals("zip")) {
-//            info.setStatus(Status.FAILED);
-//            info.setMessage("The input must be a zip file");
-//        } else {
-//
-//            // Is the file successfully extracted?
-//            boolean isExtracted = false;
-//
-//            try (InputStream fileStream = file.getInputStream()) {
-//
-//                // Use file stream to prevent memory overflowed due to the huge file size
-//                FileUtils.copyInputStreamToFile(fileStream, targetFile);
-//
-//                // Extract zip file
-//                ZipFile zipFile = new ZipFile(targetFile);
-//                zipFile.extractAll(destination);
-//
-//                // Successfully extracted the file
-//                isExtracted = true;
-//
-//            } catch (IOException | ZipException e) {
-//                logger.error(e.getMessage(), e);
-//
-//                info.setStatus(Status.FAILED);
-//                info.setMessage(e.getMessage());
-//            }
-//
-//            if (isExtracted) {
-//
-//                // Create the path to the extracted directory
-//                Path rootDir = Paths.get(destination);
-//
-//                BagReader reader = new BagReader();
-//
-//                boolean isValidBag = false;
-//                try {
-//                    // Create a bag from an existing directory
-//                    Bag bag = reader.read(rootDir);
-//
-//                    BagVerifier verifier = new BagVerifier();
-//
-//                    if (BagVerifier.canQuickVerify(bag)) {
-//                        BagVerifier.quicklyVerify(bag);
-//                    }
-//
-//                    // Check for the validity and completeness of a bag
-//                    verifier.isValid(bag, true);
-//
-//                    isValidBag = true;
-//
-//                } catch (MissingPayloadManifestException | UnsupportedAlgorithmException |
-//                        MaliciousPathException | InvalidPayloadOxumException | MissingPayloadDirectoryException |
-//                        FileNotInPayloadDirectoryException | UnparsableVersionException |
-//                        InvalidBagitFileFormatException | MissingBagitFileException | CorruptChecksumException |
-//                        VerificationException | IOException | InterruptedException e) {
-//                    logger.error(e.getMessage(), e);
-//
-//                    info.setStatus(Status.FAILED);
-//                    info.setMessage(e.getMessage());
-//                }
-//
-//                // Only import valid bag
-//                if (isValidBag) {
-//
-//                    try {
-//
-//                        // Import data to the archive storage
-//                        String pid = importService.importZipFile(targetFile, rootDir);
-//
-//                        info.setStatus(Status.SUCCESS);
-//                        info.setMessage("The file is successfully stored in the system");
-//                        info.setPid(pid);
-//
-//                    } catch (Exception e) {
-//                        logger.error(e.getMessage(), e);
-//
-//                        info.setStatus(Status.FAILED);
-//                        info.setMessage(e.getMessage());
-//                    }
-//                }
-//            }
-//
-//        }
 
         // Clean up the temp
         FileSystemUtils.deleteRecursively(targetFile.getParentFile());

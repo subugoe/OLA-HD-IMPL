@@ -8,7 +8,6 @@ import ola.hd.longtermstorage.exception.ImportException;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -17,7 +16,10 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class CdstarService implements ImportService, ExportService {
@@ -80,13 +82,17 @@ public class CdstarService implements ImportService, ExportService {
         }
 
         // Update data for the PID
-        List<Pair<String, String>> pidData = new ArrayList<>();
-        pidData.add(Pair.of("ONLINE_URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
-        pidData.add(Pair.of("OFFLINE_URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
+        List<AbstractMap.SimpleImmutableEntry<String, String>> pidData = new ArrayList<>();
 
-        // TODO: Fix the update (append new data, not overwrite)
+        // Update the online and offline URL
+        pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE_URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
+        pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE_URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
+
+        // Keep all meta-data from the bag-info.txt
+        pidData.addAll(metaData);
+
+        // Update the PID
         pidService.updatePid(pid, pidData);
-
 
         long end = System.currentTimeMillis();
         long elapsed = (end - start) / 1000;

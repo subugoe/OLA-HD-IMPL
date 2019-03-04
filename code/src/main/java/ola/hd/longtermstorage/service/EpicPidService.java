@@ -1,12 +1,15 @@
 package ola.hd.longtermstorage.service;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.List;
 
 @Service
@@ -27,7 +30,7 @@ public class EpicPidService implements PidService {
     private static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json");
 
     @Override
-    public String createPid(List<Pair<String, String>> data) throws IOException {
+    public String createPid(List<AbstractMap.SimpleImmutableEntry<String, String>> data) throws IOException {
 
         String fullUrl = url + prefix;
         String payload = buildRequestPayload(data);
@@ -60,7 +63,7 @@ public class EpicPidService implements PidService {
     }
 
     @Override
-    public boolean updatePid(String pid, List<Pair<String, String>> data) throws IOException {
+    public boolean updatePid(String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> data) throws IOException {
         String fullUrl = url + pid;
         String payload = buildRequestPayload(data);
 
@@ -100,14 +103,14 @@ public class EpicPidService implements PidService {
         client.newCall(request).execute();
     }
 
-    private String buildRequestPayload(List<Pair<String, String>> data) {
+    private String buildRequestPayload(List<AbstractMap.SimpleImmutableEntry<String, String>> data) {
 
         JsonArray jsonArray = new JsonArray();
 
-        for (Pair<String, String> pair: data) {
+        for (AbstractMap.SimpleImmutableEntry<String, String> pair: data) {
             JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("type", pair.getFirst());
-            jsonObject.addProperty("parsed_data", pair.getSecond());
+            jsonObject.addProperty("type", pair.getKey());
+            jsonObject.addProperty("parsed_data", pair.getValue());
 
             jsonArray.add(jsonObject);
         }
