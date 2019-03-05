@@ -84,8 +84,8 @@ public class CdstarService implements ImportService, ExportService {
         List<AbstractMap.SimpleImmutableEntry<String, String>> pidData = new ArrayList<>();
 
         // Update the online and offline URL
-        pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE_URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
-        pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE_URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
+        pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
+        pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
 
         // Keep all meta-data from the bag-info.txt
         pidData.addAll(metaData);
@@ -314,9 +314,9 @@ public class CdstarService implements ImportService, ExportService {
                 .addFormDataPart("meta:dc:identifier", pid);
 
         // Link the online archive to the offline one
-        if (source != null) {
-            builder.addFormDataPart("meta:dc:source", source);
-        }
+//        if (source != null) {
+//            builder.addFormDataPart("meta:dc:source", source);
+//        }
 
         // TODO: add meta-data
 
@@ -353,7 +353,7 @@ public class CdstarService implements ImportService, ExportService {
 
         // TODO: search based on the profile
         // Search for archive with specified identifier (PPN, PID) and has the dc:source value
-        String query = String.format("dcIdentifier:\"%s\" AND _exists_:dcSource", identifier);
+        String query = String.format("dcIdentifier:\"%s\" AND profile:default", identifier);
 
         // Sort by modified time in descending order
         String order = "-modified";

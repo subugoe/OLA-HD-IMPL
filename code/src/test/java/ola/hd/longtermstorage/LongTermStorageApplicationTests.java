@@ -21,6 +21,7 @@ public class LongTermStorageApplicationTests {
     public void contextLoads() {
     }
 
+//    @Test
     public void deleteAllArchives() throws IOException {
 
         // Get list of archives

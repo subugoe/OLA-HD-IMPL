@@ -4,6 +4,7 @@ import gov.loc.repository.bagit.domain.Bag;
 import gov.loc.repository.bagit.reader.BagReader;
 import gov.loc.repository.bagit.verify.BagVerifier;
 import net.lingala.zip4j.core.ZipFile;
+import ola.hd.longtermstorage.component.ExecutorWrapper;
 import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.repository.TrackingRepository;
 import ola.hd.longtermstorage.service.ImportService;
@@ -48,13 +49,14 @@ public class ImportController {
 
     private final PidService pidService;
 
-    // TODO: Use ExecutorService to parallelize the code
+    private final ExecutorWrapper executor;
 
     @Autowired
-    public ImportController(ImportService importService, TrackingRepository trackingRepository, PidService pidService) {
+    public ImportController(ImportService importService, TrackingRepository trackingRepository, PidService pidService, ExecutorWrapper executor) {
         this.importService = importService;
         this.trackingRepository = trackingRepository;
         this.pidService = pidService;
+        this.executor = executor;
     }
 
     @PostMapping(value = "/bag", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -156,8 +158,8 @@ public class ImportController {
 
         // Build meta-data for the PID
         List<AbstractMap.SimpleImmutableEntry<String, String>> data = new ArrayList<>();
-        data.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE_URL", "This will be updated soon"));
-        data.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE_URL", "This will be updated soon"));
+        data.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", "This will be updated soon"));
+        data.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", "This will be updated soon"));
 
         // Get meta-data from bag-info.txt
         List<AbstractMap.SimpleImmutableEntry<String, String>> bagInfos = bag.getMetadata().getAll();
@@ -170,13 +172,19 @@ public class ImportController {
             // TODO: Import a new version of a bag
             System.out.println("Importing a new version");
         } else {
-            // Import an individual bag
-            System.out.println("Importing an individual bag");
-            importService.importZipFile(Paths.get(destination), pid, bagInfos);
-        }
 
-        // Clean up the temp
-        FileSystemUtils.deleteRecursively(targetFile.getParentFile());
+            // Import an individual bag
+            executor.submit(() -> {
+                try {
+                    importService.importZipFile(Paths.get(destination), pid, bagInfos);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    // Clean up the temp
+                    FileSystemUtils.deleteRecursively(targetFile.getParentFile());
+                }
+            });
+        }
 
         //trackingRepository.save(info);
 
