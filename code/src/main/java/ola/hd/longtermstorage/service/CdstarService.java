@@ -67,8 +67,8 @@ public class CdstarService implements ImportService, ExportService {
             uploadData(extractedDir, finalTxId, onlineArchiveId, offlineArchiveId);
 
             // Update archive identifiers (with PPN and PID)
-            setArchiveIdentifier(onlineArchiveId, metaData, pid, offlineArchiveId, txId);
-            setArchiveIdentifier(offlineArchiveId, metaData, pid, null, txId);
+            setArchiveIdentifier(onlineArchiveId, metaData, pid, txId);
+            setArchiveIdentifier(offlineArchiveId, metaData, pid, txId);
 
             // Commit the transaction
             commitTransaction(txId);
@@ -305,7 +305,7 @@ public class CdstarService implements ImportService, ExportService {
         }
     }
 
-    private void setArchiveIdentifier(String archiveId, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData, String pid, String source, String txId) throws IOException, ImportException {
+    private void setArchiveIdentifier(String archiveId, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData, String pid, String txId) throws IOException, ImportException {
         String fullUrl = url + vault + "/" + archiveId;
         OkHttpClient client = new OkHttpClient();
 
@@ -313,12 +313,17 @@ public class CdstarService implements ImportService, ExportService {
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("meta:dc:identifier", pid);
 
-        // Link the online archive to the offline one
-//        if (source != null) {
-//            builder.addFormDataPart("meta:dc:source", source);
-//        }
-
-        // TODO: add meta-data
+        // Extract proper meta-data
+        for (AbstractMap.SimpleImmutableEntry<String, String> item : metaData) {
+            String key = item.getKey();
+            switch (key) {
+                case "Bagging-Date":
+                    builder.addFormDataPart("meta:dc:date", item.getValue());
+                    break;
+                case "Ocrd-Identifier":
+                    builder.addFormDataPart("meta:dc:identifier", item.getValue());
+            }
+        }
 
         RequestBody requestBody = builder.build();
 
