@@ -38,6 +38,9 @@ public class CdstarService implements ImportService, ExportService {
     @Value("${cdstar.offlineProfile}")
     private String offlineProfile;
 
+    @Value("${cdstar.onlineProfile}")
+    private String onlineProfile;
+
     @Value("${offline.mimeTypes}")
     private String offlineMimeTypes;
 
@@ -49,7 +52,7 @@ public class CdstarService implements ImportService, ExportService {
     }
 
     @Override
-    public void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws Exception {
+    public void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws IOException, ImportException {
 
         String txId = null;
         String onlineArchiveId, offlineArchiveId;
@@ -59,16 +62,14 @@ public class CdstarService implements ImportService, ExportService {
             // Get the transaction ID
             txId = getTransactionId();
 
-            final String finalTxId = txId;
-
             onlineArchiveId = createArchive(txId, false);
             offlineArchiveId = createArchive(txId, true);
 
-            uploadData(extractedDir, finalTxId, onlineArchiveId, offlineArchiveId);
+            uploadData(extractedDir, txId, onlineArchiveId, offlineArchiveId);
 
-            // Update archive identifiers (with PPN and PID)
-            setArchiveIdentifier(onlineArchiveId, metaData, pid, txId);
-            setArchiveIdentifier(offlineArchiveId, metaData, pid, txId);
+            // Update archive meta-data
+            setArchiveMetaData(onlineArchiveId, metaData, pid, txId, null, null);
+            setArchiveMetaData(offlineArchiveId, metaData, pid, txId, null, null);
 
             // Commit the transaction
             commitTransaction(txId);
@@ -85,13 +86,73 @@ public class CdstarService implements ImportService, ExportService {
 
         // Update the online and offline URL
         pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
-        pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
+        pidData.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
 
         // Keep all meta-data from the bag-info.txt
         pidData.addAll(metaData);
 
         // Update the PID
         pidService.updatePid(pid, pidData);
+
+        long end = System.currentTimeMillis();
+        long elapsed = (end - start) / 1000;
+        System.out.println("Upload time: " + elapsed + " seconds");
+    }
+
+    @Override
+    public void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData, String prevPid) throws IOException, ImportException {
+        String txId = null;
+        String onlineArchiveId, offlineArchiveId;
+
+        // Get the online archive of the previous version
+        String prevOnlineArchiveId = getArchiveIdFromIdentifier(prevPid, onlineProfile);
+
+        long start = System.currentTimeMillis();
+        try {
+            // Get the transaction ID
+            txId = getTransactionId();
+
+            onlineArchiveId = createArchive(txId, false);
+            offlineArchiveId = createArchive(txId, true);
+
+            uploadData(extractedDir, txId, onlineArchiveId, offlineArchiveId);
+
+            // Update archive meta-data of current version
+            setArchiveMetaData(onlineArchiveId, metaData, pid, txId, prevPid, null);
+            setArchiveMetaData(offlineArchiveId, metaData, pid, txId, prevPid, null);
+
+            // Update archive meta-data of previous version. Update the online archive only because it's not possible
+            // to update meta-data of an offline archive
+            linkToNextVersion(prevOnlineArchiveId, txId, pid);
+
+            // Commit the transaction
+            commitTransaction(txId);
+
+        } catch (Exception e) {
+            if (txId != null) {
+                rollbackTransaction(txId);
+            }
+            throw e;
+        }
+
+        // Update data for the PID
+        List<AbstractMap.SimpleImmutableEntry<String, String>> pidData = new ArrayList<>();
+
+        // Update the online and offline URL
+        pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
+        pidData.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
+        pidData.add(new AbstractMap.SimpleImmutableEntry<>("PREVIOUS-VERSION", prevPid));
+
+        // Keep all meta-data from the bag-info.txt
+        pidData.addAll(metaData);
+
+        // Update the PID of the new ZIP
+        pidService.updatePid(pid, pidData);
+
+        // Update the old PID to link to the new version
+        List<AbstractMap.SimpleImmutableEntry<String, String>> pidAppendedData = new ArrayList<>();
+        pidAppendedData.add(new AbstractMap.SimpleImmutableEntry<>("NEXT-VERSION", pid));
+        pidService.appendData(prevPid, pidAppendedData);
 
         long end = System.currentTimeMillis();
         long elapsed = (end - start) / 1000;
@@ -305,24 +366,39 @@ public class CdstarService implements ImportService, ExportService {
         }
     }
 
-    private void setArchiveIdentifier(String archiveId, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData, String pid, String txId) throws IOException, ImportException {
+    private void setArchiveMetaData(String archiveId, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData,
+                                    String pid, String txId, String prevPid, String nextPid) throws IOException, ImportException {
         String fullUrl = url + vault + "/" + archiveId;
         OkHttpClient client = new OkHttpClient();
 
         MultipartBody.Builder builder = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("meta:dc:identifier", pid);
+                .setType(MultipartBody.FORM);
 
         // Extract proper meta-data
-        for (AbstractMap.SimpleImmutableEntry<String, String> item : metaData) {
-            String key = item.getKey();
-            switch (key) {
-                case "Bagging-Date":
-                    builder.addFormDataPart("meta:dc:date", item.getValue());
-                    break;
-                case "Ocrd-Identifier":
-                    builder.addFormDataPart("meta:dc:identifier", item.getValue());
+        if (metaData != null) {
+            for (AbstractMap.SimpleImmutableEntry<String, String> item : metaData) {
+                String key = item.getKey();
+                switch (key) {
+                    case "Bagging-Date":
+                        builder.addFormDataPart("meta:dc:date", item.getValue());
+                        break;
+                    case "Ocrd-Identifier":
+                        builder.addFormDataPart("meta:dc:identifier", item.getValue());
+                }
             }
+        }
+
+        // Set identifier
+        if (pid != null) {
+            builder.addFormDataPart("meta:dc:identifier", pid);
+        }
+
+        // Link with other versions if necessary
+        if (prevPid != null) {
+            builder.addFormDataPart("meta:dc:source", prevPid);
+        }
+        if (nextPid != null) {
+            builder.addFormDataPart("meta:dc:relation", nextPid);
         }
 
         RequestBody requestBody = builder.build();
@@ -347,18 +423,21 @@ public class CdstarService implements ImportService, ExportService {
         }
     }
 
+    private void linkToNextVersion(String archiveId, String txId, String nextPid) throws IOException, ImportException {
+        setArchiveMetaData(archiveId, null, null, txId, null, nextPid);
+    }
+
     @Override
     public byte[] export(String identifier) throws IOException, ImportException {
-        String archiveId = getArchiveIdFromIdentifier(identifier);
+        String archiveId = getArchiveIdFromIdentifier(identifier, onlineProfile);
         return exportArchive(archiveId);
     }
 
-    private String getArchiveIdFromIdentifier(String identifier) throws IOException, ImportException {
+    private String getArchiveIdFromIdentifier(String identifier, String profile) throws IOException, ImportException {
         String fullUrl = url + vault;
 
-        // TODO: search based on the profile
-        // Search for archive with specified identifier (PPN, PID) and has the dc:source value
-        String query = String.format("dcIdentifier:\"%s\" AND profile:default", identifier);
+        // Search for archive with specified identifier (PPN, PID)
+        String query = String.format("dcIdentifier:\"%s\" AND profile:%s", identifier, profile);
 
         // Sort by modified time in descending order
         String order = "-modified";

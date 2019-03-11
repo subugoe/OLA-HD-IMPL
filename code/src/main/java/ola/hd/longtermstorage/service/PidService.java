@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface PidService {
     String createPid(List<AbstractMap.SimpleImmutableEntry<String, String>> data) throws IOException;
-    boolean updatePid(String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> data) throws IOException;
+    void updatePid(String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> data) throws IOException;
+    void appendData(String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> data) throws IOException;
     void deletePid(String pid) throws IOException;
 }

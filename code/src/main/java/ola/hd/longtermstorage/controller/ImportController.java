@@ -169,8 +169,20 @@ public class ImportController {
         String pid = pidService.createPid(data);
 
         if (prev != null) {
-            // TODO: Import a new version of a bag
+            // Import a new version of a bag
             System.out.println("Importing a new version");
+            String finalPrev = prev;
+            executor.submit(() -> {
+                try {
+                    importService.importZipFile(Paths.get(destination), pid, bagInfos, finalPrev);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                } finally {
+                    // Clean up the temp
+                    FileSystemUtils.deleteRecursively(targetFile.getParentFile());
+                }
+            });
         } else {
 
             // Import an individual bag
@@ -178,6 +190,7 @@ public class ImportController {
                 try {
                     importService.importZipFile(Paths.get(destination), pid, bagInfos);
                 } catch (Exception e) {
+                    e.printStackTrace();
                     throw new RuntimeException(e);
                 } finally {
                     // Clean up the temp
