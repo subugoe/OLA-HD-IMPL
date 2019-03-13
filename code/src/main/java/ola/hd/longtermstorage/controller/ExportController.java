@@ -23,7 +23,7 @@ public class ExportController {
         this.exportService = exportService;
     }
 
-    @GetMapping(value = "/export")
+    @GetMapping(value = "/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<Resource> export(@RequestParam("id") String id) throws IOException, ImportException {
         byte[] data = exportService.export(id);
         ByteArrayResource resource = new ByteArrayResource(data);
