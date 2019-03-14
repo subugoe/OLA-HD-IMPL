@@ -2,6 +2,8 @@ package ola.hd.longtermstorage.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
@@ -28,6 +30,11 @@ public class SwaggerConfig {
     @Bean
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
-                .apiInfo(API_INFO);
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("ola.hd.longtermstorage"))
+                .paths(PathSelectors.any())
+                .build()
+                .apiInfo(API_INFO)
+                .useDefaultResponseMessages(false);
     }
 }

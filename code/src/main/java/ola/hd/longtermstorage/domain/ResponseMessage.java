@@ -7,13 +7,14 @@ import org.springframework.http.HttpStatus;
 @ApiModel(description = "The response from the server")
 public class ResponseMessage {
 
-    @ApiModelProperty(notes = "The HTTP status code")
+    @ApiModelProperty(value = "The HTTP status code", example = "201")
     private int httpCode;
 
-    @ApiModelProperty(notes = "The HTTP status")
+    @ApiModelProperty(value = "The HTTP status", example = "CREATED")
     private HttpStatus httpStatus;
 
-    @ApiModelProperty(notes = "The message used to provide more information")
+    @ApiModelProperty(value = "The message used to provide more information",
+            example = "Your data has been uploaded.")
     private String message;
 
     public ResponseMessage(HttpStatus httpStatus, String message) {

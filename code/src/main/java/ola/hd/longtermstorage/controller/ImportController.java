@@ -1,9 +1,12 @@
 package ola.hd.longtermstorage.controller;
 
 import gov.loc.repository.bagit.domain.Bag;
+import gov.loc.repository.bagit.exceptions.*;
 import gov.loc.repository.bagit.reader.BagReader;
 import gov.loc.repository.bagit.verify.BagVerifier;
+import io.swagger.annotations.*;
 import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 import ola.hd.longtermstorage.component.ExecutorWrapper;
 import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.repository.TrackingRepository;
@@ -11,6 +14,7 @@ import ola.hd.longtermstorage.service.ImportService;
 import ola.hd.longtermstorage.service.PidService;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.FileUtils;
@@ -24,13 +28,16 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap;
@@ -38,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Api(description = "This endpoint is used to import a ZIP file into the system")
 @RestController
 public class ImportController {
 
@@ -59,14 +67,33 @@ public class ImportController {
         this.executor = executor;
     }
 
+    @ApiOperation(value = "Import a ZIP file into a system. It may be an independent ZIP, or a new version of another ZIP. " +
+            "In the second case, a PID of the previous ZIP must be provided.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "The ZIP has a valid BagIt structure. The system is saving it to the archive.",
+                    response = ResponseMessage.class,
+                    responseHeaders = {
+                            @ResponseHeader(name = "Location", description = "The PID of the ZIP.", response = String.class)
+                    }),
+            @ApiResponse(code = 400, message = "The ZIP has an invalid BagIt structure.", response = ResponseMessage.class),
+            @ApiResponse(code = 415, message = "The request is not a multipart request.", response = ResponseMessage.class)
+    })
+    @ApiImplicitParams(value = {
+            @ApiImplicitParam(dataType = "__file", name = "file", value = "The file to be imported.", required = true, paramType = "form"),
+            @ApiImplicitParam(dataType = "String", name = "prev", value = "The PID of the previous version", paramType = "form")
+    })
+    @ResponseStatus(value = HttpStatus.CREATED)
     @PostMapping(value = "/bag", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> importData(HttpServletRequest request) throws Exception {
+    public ResponseEntity<?> importData(HttpServletRequest request) throws IOException, FileUploadException, ZipException,
+            MaliciousPathException, UnsupportedAlgorithmException, InvalidBagitFileFormatException, UnparsableVersionException,
+            InvalidPayloadOxumException, MissingBagitFileException, CorruptChecksumException, VerificationException, InterruptedException,
+            MissingPayloadDirectoryException, MissingPayloadManifestException, FileNotInPayloadDirectoryException, URISyntaxException {
 
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
         if (!isMultipart) {
-            return ResponseEntity.badRequest()
-                    .body(new ResponseMessage(HttpStatus.BAD_REQUEST,
-                            "The request must be multipart request"));
+            return new ResponseEntity<>(
+                    new ResponseMessage(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "The request must be multipart request"),
+                    HttpStatus.UNSUPPORTED_MEDIA_TYPE);
         }
 
         // A PID pointing to the previous version
