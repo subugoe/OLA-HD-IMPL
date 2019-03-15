@@ -7,7 +7,9 @@ import ola.hd.longtermstorage.exception.ImportException;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.File;
 import java.io.IOException;
@@ -469,7 +471,15 @@ public class CdstarService implements ImportService, ExportService {
                     ObjectMapper mapper = new ObjectMapper();
                     JsonNode root = mapper.readTree(bodyString);
                     JsonNode hits = root.get("hits");
-                    return hits.get(0).get("id").asText();
+                    JsonNode firstElement = hits.get(0);
+
+                    // Archive found
+                    if (firstElement != null) {
+                        return firstElement.get("id").asText();
+                    }
+
+                    // Archive not found
+                    throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "The archive with identifier " + identifier + " could not be found.");
                 }
             }
 

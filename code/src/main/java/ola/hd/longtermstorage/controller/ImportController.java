@@ -23,13 +23,17 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.FileSystemUtils;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.context.request.ServletWebRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
@@ -38,6 +42,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap;
@@ -70,7 +75,7 @@ public class ImportController {
     @ApiOperation(value = "Import a ZIP file into a system. It may be an independent ZIP, or a new version of another ZIP. " +
             "In the second case, a PID of the previous ZIP must be provided.")
     @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "The ZIP has a valid BagIt structure. The system is saving it to the archive.",
+            @ApiResponse(code = 202, message = "The ZIP has a valid BagIt structure. The system is saving it to the archive.",
                     response = ResponseMessage.class,
                     responseHeaders = {
                             @ResponseHeader(name = "Location", description = "The PID of the ZIP.", response = String.class)
@@ -82,18 +87,13 @@ public class ImportController {
             @ApiImplicitParam(dataType = "__file", name = "file", value = "The file to be imported.", required = true, paramType = "form"),
             @ApiImplicitParam(dataType = "String", name = "prev", value = "The PID of the previous version", paramType = "form")
     })
-    @ResponseStatus(value = HttpStatus.CREATED)
+    @ResponseStatus(value = HttpStatus.ACCEPTED)
     @PostMapping(value = "/bag", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> importData(HttpServletRequest request) throws IOException, FileUploadException, ZipException,
-            MaliciousPathException, UnsupportedAlgorithmException, InvalidBagitFileFormatException, UnparsableVersionException,
-            InvalidPayloadOxumException, MissingBagitFileException, CorruptChecksumException, VerificationException, InterruptedException,
-            MissingPayloadDirectoryException, MissingPayloadManifestException, FileNotInPayloadDirectoryException, URISyntaxException {
+    public ResponseEntity<?> importData(HttpServletRequest request) throws IOException, FileUploadException, URISyntaxException {
 
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
         if (!isMultipart) {
-            return new ResponseEntity<>(
-                    new ResponseMessage(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "The request must be multipart request"),
-                    HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+            throw new HttpClientErrorException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "The request must be multipart request");
         }
 
         // A PID pointing to the previous version
@@ -125,9 +125,11 @@ public class ImportController {
 
                 // More than 1 file is uploaded?
                 if (fileCount > 1) {
-                    return ResponseEntity.badRequest()
-                            .body(new ResponseMessage(HttpStatus.BAD_REQUEST,
-                                    "Only 1 zip file is allow"));
+
+                    // Clean up the temp
+                    FileSystemUtils.deleteRecursively(targetFile.getParentFile());
+
+                    throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Only 1 zip file is allow");
                 }
 
                 // Check file type
@@ -163,25 +165,41 @@ public class ImportController {
             }
         }
 
-        // Extract the zip file
-        ZipFile zipFile = new ZipFile(targetFile);
-        zipFile.extractAll(destination);
+        Bag bag;
+        try {
+            // Extract the zip file
+            ZipFile zipFile = new ZipFile(targetFile);
+            zipFile.extractAll(destination);
 
-        // Validate the bag
-        Path rootDir = Paths.get(destination);
-        BagReader reader = new BagReader();
+            // Validate the bag
+            Path rootDir = Paths.get(destination);
+            BagReader reader = new BagReader();
 
-        // Create a bag from an existing directory
-        Bag bag = reader.read(rootDir);
+            // Create a bag from an existing directory
+            bag = reader.read(rootDir);
 
-        BagVerifier verifier = new BagVerifier();
+            BagVerifier verifier = new BagVerifier();
 
-        if (BagVerifier.canQuickVerify(bag)) {
-            BagVerifier.quicklyVerify(bag);
+            if (BagVerifier.canQuickVerify(bag)) {
+                BagVerifier.quicklyVerify(bag);
+            }
+
+            // Check for the validity and completeness of a bag
+            verifier.isValid(bag, true);
+
+        } catch (NoSuchFileException | MissingPayloadManifestException | UnsupportedAlgorithmException | CorruptChecksumException |
+                MaliciousPathException | InvalidPayloadOxumException | FileNotInPayloadDirectoryException |
+                MissingPayloadDirectoryException | InvalidBagitFileFormatException | InterruptedException |
+                ZipException | UnparsableVersionException | MissingBagitFileException | VerificationException ex) {
+
+            // Clean up the temp
+            FileSystemUtils.deleteRecursively(targetFile.getParentFile());
+
+            // Throw a friendly message to the client
+            String message = "Invalid file input. The uploaded file must be a ZIP file with BagIt structure.";
+            throw new IllegalArgumentException(message, ex);
         }
 
-        // Check for the validity and completeness of a bag
-        verifier.isValid(bag, true);
 
         // Build meta-data for the PID
         List<AbstractMap.SimpleImmutableEntry<String, String>> data = new ArrayList<>();
@@ -202,9 +220,9 @@ public class ImportController {
             executor.submit(() -> {
                 try {
                     importService.importZipFile(Paths.get(destination), pid, bagInfos, finalPrev);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
+                } catch (Exception ex) {
+                    // Log the error
+                    logger.error(ex.getMessage(), ex);
                 } finally {
                     // Clean up the temp
                     FileSystemUtils.deleteRecursively(targetFile.getParentFile());
@@ -216,9 +234,9 @@ public class ImportController {
             executor.submit(() -> {
                 try {
                     importService.importZipFile(Paths.get(destination), pid, bagInfos);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
+                } catch (Exception ex) {
+                    // Log the error
+                    logger.error(ex.getMessage(), ex);
                 } finally {
                     // Clean up the temp
                     FileSystemUtils.deleteRecursively(targetFile.getParentFile());
@@ -228,8 +246,28 @@ public class ImportController {
 
         //trackingRepository.save(info);
 
+        // Put PID in the Location header
         URI uri = new URI(pid);
-        return ResponseEntity.created(uri)
-                .body(new ResponseMessage(HttpStatus.CREATED, "Your data is being processed"));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(uri);
+
+        return ResponseEntity.accepted()
+                .headers(headers)
+                .body(new ResponseMessage(HttpStatus.ACCEPTED, "Your data is being processed"));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex, ServletWebRequest request) {
+
+        // Extract necessary information
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        String message = ex.getMessage();
+        String uri = request.getRequest().getRequestURI();
+
+        // Log the error
+        logger.error(message, ex);
+
+        return ResponseEntity.badRequest()
+                .body(new ResponseMessage(status, message, uri));
     }
 }
