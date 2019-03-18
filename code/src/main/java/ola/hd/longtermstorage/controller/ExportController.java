@@ -5,7 +5,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import ola.hd.longtermstorage.domain.ResponseMessage;
-import ola.hd.longtermstorage.exception.ImportException;
 import ola.hd.longtermstorage.service.ExportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -37,7 +36,7 @@ public class ExportController {
                     response = ResponseMessage.class)
     })
     @GetMapping(value = "/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<Resource> export(@RequestParam("id") String id) throws IOException, ImportException {
+    public ResponseEntity<Resource> export(@RequestParam("id") String id) throws IOException {
         byte[] data = exportService.export(id);
         ByteArrayResource resource = new ByteArrayResource(data);
 

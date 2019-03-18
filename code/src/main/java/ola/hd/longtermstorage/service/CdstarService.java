@@ -3,13 +3,13 @@ package ola.hd.longtermstorage.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
-import ola.hd.longtermstorage.exception.ImportException;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +54,7 @@ public class CdstarService implements ImportService, ExportService {
     }
 
     @Override
-    public void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws IOException, ImportException {
+    public void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws IOException {
 
         String txId = null;
         String onlineArchiveId, offlineArchiveId;
@@ -102,7 +102,7 @@ public class CdstarService implements ImportService, ExportService {
     }
 
     @Override
-    public void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData, String prevPid) throws IOException, ImportException {
+    public void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData, String prevPid) throws IOException {
         String txId = null;
         String onlineArchiveId, offlineArchiveId;
 
@@ -161,7 +161,7 @@ public class CdstarService implements ImportService, ExportService {
         System.out.println("Upload time: " + elapsed + " seconds");
     }
 
-    private String getTransactionId() throws ImportException, IOException {
+    private String getTransactionId() throws IOException {
 
         String transactionUrl = url + "_tx/";
 
@@ -191,11 +191,7 @@ public class CdstarService implements ImportService, ExportService {
             }
 
             // Cannot get the transaction ID? Abort!
-            ImportException exception = new ImportException("Cannot start the upload transaction");
-            exception.setHttpStatusCode(response.code());
-            exception.setHttpMessage(response.message());
-
-            throw exception;
+            throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot start the upload transaction.");
         }
     }
 
@@ -244,13 +240,13 @@ public class CdstarService implements ImportService, ExportService {
                             sendRquest(offlineUrl, txId, file, mimeType);
                             sendRquest(onlineUrl, txId, file, mimeType);
                         }
-                    } catch (ImportException | IOException e) {
+                    } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 });
     }
 
-    private void sendRquest(String url, String txId, File file, String mimeType) throws IOException, ImportException {
+    private void sendRquest(String url, String txId, File file, String mimeType) throws IOException {
         OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()
@@ -265,16 +261,12 @@ public class CdstarService implements ImportService, ExportService {
             if (!response.isSuccessful()) {
 
                 // Something is wrong, throw the exception
-                ImportException exception = new ImportException("Cannot send data to CDSTAR. URL: " + url);
-                exception.setHttpStatusCode(response.code());
-                exception.setHttpMessage(response.message());
-
-                throw exception;
+                throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot send data to CDSTAR. URL: " + url);
             }
         }
     }
 
-    private void commitTransaction(String txId) throws IOException, ImportException {
+    private void commitTransaction(String txId) throws IOException {
 
         String txUrl = url + "_tx/" + txId;
 
@@ -289,16 +281,12 @@ public class CdstarService implements ImportService, ExportService {
             if (!response.isSuccessful()) {
 
                 // Something is wrong here
-                ImportException exception = new ImportException("Cannot commit the transaction");
-                exception.setHttpStatusCode(response.code());
-                exception.setHttpMessage(response.message());
-
-                throw exception;
+                throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot commit the transaction");
             }
         }
     }
 
-    private void rollbackTransaction(String txId) throws IOException, ImportException {
+    private void rollbackTransaction(String txId) throws IOException {
 
         String txUrl = url + "_tx/" + txId;
 
@@ -313,16 +301,12 @@ public class CdstarService implements ImportService, ExportService {
             if (!response.isSuccessful()) {
 
                 // Something is wrong here
-                ImportException exception = new ImportException("Error when rolling back the transaction");
-                exception.setHttpStatusCode(response.code());
-                exception.setHttpMessage(response.message());
-
-                throw exception;
+                throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Error when rolling back the transaction");
             }
         }
     }
 
-    private String createArchive(String txId, boolean isOffline) throws IOException, ImportException {
+    private String createArchive(String txId, boolean isOffline) throws IOException {
         String fullUrl = url + vault;
 
         OkHttpClient client = new OkHttpClient();
@@ -360,16 +344,12 @@ public class CdstarService implements ImportService, ExportService {
             }
 
             // Something is wrong, throw the exception
-            ImportException exception = new ImportException("Cannot create archive");
-            exception.setHttpStatusCode(response.code());
-            exception.setHttpMessage(response.message());
-
-            throw exception;
+            throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot create archive");
         }
     }
 
     private void setArchiveMetaData(String archiveId, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData,
-                                    String pid, String txId, String prevPid, String nextPid) throws IOException, ImportException {
+                                    String pid, String txId, String prevPid, String nextPid) throws IOException {
         String fullUrl = url + vault + "/" + archiveId;
         OkHttpClient client = new OkHttpClient();
 
@@ -416,26 +396,22 @@ public class CdstarService implements ImportService, ExportService {
             if (!response.isSuccessful()) {
 
                 // Something is wrong, throw the exception
-                ImportException exception = new ImportException("Cannot set archive meta-data");
-                exception.setHttpStatusCode(response.code());
-                exception.setHttpMessage(response.message());
-
-                throw exception;
+                throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot set archive meta-data");
             }
         }
     }
 
-    private void linkToNextVersion(String archiveId, String txId, String nextPid) throws IOException, ImportException {
+    private void linkToNextVersion(String archiveId, String txId, String nextPid) throws IOException {
         setArchiveMetaData(archiveId, null, null, txId, null, nextPid);
     }
 
     @Override
-    public byte[] export(String identifier) throws IOException, ImportException {
+    public byte[] export(String identifier) throws IOException {
         String archiveId = getArchiveIdFromIdentifier(identifier, onlineProfile);
         return exportArchive(archiveId);
     }
 
-    private String getArchiveIdFromIdentifier(String identifier, String profile) throws IOException, ImportException {
+    private String getArchiveIdFromIdentifier(String identifier, String profile) throws IOException {
         String fullUrl = url + vault;
 
         // Search for archive with specified identifier (PPN, PID)
@@ -484,15 +460,11 @@ public class CdstarService implements ImportService, ExportService {
             }
 
             // Cannot get the archive ID? Throw the exception
-            ImportException exception = new ImportException("Cannot get the archive from its identifier");
-            exception.setHttpStatusCode(response.code());
-            exception.setHttpMessage(response.message());
-
-            throw exception;
+            throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Error when getting the archive with the identifier " + identifier);
         }
     }
 
-    private byte[] exportArchive(String archiveId) throws IOException, ImportException {
+    private byte[] exportArchive(String archiveId) throws IOException {
         String fullUrl = url + vault + "/" + archiveId;
 
         // Construct the URL
@@ -515,11 +487,7 @@ public class CdstarService implements ImportService, ExportService {
             }
 
             // Cannot get the archive ID? Throw the exception
-            ImportException exception = new ImportException("Cannot export archive");
-            exception.setHttpStatusCode(response.code());
-            exception.setHttpMessage(response.message());
-
-            throw exception;
+            throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot export the archive " + archiveId);
         }
     }
 }

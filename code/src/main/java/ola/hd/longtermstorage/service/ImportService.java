@@ -1,7 +1,5 @@
 package ola.hd.longtermstorage.service;
 
-import ola.hd.longtermstorage.exception.ImportException;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.AbstractMap;
@@ -16,9 +14,8 @@ public interface ImportService {
      * @param pid          The PID which was assigned for this file
      * @param metaData     The list of meta-data of this ZIP
      * @throws IOException     Thrown if something's wrong when connecting to different services
-     * @throws ImportException Thrown if the HTTP Statuses returned from other services are not success
      */
-    void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws IOException, ImportException;
+    void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws IOException;
 
     /**
      * Import a new version of a work
@@ -28,7 +25,6 @@ public interface ImportService {
      * @param metaData     The list of meta-data of this ZIP
      * @param prevPid      The PID of the previous version
      * @throws IOException     Thrown if something's wrong when connecting to different services
-     * @throws ImportException Thrown if the HTTP Statuses returned from other services are not success
      */
-    void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData, String prevPid) throws IOException, ImportException;
+    void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData, String prevPid) throws IOException;
 }

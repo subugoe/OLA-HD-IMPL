@@ -7,7 +7,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.io.IOException;
 import java.util.AbstractMap;
@@ -58,9 +60,10 @@ public class EpicPidService implements PidService {
                     return root.get("epic-pid").asText();
                 }
             }
-        }
 
-        return null;
+            // Something is wrong. Throw exception
+            throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot create a PID.");
+        }
     }
 
     @Override
@@ -78,7 +81,13 @@ public class EpicPidService implements PidService {
                 .put(RequestBody.create(MEDIA_TYPE_JSON, payload))
                 .build();
 
-        client.newCall(request).execute();
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+
+                // Something is wrong. Throw exception
+                throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot update the PID " + pid);
+            }
+        }
     }
 
     @Override
@@ -108,7 +117,13 @@ public class EpicPidService implements PidService {
                 .delete()
                 .build();
 
-        client.newCall(request).execute();
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+
+                // Something is wrong. Throw exception
+                throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot delete the PID " + pid);
+            }
+        }
     }
 
     private List<AbstractMap.SimpleImmutableEntry<String, String>> getPidData(String pid) throws IOException {
@@ -148,6 +163,9 @@ public class EpicPidService implements PidService {
                         }
                     }
                 }
+            } else {
+                // Something is wrong. Throw exception
+                throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot get data of the PID " + pid);
             }
         }
 

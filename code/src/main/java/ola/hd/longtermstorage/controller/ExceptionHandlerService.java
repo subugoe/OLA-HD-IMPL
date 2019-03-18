@@ -18,7 +18,7 @@ public class ExceptionHandlerService extends ResponseEntityExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ExceptionHandlerService.class);
 
-    @ExceptionHandler({HttpClientErrorException.class, HttpServerErrorException.class})
+    @ExceptionHandler({HttpClientErrorException.class})
     public ResponseEntity<?> handleClientException(HttpStatusCodeException ex, ServletWebRequest request) {
 
         // Extract necessary information
@@ -33,7 +33,7 @@ public class ExceptionHandlerService extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, new ResponseMessage(status, message, uri), null, status, request);
     }
 
-    @ExceptionHandler({Exception.class})
+    @ExceptionHandler({Exception.class, HttpServerErrorException.class})
     public ResponseEntity<?> handleException(Exception ex, ServletWebRequest request) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         String message = "A problem occurred while processing your request. Please try again later.";
