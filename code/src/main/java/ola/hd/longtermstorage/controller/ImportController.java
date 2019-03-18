@@ -9,6 +9,8 @@ import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import ola.hd.longtermstorage.component.ExecutorWrapper;
 import ola.hd.longtermstorage.domain.ResponseMessage;
+import ola.hd.longtermstorage.domain.Status;
+import ola.hd.longtermstorage.domain.TrackingInfo;
 import ola.hd.longtermstorage.repository.TrackingRepository;
 import ola.hd.longtermstorage.service.ImportService;
 import ola.hd.longtermstorage.service.PidService;
@@ -73,7 +75,8 @@ public class ImportController {
     }
 
     @ApiOperation(value = "Import a ZIP file into a system. It may be an independent ZIP, or a new version of another ZIP. " +
-            "In the second case, a PID of the previous ZIP must be provided.")
+            "In the second case, a PID of the previous ZIP must be provided.",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiResponses(value = {
             @ApiResponse(code = 202, message = "The ZIP has a valid BagIt structure. The system is saving it to the archive.",
                     response = ResponseMessage.class,
@@ -88,12 +91,22 @@ public class ImportController {
             @ApiImplicitParam(dataType = "String", name = "prev", value = "The PID of the previous version", paramType = "form")
     })
     @ResponseStatus(value = HttpStatus.ACCEPTED)
-    @PostMapping(value = "/bag", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/bag", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> importData(HttpServletRequest request) throws IOException, FileUploadException, URISyntaxException {
+
+        TrackingInfo info = new TrackingInfo("user", Status.PROCESSING, "Processing...", null);
 
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
         if (!isMultipart) {
-            throw new HttpClientErrorException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "The request must be multipart request");
+
+            String message = "The request must be multipart request";
+
+            // Save to the tracking database
+            info.setStatus(Status.FAILED);
+            info.setMessage(message);
+            trackingRepository.save(info);
+
+            throw new HttpClientErrorException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, message);
         }
 
         // A PID pointing to the previous version
@@ -129,22 +142,15 @@ public class ImportController {
                     // Clean up the temp
                     FileSystemUtils.deleteRecursively(targetFile.getParentFile());
 
-                    throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Only 1 zip file is allow");
-                }
+                    String message = "Only 1 zip file is allow";
 
-                // Check file type
-//                try (InputStream uploadedStream = item.openStream()) {
-//
-//                    Tika tika = new Tika();
-//                    String mimeType = tika.detect(uploadedStream);
-//
-//                    // Not a zip file
-//                    if (!mimeType.equals("application/zip")) {
-//                        return ResponseEntity.badRequest()
-//                                .body(new ResponseMessage(HttpStatus.BAD_REQUEST,
-//                                        "The file must be in zip format"));
-//                    }
-//                }
+                    // Save to the tracking database
+                    info.setStatus(Status.FAILED);
+                    info.setMessage(message);
+                    trackingRepository.save(info);
+
+                    throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, message);
+                }
 
                 // Save the file
                 try (InputStream uploadedStream = item.openStream();
@@ -195,8 +201,14 @@ public class ImportController {
             // Clean up the temp
             FileSystemUtils.deleteRecursively(targetFile.getParentFile());
 
-            // Throw a friendly message to the client
             String message = "Invalid file input. The uploaded file must be a ZIP file with BagIt structure.";
+
+            // Save to the tracking database
+            info.setStatus(Status.FAILED);
+            info.setMessage(message);
+            trackingRepository.save(info);
+
+            // Throw a friendly message to the client
             throw new IllegalArgumentException(message, ex);
         }
 
@@ -213,6 +225,9 @@ public class ImportController {
         // Get an empty PID
         String pid = pidService.createPid(data);
 
+        // Store the PID to the tracking database
+        info.setPid(pid);
+
         if (prev != null) {
             // Import a new version of a bag
             System.out.println("Importing a new version");
@@ -220,9 +235,19 @@ public class ImportController {
             executor.submit(() -> {
                 try {
                     importService.importZipFile(Paths.get(destination), pid, bagInfos, finalPrev);
+
+                    // Save success data to the tracking database
+                    info.setStatus(Status.SUCCESS);
+                    info.setMessage("The data has been successfully imported.");
+                    trackingRepository.save(info);
                 } catch (Exception ex) {
                     // Log the error
                     logger.error(ex.getMessage(), ex);
+
+                    // Save the failure data to the tracking database
+                    info.setStatus(Status.FAILED);
+                    info.setMessage(ex.getMessage());
+                    trackingRepository.save(info);
                 } finally {
                     // Clean up the temp
                     FileSystemUtils.deleteRecursively(targetFile.getParentFile());
@@ -234,9 +259,19 @@ public class ImportController {
             executor.submit(() -> {
                 try {
                     importService.importZipFile(Paths.get(destination), pid, bagInfos);
+
+                    // Save success data to the tracking database
+                    info.setStatus(Status.SUCCESS);
+                    info.setMessage("The data has been successfully imported.");
+                    trackingRepository.save(info);
                 } catch (Exception ex) {
                     // Log the error
                     logger.error(ex.getMessage(), ex);
+
+                    // Save the failure data to the tracking database
+                    info.setStatus(Status.FAILED);
+                    info.setMessage(ex.getMessage());
+                    trackingRepository.save(info);
                 } finally {
                     // Clean up the temp
                     FileSystemUtils.deleteRecursively(targetFile.getParentFile());
@@ -244,7 +279,7 @@ public class ImportController {
             });
         }
 
-        //trackingRepository.save(info);
+        trackingRepository.save(info);
 
         // Put PID in the Location header
         URI uri = new URI(pid);

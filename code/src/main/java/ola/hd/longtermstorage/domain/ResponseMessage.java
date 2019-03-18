@@ -1,12 +1,11 @@
 package ola.hd.longtermstorage.domain;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.springframework.http.HttpStatus;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @ApiModel(description = "The response from the server")
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -22,8 +21,7 @@ public class ResponseMessage {
     private String message;
 
     @ApiModelProperty(value = "The time when the request was made")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 
     @ApiModelProperty(value = "The address where the request was sent to")
     private String path;
@@ -32,7 +30,7 @@ public class ResponseMessage {
         this.httpStatus = httpStatus;
         this.message = message;
         this.path = path;
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = Instant.now();
         this.httpCode = httpStatus.value();
     }
 
@@ -40,7 +38,7 @@ public class ResponseMessage {
         this.httpStatus = httpStatus;
         this.message = message;
         this.httpCode = httpStatus.value();
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = Instant.now();
     }
 
     public int getHttpCode() {
@@ -55,7 +53,7 @@ public class ResponseMessage {
         return message;
     }
 
-    public LocalDateTime getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 

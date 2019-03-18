@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.Instant;
 import java.util.Date;
 
 @Document(collection = "tracking")
@@ -16,14 +17,8 @@ public class TrackingInfo {
     // Who perform the action
     private String username;
 
-    // What action is it (e.g. upload/create, update, delete)
-    private Action action;
-
-    // Name of the affected (uploaded, updated, deleted) file
-    private String fileName;
-
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private Date timestamp;
+    //@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private Instant timestamp;
 
     // Status of the action (e.g. processing, success, failed)
     private Status status;
@@ -39,12 +34,12 @@ public class TrackingInfo {
         // this one is protected since it shouldn't be used directly
     }
 
-    public TrackingInfo(String username, Action action, String fileName, Date timestamp, Status status) {
+    public TrackingInfo(String username, Status status, String message, String pid) {
         this.username = username;
-        this.action = action;
-        this.fileName = fileName;
-        this.timestamp = timestamp;
         this.status = status;
+        this.message = message;
+        this.pid = pid;
+        this.timestamp = Instant.now();
     }
 
     public String getId() {
@@ -61,30 +56,6 @@ public class TrackingInfo {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public Action getAction() {
-        return action;
-    }
-
-    public void setAction(Action action) {
-        this.action = action;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public Date getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
     }
 
     public Status getStatus() {
@@ -109,6 +80,14 @@ public class TrackingInfo {
 
     public void setPid(String pid) {
         this.pid = pid;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
     }
 }
 
