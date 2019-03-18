@@ -5,6 +5,8 @@ import gov.loc.repository.bagit.exceptions.*;
 import gov.loc.repository.bagit.reader.BagReader;
 import gov.loc.repository.bagit.verify.BagVerifier;
 import io.swagger.annotations.*;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import ola.hd.longtermstorage.component.ExecutorWrapper;
@@ -47,6 +49,7 @@ import java.net.URISyntaxException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -212,7 +215,6 @@ public class ImportController {
             throw new IllegalArgumentException(message, ex);
         }
 
-
         // Build meta-data for the PID
         List<AbstractMap.SimpleImmutableEntry<String, String>> data = new ArrayList<>();
         data.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", "This will be updated soon"));
@@ -222,8 +224,13 @@ public class ImportController {
         List<AbstractMap.SimpleImmutableEntry<String, String>> bagInfos = bag.getMetadata().getAll();
         data.addAll(bagInfos);
 
+        // Retry policies when a call to another service is failed
+        RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
+                .withDelay(Duration.ofSeconds(10))
+                .withMaxRetries(3);
+
         // Get an empty PID
-        String pid = pidService.createPid(data);
+        String pid = Failsafe.with(retryPolicy).get(() -> pidService.createPid(data));
 
         // Store the PID to the tracking database
         info.setPid(pid);
@@ -234,20 +241,14 @@ public class ImportController {
             String finalPrev = prev;
             executor.submit(() -> {
                 try {
-                    importService.importZipFile(Paths.get(destination), pid, bagInfos, finalPrev);
+                    Failsafe.with(retryPolicy).run(() -> importService.importZipFile(Paths.get(destination), pid, bagInfos, finalPrev));
 
                     // Save success data to the tracking database
                     info.setStatus(Status.SUCCESS);
                     info.setMessage("The data has been successfully imported.");
                     trackingRepository.save(info);
                 } catch (Exception ex) {
-                    // Log the error
-                    logger.error(ex.getMessage(), ex);
-
-                    // Save the failure data to the tracking database
-                    info.setStatus(Status.FAILED);
-                    info.setMessage(ex.getMessage());
-                    trackingRepository.save(info);
+                    handleFailedImport(ex, pid, info);
                 } finally {
                     // Clean up the temp
                     FileSystemUtils.deleteRecursively(targetFile.getParentFile());
@@ -258,20 +259,14 @@ public class ImportController {
             // Import an individual bag
             executor.submit(() -> {
                 try {
-                    importService.importZipFile(Paths.get(destination), pid, bagInfos);
+                    Failsafe.with(retryPolicy).run(() -> importService.importZipFile(Paths.get(destination), pid, bagInfos));
 
                     // Save success data to the tracking database
                     info.setStatus(Status.SUCCESS);
                     info.setMessage("The data has been successfully imported.");
                     trackingRepository.save(info);
                 } catch (Exception ex) {
-                    // Log the error
-                    logger.error(ex.getMessage(), ex);
-
-                    // Save the failure data to the tracking database
-                    info.setStatus(Status.FAILED);
-                    info.setMessage(ex.getMessage());
-                    trackingRepository.save(info);
+                    handleFailedImport(ex, pid, info);
                 } finally {
                     // Clean up the temp
                     FileSystemUtils.deleteRecursively(targetFile.getParentFile());
@@ -289,6 +284,24 @@ public class ImportController {
         return ResponseEntity.accepted()
                 .headers(headers)
                 .body(new ResponseMessage(HttpStatus.ACCEPTED, "Your data is being processed"));
+    }
+
+    private void handleFailedImport(Exception ex, String pid, TrackingInfo info) {
+
+        // Delete the PID
+        try {
+            pidService.deletePid(pid);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Log the error
+        logger.error(ex.getMessage(), ex);
+
+        // Save the failure data to the tracking database
+        info.setStatus(Status.FAILED);
+        info.setMessage(ex.getMessage());
+        trackingRepository.save(info);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

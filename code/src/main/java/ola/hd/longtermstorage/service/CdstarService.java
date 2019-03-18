@@ -57,15 +57,15 @@ public class CdstarService implements ImportService, ExportService {
     public void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws IOException {
 
         String txId = null;
-        String onlineArchiveId, offlineArchiveId;
 
-        long start = System.currentTimeMillis();
         try {
+            long start = System.currentTimeMillis();
+
             // Get the transaction ID
             txId = getTransactionId();
 
-            onlineArchiveId = createArchive(txId, false);
-            offlineArchiveId = createArchive(txId, true);
+            String onlineArchiveId = createArchive(txId, false);
+            String offlineArchiveId = createArchive(txId, true);
 
             uploadData(extractedDir, txId, onlineArchiveId, offlineArchiveId);
 
@@ -73,49 +73,51 @@ public class CdstarService implements ImportService, ExportService {
             setArchiveMetaData(onlineArchiveId, metaData, pid, txId, null, null);
             setArchiveMetaData(offlineArchiveId, metaData, pid, txId, null, null);
 
+            // Update data for the PID
+            List<AbstractMap.SimpleImmutableEntry<String, String>> pidData = new ArrayList<>();
+
+            // Update the online and offline URL
+            pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
+            pidData.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
+
+            // Keep all meta-data from the bag-info.txt
+            pidData.addAll(metaData);
+
+            // Update the PID
+            pidService.updatePid(pid, pidData);
+
             // Commit the transaction
             commitTransaction(txId);
 
-        } catch (Exception e) {
+            long end = System.currentTimeMillis();
+            long elapsed = (end - start) / 1000;
+            System.out.println("Upload time: " + elapsed + " seconds");
+
+        } catch (Exception ex) {
             if (txId != null) {
                 rollbackTransaction(txId);
             }
-            throw e;
+
+            throw ex;
         }
-
-        // Update data for the PID
-        List<AbstractMap.SimpleImmutableEntry<String, String>> pidData = new ArrayList<>();
-
-        // Update the online and offline URL
-        pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
-        pidData.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
-
-        // Keep all meta-data from the bag-info.txt
-        pidData.addAll(metaData);
-
-        // Update the PID
-        pidService.updatePid(pid, pidData);
-
-        long end = System.currentTimeMillis();
-        long elapsed = (end - start) / 1000;
-        System.out.println("Upload time: " + elapsed + " seconds");
     }
 
     @Override
     public void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData, String prevPid) throws IOException {
+
         String txId = null;
-        String onlineArchiveId, offlineArchiveId;
 
-        // Get the online archive of the previous version
-        String prevOnlineArchiveId = getArchiveIdFromIdentifier(prevPid, onlineProfile);
-
-        long start = System.currentTimeMillis();
         try {
+            long start = System.currentTimeMillis();
+
+            // Get the online archive of the previous version
+            String prevOnlineArchiveId = getArchiveIdFromIdentifier(prevPid, onlineProfile);
+
             // Get the transaction ID
             txId = getTransactionId();
 
-            onlineArchiveId = createArchive(txId, false);
-            offlineArchiveId = createArchive(txId, true);
+            String onlineArchiveId = createArchive(txId, false);
+            String offlineArchiveId = createArchive(txId, true);
 
             uploadData(extractedDir, txId, onlineArchiveId, offlineArchiveId);
 
@@ -127,38 +129,39 @@ public class CdstarService implements ImportService, ExportService {
             // to update meta-data of an offline archive
             linkToNextVersion(prevOnlineArchiveId, txId, pid);
 
+            // Update data for the PID
+            List<AbstractMap.SimpleImmutableEntry<String, String>> pidData = new ArrayList<>();
+
+            // Update the online and offline URL
+            pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
+            pidData.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
+            pidData.add(new AbstractMap.SimpleImmutableEntry<>("PREVIOUS-VERSION", prevPid));
+
+            // Keep all meta-data from the bag-info.txt
+            pidData.addAll(metaData);
+
+            // Update the PID of the new ZIP
+            pidService.updatePid(pid, pidData);
+
+            // Update the old PID to link to the new version
+            List<AbstractMap.SimpleImmutableEntry<String, String>> pidAppendedData = new ArrayList<>();
+            pidAppendedData.add(new AbstractMap.SimpleImmutableEntry<>("NEXT-VERSION", pid));
+            pidService.appendData(prevPid, pidAppendedData);
+
+            long end = System.currentTimeMillis();
+            long elapsed = (end - start) / 1000;
+            System.out.println("Upload time: " + elapsed + " seconds");
+
             // Commit the transaction
             commitTransaction(txId);
 
-        } catch (Exception e) {
+        } catch (IOException ex) {
             if (txId != null) {
                 rollbackTransaction(txId);
             }
-            throw e;
+
+            throw ex;
         }
-
-        // Update data for the PID
-        List<AbstractMap.SimpleImmutableEntry<String, String>> pidData = new ArrayList<>();
-
-        // Update the online and offline URL
-        pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
-        pidData.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
-        pidData.add(new AbstractMap.SimpleImmutableEntry<>("PREVIOUS-VERSION", prevPid));
-
-        // Keep all meta-data from the bag-info.txt
-        pidData.addAll(metaData);
-
-        // Update the PID of the new ZIP
-        pidService.updatePid(pid, pidData);
-
-        // Update the old PID to link to the new version
-        List<AbstractMap.SimpleImmutableEntry<String, String>> pidAppendedData = new ArrayList<>();
-        pidAppendedData.add(new AbstractMap.SimpleImmutableEntry<>("NEXT-VERSION", pid));
-        pidService.appendData(prevPid, pidAppendedData);
-
-        long end = System.currentTimeMillis();
-        long elapsed = (end - start) / 1000;
-        System.out.println("Upload time: " + elapsed + " seconds");
     }
 
     private String getTransactionId() throws IOException {
@@ -169,7 +172,7 @@ public class CdstarService implements ImportService, ExportService {
 
         RequestBody txBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("timeout", "60")
+                .addFormDataPart("timeout", "300")
                 .build();
 
         Request request = new Request.Builder()
