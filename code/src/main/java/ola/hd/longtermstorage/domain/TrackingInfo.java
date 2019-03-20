@@ -1,11 +1,10 @@
 package ola.hd.longtermstorage.domain;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.Instant;
-import java.util.Date;
 
 @Document(collection = "tracking")
 public class TrackingInfo {
@@ -27,7 +26,14 @@ public class TrackingInfo {
     private String message;
 
     // The PID of the file
+    @Indexed(unique = true)
     private String pid;
+
+    // PID of the previous version
+    private String previousVersion;
+
+    // PID of the previous version
+    private String nextVersion;
 
     protected TrackingInfo() {
         // no-args constructor required by JPA spec
@@ -88,6 +94,22 @@ public class TrackingInfo {
 
     public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getPreviousVersion() {
+        return previousVersion;
+    }
+
+    public void setPreviousVersion(String previousVersion) {
+        this.previousVersion = previousVersion;
+    }
+
+    public String getNextVersion() {
+        return nextVersion;
+    }
+
+    public void setNextVersion(String nextVersion) {
+        this.nextVersion = nextVersion;
     }
 }
 

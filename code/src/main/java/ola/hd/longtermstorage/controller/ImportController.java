@@ -257,7 +257,15 @@ public class ImportController {
                     // Save success data to the tracking database
                     info.setStatus(Status.SUCCESS);
                     info.setMessage("The data has been successfully imported.");
+                    info.setPreviousVersion(finalPrev);
                     trackingRepository.save(info);
+
+                    // Set Next Version field
+                    TrackingInfo prevInfo = trackingRepository.findByPid(finalPrev);
+                    if (prevInfo != null) {
+                        prevInfo.setNextVersion(pid);
+                        trackingRepository.save(prevInfo);
+                    }
 
                 } catch (Exception ex) {
                     handleFailedImport(ex, pid, info);
