@@ -215,38 +215,50 @@ public class ImportController {
             throw new IllegalArgumentException(message, ex);
         }
 
-        // Build meta-data for the PID
-        List<AbstractMap.SimpleImmutableEntry<String, String>> data = new ArrayList<>();
-        data.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", "This will be updated soon"));
-        data.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", "This will be updated soon"));
-
         // Get meta-data from bag-info.txt
         List<AbstractMap.SimpleImmutableEntry<String, String>> bagInfos = bag.getMetadata().getAll();
-        data.addAll(bagInfos);
 
         // Retry policies when a call to another service is failed
         RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
                 .withDelay(Duration.ofSeconds(10))
                 .withMaxRetries(3);
 
-        // Get an empty PID
-        String pid = Failsafe.with(retryPolicy).get(() -> pidService.createPid(data));
+        // Create a PID with meta-data from bag-info.txt
+        String pid = Failsafe.with(retryPolicy).get(() -> pidService.createPid(bagInfos));
 
         // Store the PID to the tracking database
         info.setPid(pid);
 
         if (prev != null) {
+
             // Import a new version of a bag
-            System.out.println("Importing a new version");
             String finalPrev = prev;
             executor.submit(() -> {
                 try {
-                    Failsafe.with(retryPolicy).run(() -> importService.importZipFile(Paths.get(destination), pid, bagInfos, finalPrev));
+                    // Import files
+                    List<AbstractMap.SimpleImmutableEntry<String, String>> metaData =
+                            Failsafe.with(retryPolicy).get(() -> importService.importZipFile(Paths.get(destination), pid, bagInfos, finalPrev));
+
+                    // Point to the previous version
+                    metaData.add(new AbstractMap.SimpleImmutableEntry<>("PREVIOUS-VERSION", finalPrev));
+
+                    // Meta-data from the bag-info.txt
+                    metaData.addAll(bagInfos);
+
+                    // Use update instead of append to save 1 HTTP call to the PID Service
+                    pidService.updatePid(pid, metaData);
+
+                    // Update the old PID to link to the new version
+                    List<AbstractMap.SimpleImmutableEntry<String, String>> pidAppendedData = new ArrayList<>();
+                    pidAppendedData.add(new AbstractMap.SimpleImmutableEntry<>("NEXT-VERSION", pid));
+                    pidService.appendData(finalPrev, pidAppendedData);
+
 
                     // Save success data to the tracking database
                     info.setStatus(Status.SUCCESS);
                     info.setMessage("The data has been successfully imported.");
                     trackingRepository.save(info);
+
                 } catch (Exception ex) {
                     handleFailedImport(ex, pid, info);
                 } finally {
@@ -259,12 +271,21 @@ public class ImportController {
             // Import an individual bag
             executor.submit(() -> {
                 try {
-                    Failsafe.with(retryPolicy).run(() -> importService.importZipFile(Paths.get(destination), pid, bagInfos));
+                    // Import files
+                    List<AbstractMap.SimpleImmutableEntry<String, String>> metaData =
+                            Failsafe.with(retryPolicy).get(() -> importService.importZipFile(Paths.get(destination), pid, bagInfos));
+
+                    // Meta-data from the bag-info.txt
+                    metaData.addAll(bagInfos);
+
+                    // Use update instead of append to save 1 HTTP call to the PID Service
+                    pidService.updatePid(pid, metaData);
 
                     // Save success data to the tracking database
                     info.setStatus(Status.SUCCESS);
                     info.setMessage("The data has been successfully imported.");
                     trackingRepository.save(info);
+
                 } catch (Exception ex) {
                     handleFailedImport(ex, pid, info);
                 } finally {

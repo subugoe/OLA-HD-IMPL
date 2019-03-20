@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.apache.tika.Tika;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -46,15 +45,10 @@ public class CdstarService implements ImportService, ExportService {
     @Value("${offline.mimeTypes}")
     private String offlineMimeTypes;
 
-    private final PidService pidService;
-
-    @Autowired
-    public CdstarService(PidService pidService) {
-        this.pidService = pidService;
-    }
-
     @Override
-    public void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws IOException {
+    public List<AbstractMap.SimpleImmutableEntry<String, String>> importZipFile(Path extractedDir,
+                                                                                String pid,
+                                                                                List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws IOException {
 
         String txId = null;
 
@@ -73,18 +67,10 @@ public class CdstarService implements ImportService, ExportService {
             setArchiveMetaData(onlineArchiveId, metaData, pid, txId, null, null);
             setArchiveMetaData(offlineArchiveId, metaData, pid, txId, null, null);
 
-            // Update data for the PID
-            List<AbstractMap.SimpleImmutableEntry<String, String>> pidData = new ArrayList<>();
-
-            // Update the online and offline URL
-            pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
-            pidData.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
-
-            // Keep all meta-data from the bag-info.txt
-            pidData.addAll(metaData);
-
-            // Update the PID
-            pidService.updatePid(pid, pidData);
+            // Meta-data to return
+            List<AbstractMap.SimpleImmutableEntry<String, String>> results = new ArrayList<>();
+            results.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
+            results.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
 
             // Commit the transaction
             commitTransaction(txId);
@@ -93,6 +79,7 @@ public class CdstarService implements ImportService, ExportService {
             long elapsed = (end - start) / 1000;
             System.out.println("Upload time: " + elapsed + " seconds");
 
+            return results;
         } catch (Exception ex) {
             if (txId != null) {
                 rollbackTransaction(txId);
@@ -103,7 +90,9 @@ public class CdstarService implements ImportService, ExportService {
     }
 
     @Override
-    public void importZipFile(Path extractedDir, String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData, String prevPid) throws IOException {
+    public List<AbstractMap.SimpleImmutableEntry<String, String>> importZipFile(Path extractedDir, String pid,
+                                                                                List<AbstractMap.SimpleImmutableEntry<String, String>> metaData,
+                                                                                String prevPid) throws IOException {
 
         String txId = null;
 
@@ -129,24 +118,10 @@ public class CdstarService implements ImportService, ExportService {
             // to update meta-data of an offline archive
             linkToNextVersion(prevOnlineArchiveId, txId, pid);
 
-            // Update data for the PID
-            List<AbstractMap.SimpleImmutableEntry<String, String>> pidData = new ArrayList<>();
-
-            // Update the online and offline URL
-            pidData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
-            pidData.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
-            pidData.add(new AbstractMap.SimpleImmutableEntry<>("PREVIOUS-VERSION", prevPid));
-
-            // Keep all meta-data from the bag-info.txt
-            pidData.addAll(metaData);
-
-            // Update the PID of the new ZIP
-            pidService.updatePid(pid, pidData);
-
-            // Update the old PID to link to the new version
-            List<AbstractMap.SimpleImmutableEntry<String, String>> pidAppendedData = new ArrayList<>();
-            pidAppendedData.add(new AbstractMap.SimpleImmutableEntry<>("NEXT-VERSION", pid));
-            pidService.appendData(prevPid, pidAppendedData);
+            // Meta-data to return
+            List<AbstractMap.SimpleImmutableEntry<String, String>> results = new ArrayList<>();
+            results.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
+            results.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
 
             long end = System.currentTimeMillis();
             long elapsed = (end - start) / 1000;
@@ -154,6 +129,8 @@ public class CdstarService implements ImportService, ExportService {
 
             // Commit the transaction
             commitTransaction(txId);
+
+            return results;
 
         } catch (IOException ex) {
             if (txId != null) {
@@ -218,7 +195,6 @@ public class CdstarService implements ImportService, ExportService {
                     try {
 
                         // Try to figure out the correct MIME type
-                        //mimeType = Files.probeContentType(path);
                         mimeType = tika.detect(path);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
