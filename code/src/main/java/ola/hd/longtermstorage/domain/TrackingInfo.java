@@ -1,7 +1,6 @@
 package ola.hd.longtermstorage.domain;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -26,7 +25,6 @@ public class TrackingInfo {
     private String message;
 
     // The PID of the file
-    @Indexed(unique = true)
     private String pid;
 
     // PID of the previous version
