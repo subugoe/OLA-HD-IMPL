@@ -381,6 +381,10 @@ public class CdstarService implements ImportService, ExportService {
     }
 
     private void linkToNextVersion(String archiveId, String txId, String nextPid) throws IOException {
+
+        // TODO: get the current meta:dc:relation
+        //  append new nextPid
+
         setArchiveMetaData(archiveId, null, null, txId, null, nextPid);
     }
 

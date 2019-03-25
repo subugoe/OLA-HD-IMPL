@@ -4,6 +4,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document(collection = "tracking")
 public class TrackingInfo {
@@ -31,7 +33,7 @@ public class TrackingInfo {
     private String previousVersion;
 
     // PID of the previous version
-    private String nextVersion;
+    private List<String> nextVersion;
 
     protected TrackingInfo() {
         // no-args constructor required by JPA spec
@@ -44,6 +46,13 @@ public class TrackingInfo {
         this.message = message;
         this.pid = pid;
         this.timestamp = Instant.now();
+    }
+
+    public void addNextVersion(String nextVersion) {
+        if (this.nextVersion == null) {
+            this.nextVersion = new ArrayList<>();
+        }
+        this.nextVersion.add(nextVersion);
     }
 
     public String getId() {
@@ -102,11 +111,11 @@ public class TrackingInfo {
         this.previousVersion = previousVersion;
     }
 
-    public String getNextVersion() {
+    public List<String> getNextVersion() {
         return nextVersion;
     }
 
-    public void setNextVersion(String nextVersion) {
+    public void setNextVersion(List<String> nextVersion) {
         this.nextVersion = nextVersion;
     }
 }
