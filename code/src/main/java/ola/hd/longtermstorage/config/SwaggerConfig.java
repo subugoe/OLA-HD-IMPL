@@ -11,6 +11,7 @@ import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 @Configuration
 @EnableSwagger2
@@ -35,6 +36,7 @@ public class SwaggerConfig {
                 .paths(PathSelectors.any())
                 .build()
                 .apiInfo(API_INFO)
+                .protocols(Set.of("http"))
                 .useDefaultResponseMessages(false);
     }
 }
