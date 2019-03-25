@@ -102,7 +102,7 @@ public class ImportController {
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
         if (!isMultipart) {
 
-            String message = "The request must be multipart request";
+            String message = "The request must be multipart request.";
 
             // Save to the tracking database
             info.setStatus(Status.FAILED);
@@ -145,7 +145,7 @@ public class ImportController {
                     // Clean up the temp
                     FileSystemUtils.deleteRecursively(targetFile.getParentFile());
 
-                    String message = "Only 1 zip file is allow";
+                    String message = "Only 1 zip file is allow.";
 
                     // Save to the tracking database
                     info.setStatus(Status.FAILED);
@@ -172,6 +172,19 @@ public class ImportController {
                     }
                 }
             }
+        }
+
+        // No file is uploaded?
+        if (fileCount == 0) {
+            String message = "The request must contain 1 zip file.";
+
+            // Save to the tracking database
+            info.setStatus(Status.FAILED);
+            info.setMessage(message);
+            trackingRepository.save(info);
+
+            // Throw a friendly message to the client
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, message);
         }
 
         Bag bag;
@@ -312,7 +325,7 @@ public class ImportController {
 
         return ResponseEntity.accepted()
                 .headers(headers)
-                .body(new ResponseMessage(HttpStatus.ACCEPTED, "Your data is being processed"));
+                .body(new ResponseMessage(HttpStatus.ACCEPTED, "Your data is being processed."));
     }
 
     private void handleFailedImport(Exception ex, String pid, TrackingInfo info) {
