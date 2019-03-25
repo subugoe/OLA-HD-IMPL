@@ -24,6 +24,7 @@ import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,11 +119,11 @@ public class ImportController {
         // For a unique directory name for each uploaded file
         UUID uuid = UUID.randomUUID();
 
-        // Save the uploaded file to the temp folder
-        File targetFile = new File("upload-temp" + File.separator + uuid + File.separator + "temp.zip");
+        // Temporary directory
+        String tempDir = "upload-temp" + File.separator + uuid;
 
-        // Where to extract the file
-        String destination = targetFile.getParent() + File.separator + FilenameUtils.getBaseName(targetFile.getName());
+        // The uploaded file
+        File targetFile = null;
 
         // Make sure that there is only 1 file uploaded
         int fileCount = 0;
@@ -137,13 +138,19 @@ public class ImportController {
             // Is it a file?
             if (!item.isFormField()) {
 
+                // Get file name
+                String fileName = item.getName();
+
+                // Save the uploaded file to the temp folder
+                targetFile = new File(tempDir + File.separator + fileName);
+
                 fileCount++;
 
                 // More than 1 file is uploaded?
                 if (fileCount > 1) {
 
                     // Clean up the temp
-                    FileSystemUtils.deleteRecursively(targetFile.getParentFile());
+                    FileSystemUtils.deleteRecursively(new File(tempDir));
 
                     String message = "Only 1 zip file is allow.";
 
@@ -175,7 +182,8 @@ public class ImportController {
         }
 
         // No file is uploaded?
-        if (fileCount == 0) {
+        if (targetFile == null) {
+
             String message = "The request must contain 1 zip file.";
 
             // Save to the tracking database
@@ -187,9 +195,32 @@ public class ImportController {
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, message);
         }
 
+        // Not a ZIP file?
+        Tika tika = new Tika();
+        String mimeType = tika.detect(targetFile);
+        if (!mimeType.equals("application/zip")) {
+
+            // Clean up the temp
+            FileSystemUtils.deleteRecursively(new File(tempDir));
+
+            String message = "The file must be in the ZIP format";
+
+            // Save to the tracking database
+            info.setStatus(Status.FAILED);
+            info.setMessage(message);
+            trackingRepository.save(info);
+
+            // Throw a friendly message to the client
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, message);
+        }
+
+        // Where to extract the file
+        String destination = tempDir + File.separator + FilenameUtils.getBaseName(targetFile.getName());
+
         Bag bag;
         try {
             // Extract the zip file
+            System.out.println(destination);
             ZipFile zipFile = new ZipFile(targetFile);
             zipFile.extractAll(destination);
 
@@ -215,7 +246,7 @@ public class ImportController {
                 ZipException | UnparsableVersionException | MissingBagitFileException | VerificationException ex) {
 
             // Clean up the temp
-            FileSystemUtils.deleteRecursively(targetFile.getParentFile());
+            FileSystemUtils.deleteRecursively(new File(tempDir));
 
             String message = "Invalid file input. The uploaded file must be a ZIP file with BagIt structure.";
 
@@ -284,7 +315,7 @@ public class ImportController {
                     handleFailedImport(ex, pid, info);
                 } finally {
                     // Clean up the temp
-                    FileSystemUtils.deleteRecursively(targetFile.getParentFile());
+                    FileSystemUtils.deleteRecursively(new File(tempDir));
                 }
             });
         } else {
@@ -311,7 +342,7 @@ public class ImportController {
                     handleFailedImport(ex, pid, info);
                 } finally {
                     // Clean up the temp
-                    FileSystemUtils.deleteRecursively(targetFile.getParentFile());
+                    FileSystemUtils.deleteRecursively(new File(tempDir));
                 }
             });
         }
