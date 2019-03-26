@@ -1,4 +1,4 @@
-FROM java:openjdk-8
+FROM openjdk:11-stretch
 
 ARG app_env
 ENV APP_ENV $app_env
