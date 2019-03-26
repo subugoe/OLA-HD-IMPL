@@ -328,14 +328,14 @@ public class CdstarService implements ImportService, ExportService {
     }
 
     private void setArchiveMetaData(String archiveId, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData,
-                                    String pid, String txId, String prevPid, String nextPid) throws IOException {
+                                    String pid, String txId, String prevPid, List<String> nextVersions) throws IOException {
         String fullUrl = url + vault + "/" + archiveId;
         OkHttpClient client = new OkHttpClient();
 
         MultipartBody.Builder builder = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM);
 
-        // Extract proper meta-data
+        // Extract proper meta-data from bagit-info.txt
         if (metaData != null) {
             for (AbstractMap.SimpleImmutableEntry<String, String> item : metaData) {
                 String key = item.getKey();
@@ -358,8 +358,10 @@ public class CdstarService implements ImportService, ExportService {
         if (prevPid != null) {
             builder.addFormDataPart("meta:dc:source", prevPid);
         }
-        if (nextPid != null) {
-            builder.addFormDataPart("meta:dc:relation", nextPid);
+        if (nextVersions != null) {
+            for (String nextVersion : nextVersions) {
+                builder.addFormDataPart("meta:dc:relation", nextVersion);
+            }
         }
 
         RequestBody requestBody = builder.build();
@@ -382,10 +384,54 @@ public class CdstarService implements ImportService, ExportService {
 
     private void linkToNextVersion(String archiveId, String txId, String nextPid) throws IOException {
 
-        // TODO: get the current meta:dc:relation
-        //  append new nextPid
+        // Get the list of current next version (meta:dc:relation)
+        List<String> nextVersions = getCurrentNextVersions(archiveId, txId);
 
-        setArchiveMetaData(archiveId, null, null, txId, null, nextPid);
+        // Add another next version
+        nextVersions.add(nextPid);
+
+        setArchiveMetaData(archiveId, null, null, txId, null, nextVersions);
+    }
+
+    private List<String> getCurrentNextVersions(String archiveId, String txId) throws IOException {
+
+        List<String> results = new ArrayList<>();
+        String fullUrl = url + vault + "/" + archiveId + "?meta";
+
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(fullUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .addHeader("X-Transaction", txId)
+                .get()
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                if (response.body() != null) {
+
+                    // Parse the returned JSON
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode root = mapper.readTree(response.body().string());
+
+                    // Get the array of the dc:relation
+                    JsonNode relations = root.get("dc:relation");
+
+                    // There is no relation, return empty list
+                    if (relations == null) {
+                        return results;
+                    }
+
+                    for (JsonNode item : relations) {
+                        results.add(item.asText());
+                    }
+                    return results;
+                }
+            }
+
+            // Cannot get the archive meta-data? Throw the exception
+            throw new HttpServerErrorException(HttpStatus.valueOf(response.code()),
+                    "Error when getting the archive meta-data with the identifier " + archiveId);
+        }
     }
 
     @Override
