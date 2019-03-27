@@ -12,10 +12,10 @@ import static org.awaitility.Awaitility.await;
 
 public class MutexFactoryTests {
 
-    private final int THREAD_COUNT = 4;
+    private final int THREAD_COUNT = 16;
 
     @Test
-    public void testSingleKey() {
+    public void singleKeyTest() {
         MutexFactory<String> mutexFactory = new MutexFactory<>();
         String id = UUID.randomUUID().toString();
         final int[] count = {0};
@@ -30,5 +30,25 @@ public class MutexFactoryTests {
         await().atMost(5, TimeUnit.SECONDS)
                 .until(() -> count[0] == THREAD_COUNT);
         Assert.assertEquals(count[0], THREAD_COUNT);
+    }
+
+    @Test
+    public void doubleKeyTest() {
+        MutexFactory<Integer> mutexFactory = new MutexFactory<>();
+        final int[] count = {0, 0};
+
+        IntStream.range(0, THREAD_COUNT)
+                .parallel()
+                .forEach(i -> {
+                    int index = i % 2;
+                    synchronized (mutexFactory.getMutex(index)) {
+                        count[index]++;
+                    }
+                });
+        int expected = THREAD_COUNT / 2;
+        await().atMost(5, TimeUnit.SECONDS)
+                .until(() -> count[0] == expected  && count[1] == expected);
+        Assert.assertEquals(count[0], expected);
+        Assert.assertEquals(count[1], expected);
     }
 }
