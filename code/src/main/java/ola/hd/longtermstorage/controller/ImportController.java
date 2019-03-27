@@ -10,6 +10,7 @@ import net.jodah.failsafe.RetryPolicy;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import ola.hd.longtermstorage.component.ExecutorWrapper;
+import ola.hd.longtermstorage.component.MutexFactory;
 import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.domain.Status;
 import ola.hd.longtermstorage.domain.TrackingInfo;
@@ -70,12 +71,16 @@ public class ImportController {
 
     private final ExecutorWrapper executor;
 
+    private MutexFactory<String> mutexFactory;
+
     @Autowired
-    public ImportController(ImportService importService, TrackingRepository trackingRepository, PidService pidService, ExecutorWrapper executor) {
+    public ImportController(ImportService importService, TrackingRepository trackingRepository, PidService pidService,
+                            ExecutorWrapper executor, MutexFactory<String> mutexFactory) {
         this.importService = importService;
         this.trackingRepository = trackingRepository;
         this.pidService = pidService;
         this.executor = executor;
+        this.mutexFactory = mutexFactory;
     }
 
     @ApiOperation(value = "Import a ZIP file into a system. It may be an independent ZIP, or a new version of another ZIP. " +
@@ -220,7 +225,6 @@ public class ImportController {
         Bag bag;
         try {
             // Extract the zip file
-            System.out.println(destination);
             ZipFile zipFile = new ZipFile(targetFile);
             zipFile.extractAll(destination);
 
@@ -304,11 +308,15 @@ public class ImportController {
                     info.setPreviousVersion(finalPrev);
                     trackingRepository.save(info);
 
-                    // Set Next Version field
-                    TrackingInfo prevInfo = trackingRepository.findByPid(finalPrev);
-                    if (prevInfo != null) {
-                        prevInfo.addNextVersion(pid);
-                        trackingRepository.save(prevInfo);
+                    // Execute sequentially if it tries to append to the same document
+                    synchronized (mutexFactory.getMutex(finalPrev)) {
+
+                        // Set Next Version field
+                        TrackingInfo prevInfo = trackingRepository.findByPid(finalPrev);
+                        if (prevInfo != null) {
+                            prevInfo.addNextVersion(pid);
+                            trackingRepository.save(prevInfo);
+                        }
                     }
 
                 } catch (Exception ex) {

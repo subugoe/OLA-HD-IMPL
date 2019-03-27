@@ -3,7 +3,9 @@ package ola.hd.longtermstorage.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
+import ola.hd.longtermstorage.component.MutexFactory;
 import org.apache.tika.Tika;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -45,6 +47,13 @@ public class CdstarService implements ImportService, ExportService {
     @Value("${offline.mimeTypes}")
     private String offlineMimeTypes;
 
+    private final MutexFactory<String> mutexFactory;
+
+    @Autowired
+    public CdstarService(MutexFactory<String> mutexFactory) {
+        this.mutexFactory = mutexFactory;
+    }
+
     @Override
     public List<AbstractMap.SimpleImmutableEntry<String, String>> importZipFile(Path extractedDir,
                                                                                 String pid,
@@ -53,8 +62,6 @@ public class CdstarService implements ImportService, ExportService {
         String txId = null;
 
         try {
-            long start = System.currentTimeMillis();
-
             // Get the transaction ID
             txId = getTransactionId();
 
@@ -75,10 +82,6 @@ public class CdstarService implements ImportService, ExportService {
             // Commit the transaction
             commitTransaction(txId);
 
-            long end = System.currentTimeMillis();
-            long elapsed = (end - start) / 1000;
-            System.out.println("Upload time: " + elapsed + " seconds");
-
             return results;
         } catch (Exception ex) {
             if (txId != null) {
@@ -97,8 +100,6 @@ public class CdstarService implements ImportService, ExportService {
         String txId = null;
 
         try {
-            long start = System.currentTimeMillis();
-
             // Get the online archive of the previous version
             String prevOnlineArchiveId = getArchiveIdFromIdentifier(prevPid, onlineProfile);
 
@@ -122,10 +123,6 @@ public class CdstarService implements ImportService, ExportService {
             List<AbstractMap.SimpleImmutableEntry<String, String>> results = new ArrayList<>();
             results.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
             results.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
-
-            long end = System.currentTimeMillis();
-            long elapsed = (end - start) / 1000;
-            System.out.println("Upload time: " + elapsed + " seconds");
 
             // Commit the transaction
             commitTransaction(txId);
@@ -384,13 +381,17 @@ public class CdstarService implements ImportService, ExportService {
 
     private void linkToNextVersion(String archiveId, String txId, String nextPid) throws IOException {
 
-        // Get the list of current next version (meta:dc:relation)
-        List<String> nextVersions = getCurrentNextVersions(archiveId, txId);
+        // Execute sequentially if it tries to append to the same archive
+        synchronized (mutexFactory.getMutex(archiveId)) {
 
-        // Add another next version
-        nextVersions.add(nextPid);
+            // Get the list of current next version (meta:dc:relation)
+            List<String> nextVersions = getCurrentNextVersions(archiveId, txId);
 
-        setArchiveMetaData(archiveId, null, null, txId, null, nextVersions);
+            // Add another next version
+            nextVersions.add(nextPid);
+
+            setArchiveMetaData(archiveId, null, null, txId, null, nextVersions);
+        }
     }
 
     private List<String> getCurrentNextVersions(String archiveId, String txId) throws IOException {

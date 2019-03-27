@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import okhttp3.*;
+import ola.hd.longtermstorage.component.MutexFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,7 +33,14 @@ public class EpicPidService implements PidService {
     @Value("${epic.url}")
     private String url;
 
+    private final MutexFactory<String> mutexFactory;
+
     private static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json");
+
+    @Autowired
+    public EpicPidService(MutexFactory<String> mutexFactory) {
+        this.mutexFactory = mutexFactory;
+    }
 
     @Override
     public String createPid(List<AbstractMap.SimpleImmutableEntry<String, String>> data) throws IOException {
@@ -93,14 +102,18 @@ public class EpicPidService implements PidService {
     @Override
     public void appendData(String pid, List<AbstractMap.SimpleImmutableEntry<String, String>> data) throws IOException {
 
-        // Get current data of the PID
-        List<AbstractMap.SimpleImmutableEntry<String, String>> pidData = getPidData(pid);
+        // Execute sequentially if it tries to append to the same PID
+        synchronized (mutexFactory.getMutex(pid)) {
 
-        // Append new data
-        pidData.addAll(data);
+            // Get current data of the PID
+            List<AbstractMap.SimpleImmutableEntry<String, String>> pidData = getPidData(pid);
 
-        // Update the PID
-        updatePid(pid, pidData);
+            // Append new data
+            pidData.addAll(data);
+
+            // Update the PID
+            updatePid(pid, pidData);
+        }
     }
 
     @Override
