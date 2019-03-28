@@ -74,13 +74,13 @@ public class CdstarService implements ImportService, ExportService {
             setArchiveMetaData(onlineArchiveId, metaData, pid, txId, null, null);
             setArchiveMetaData(offlineArchiveId, metaData, pid, txId, null, null);
 
+            // Commit the transaction
+            commitTransaction(txId);
+
             // Meta-data to return
             List<AbstractMap.SimpleImmutableEntry<String, String>> results = new ArrayList<>();
             results.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
             results.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
-
-            // Commit the transaction
-            commitTransaction(txId);
 
             return results;
         } catch (Exception ex) {
@@ -119,13 +119,13 @@ public class CdstarService implements ImportService, ExportService {
             // to update meta-data of an offline archive
             linkToNextVersion(prevOnlineArchiveId, txId, pid);
 
+            // Commit the transaction
+            commitTransaction(txId);
+
             // Meta-data to return
             List<AbstractMap.SimpleImmutableEntry<String, String>> results = new ArrayList<>();
             results.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
             results.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
-
-            // Commit the transaction
-            commitTransaction(txId);
 
             return results;
 
