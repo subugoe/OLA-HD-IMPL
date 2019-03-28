@@ -29,6 +29,7 @@ import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -277,6 +278,11 @@ public class ImportController {
         // Store the PID to the tracking database
         info.setPid(pid);
 
+        // Build the export URL
+        ControllerLinkBuilder linkBuilder = ControllerLinkBuilder.linkTo(
+                ControllerLinkBuilder.methodOn(ExportController.class).export(pid));
+        String exportUrl = linkBuilder.toString();
+
         if (prev != null) {
 
             // Import a new version of a bag
@@ -292,6 +298,9 @@ public class ImportController {
 
                     // Meta-data from the bag-info.txt
                     metaData.addAll(bagInfos);
+
+                    // The export URL
+                    metaData.add(new AbstractMap.SimpleImmutableEntry<>("URL", exportUrl));
 
                     // Use update instead of append to save 1 HTTP call to the PID Service
                     pidService.updatePid(pid, metaData);
@@ -337,6 +346,9 @@ public class ImportController {
 
                     // Meta-data from the bag-info.txt
                     metaData.addAll(bagInfos);
+
+                    // The export URL
+                    metaData.add(new AbstractMap.SimpleImmutableEntry<>("URL", exportUrl));
 
                     // Use update instead of append to save 1 HTTP call to the PID Service
                     pidService.updatePid(pid, metaData);
