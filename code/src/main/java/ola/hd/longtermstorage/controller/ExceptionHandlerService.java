@@ -40,7 +40,7 @@ public class ExceptionHandlerService extends ResponseEntityExceptionHandler {
         String uri = request.getRequest().getRequestURI();
 
         // Log the error
-        logger.error(message, ex);
+        logger.error(ex.getMessage(), ex);
 
         // Let the parent process further
         return handleExceptionInternal(ex, new ResponseMessage(status, message, uri), null, status, request);
