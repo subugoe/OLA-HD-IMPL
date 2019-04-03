@@ -2,7 +2,7 @@ package ola.hd.longtermstorage.service;
 
 import ola.hd.longtermstorage.domain.User;
 import ola.hd.longtermstorage.domain.UserDetailsImpl;
-import ola.hd.longtermstorage.repository.UserRepository;
+import ola.hd.longtermstorage.repository.ldap.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

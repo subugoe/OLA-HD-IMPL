@@ -14,7 +14,7 @@ import ola.hd.longtermstorage.component.MutexFactory;
 import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.domain.Status;
 import ola.hd.longtermstorage.domain.TrackingInfo;
-import ola.hd.longtermstorage.repository.TrackingRepository;
+import ola.hd.longtermstorage.repository.mongo.TrackingRepository;
 import ola.hd.longtermstorage.service.ImportService;
 import ola.hd.longtermstorage.service.PidService;
 import org.apache.commons.fileupload.FileItemIterator;

@@ -1,4 +1,4 @@
-package ola.hd.longtermstorage.repository;
+package ola.hd.longtermstorage.repository.mongo;
 
 import ola.hd.longtermstorage.domain.TrackingInfo;
 import org.springframework.data.mongodb.repository.MongoRepository;

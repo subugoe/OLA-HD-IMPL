@@ -1,4 +1,4 @@
-package ola.hd.longtermstorage.repository;
+package ola.hd.longtermstorage.repository.ldap;
 
 import ola.hd.longtermstorage.domain.User;
 import org.springframework.data.ldap.repository.LdapRepository;
