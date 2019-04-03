@@ -52,6 +52,7 @@ import java.net.URISyntaxException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Principal;
 import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -102,9 +103,10 @@ public class ImportController {
     })
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     @PostMapping(value = "/bag", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> importData(HttpServletRequest request) throws IOException, FileUploadException, URISyntaxException {
+    public ResponseEntity<?> importData(HttpServletRequest request, Principal principal) throws IOException, FileUploadException, URISyntaxException {
 
-        TrackingInfo info = new TrackingInfo("user", Status.PROCESSING, "Processing...", null);
+        String username = principal.getName();
+        TrackingInfo info = new TrackingInfo(username, Status.PROCESSING, "Processing...", null);
 
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
         if (!isMultipart) {
