@@ -10,7 +10,7 @@ import javax.naming.Name;
         base = "ou=people",
         objectClasses = {"inetOrgPerson", "organizationalPerson", "person", "top"}
 )
-public class User {
+public class LdapUser {
 
     @Id
     private Name id;

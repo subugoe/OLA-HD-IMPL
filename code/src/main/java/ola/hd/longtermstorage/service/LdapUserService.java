@@ -1,32 +1,35 @@
 package ola.hd.longtermstorage.service;
 
-import ola.hd.longtermstorage.domain.User;
-import ola.hd.longtermstorage.domain.UserDetailsImpl;
-import ola.hd.longtermstorage.repository.ldap.UserRepository;
+import ola.hd.longtermstorage.domain.LdapUser;
+import ola.hd.longtermstorage.repository.ldap.LdapUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Service
 public class LdapUserService implements UserDetailsService {
 
-    private UserRepository userRepository;
+    private LdapUserRepository ldapUserRepository;
 
     @Autowired
-    public LdapUserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public LdapUserService(LdapUserRepository ldapUserRepository) {
+        this.ldapUserRepository = ldapUserRepository;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
+        LdapUser ldapUser = ldapUserRepository.findByUsername(username);
 
-        if (user == null) {
+        if (ldapUser == null) {
             throw new UsernameNotFoundException(username);
         }
 
-        return new UserDetailsImpl(user);
+        //return new UserDetailsImpl(ldapUser);
+        return new User(ldapUser.getUsername(), ldapUser.getPassword(), new ArrayList<>());
     }
 }

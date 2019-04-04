@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
@@ -41,6 +42,22 @@ public class ExceptionHandlerService extends ResponseEntityExceptionHandler {
 
         // Log the error
         logger.error(ex.getMessage(), ex);
+
+        // Let the parent process further
+        return handleExceptionInternal(ex, new ResponseMessage(status, message, uri), null, status, request);
+    }
+
+    @ExceptionHandler({AuthenticationException.class})
+    public ResponseEntity<?> handleAuthenticationException(AuthenticationException ex, ServletWebRequest request) {
+
+        // Extract necessary information
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        String message = ex.getMessage();
+        String uri = request.getRequest().getRequestURI();
+
+        // TODO: DEBUG
+        System.out.println("In controller advice");
+        System.out.println(message);
 
         // Let the parent process further
         return handleExceptionInternal(ex, new ResponseMessage(status, message, uri), null, status, request);
