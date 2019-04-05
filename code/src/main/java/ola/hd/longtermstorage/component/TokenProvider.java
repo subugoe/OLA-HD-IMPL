@@ -1,10 +1,8 @@
 package ola.hd.longtermstorage.component;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.*;
 import ola.hd.longtermstorage.utils.SecurityConstants;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -66,11 +64,10 @@ public class TokenProvider {
         try {
             Jwts.parser().setSigningKey(SecurityConstants.SECRET).parseClaimsJws(token);
             return true;
-        } catch (SignatureException ex) {
+        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException | SignatureException |
+                IllegalArgumentException ex) {
 
-            // TODO: for debug only
-            ex.printStackTrace();
-            return false;
+            throw new BadCredentialsException(ex.getMessage(), ex);
         }
     }
 }

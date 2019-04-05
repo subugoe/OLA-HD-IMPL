@@ -1,9 +1,7 @@
 package ola.hd.longtermstorage.filter;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import ola.hd.longtermstorage.component.TokenProvider;
 import ola.hd.longtermstorage.utils.SecurityConstants;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -48,14 +46,12 @@ public class JwtFilter extends GenericFilterBean {
             // Remove the authentication after the request to remain stateless
             SecurityContextHolder.clearContext();
 
-        } catch (ExpiredJwtException ex) {
+        } catch (Exception ex) {
 
-            // TODO: for debug only
-            ex.printStackTrace();
+            // Make sure to clear the context in case something is wrong
+            SecurityContextHolder.clearContext();
 
-            // TODO: throw exception here. Handled by an entry point later
-            throw new BadCredentialsException(ex.getMessage(), ex);
-            //((HttpServletResponse) servletResponse).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            throw ex;
         }
     }
 

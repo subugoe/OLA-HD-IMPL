@@ -55,10 +55,6 @@ public class ExceptionHandlerService extends ResponseEntityExceptionHandler {
         String message = ex.getMessage();
         String uri = request.getRequest().getRequestURI();
 
-        // TODO: DEBUG
-        System.out.println("In controller advice");
-        System.out.println(message);
-
         // Let the parent process further
         return handleExceptionInternal(ex, new ResponseMessage(status, message, uri), null, status, request);
     }

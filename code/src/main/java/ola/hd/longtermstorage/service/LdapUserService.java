@@ -29,7 +29,6 @@ public class LdapUserService implements UserDetailsService {
             throw new UsernameNotFoundException(username);
         }
 
-        //return new UserDetailsImpl(ldapUser);
         return new User(ldapUser.getUsername(), ldapUser.getPassword(), new ArrayList<>());
     }
 }
