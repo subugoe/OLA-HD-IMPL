@@ -396,6 +396,10 @@ public class ImportController {
         // Save the failure data to the tracking database
         info.setStatus(Status.FAILED);
         info.setMessage(ex.getMessage());
+
+        // Delete the PID in the tracking database
+        info.setPid(null);
+
         trackingRepository.save(info);
     }
 
