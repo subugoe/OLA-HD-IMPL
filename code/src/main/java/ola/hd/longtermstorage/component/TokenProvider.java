@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -64,7 +65,13 @@ public class TokenProvider {
         try {
             Jwts.parser().setSigningKey(SecurityConstants.SECRET).parseClaimsJws(token);
             return true;
-        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException | SignatureException |
+        } catch (ExpiredJwtException ex) {
+            Claims claims = ex.getClaims();
+            Instant exp = claims.getExpiration().toInstant();
+            String message = "JWT expired at " + exp;
+            throw new BadCredentialsException(message, ex);
+        }
+        catch (UnsupportedJwtException | MalformedJwtException | SignatureException |
                 IllegalArgumentException ex) {
 
             throw new BadCredentialsException(ex.getMessage(), ex);
