@@ -1,8 +1,9 @@
 package ola.hd.longtermstorage.config;
 
 import ola.hd.longtermstorage.component.CustomAuthenticationEntryPoint;
-import ola.hd.longtermstorage.filter.JwtFilter;
+import ola.hd.longtermstorage.component.MyLdapAuthenticationProvider;
 import ola.hd.longtermstorage.component.TokenProvider;
+import ola.hd.longtermstorage.filter.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +18,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -26,14 +27,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsService userDetailsService;
     private final TokenProvider tokenProvider;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final MyLdapAuthenticationProvider myLdapAuthenticationProvider;
 
     @Autowired
     public SecurityConfig(@Qualifier("ldapUserService") UserDetailsService userDetailsService,
                           TokenProvider tokenProvider,
-                          CustomAuthenticationEntryPoint customAuthenticationEntryPoint) {
+                          CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
+                          MyLdapAuthenticationProvider myLdapAuthenticationProvider) {
         this.userDetailsService = userDetailsService;
         this.tokenProvider = tokenProvider;
         this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
+        this.myLdapAuthenticationProvider = myLdapAuthenticationProvider;
     }
 
     @Override
@@ -47,7 +51,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .exceptionHandling()
                     .authenticationEntryPoint(this.customAuthenticationEntryPoint)
                     .and()
-                .addFilterBefore(new JwtFilter(this.tokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtFilter(this.tokenProvider), BasicAuthenticationFilter.class)
                 .authorizeRequests()
                     .antMatchers("/bag").authenticated()
                     .anyRequest().permitAll()
@@ -58,21 +62,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        // @formatter:off
-        auth
-                .ldapAuthentication()
-                    .userDnPatterns("uid={0},ou=people")
-                    .groupSearchBase("ou=groups")
-                    .contextSource()
-                        .ldif("classpath:test-server.ldif")
-                        .root("dc=springframework,dc=org")
-                        .port(8389)
-                    .and()
-                .passwordCompare()
-                    .passwordEncoder(passwordEncoder())
-                    .passwordAttribute("userPassword");
-        // @formatter:on
-
+        auth.authenticationProvider(myLdapAuthenticationProvider);
         auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
     }
 
@@ -82,7 +72,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return super.authenticationManagerBean();
     }
 
-    private PasswordEncoder passwordEncoder() {
+    @Bean
+    public PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 }

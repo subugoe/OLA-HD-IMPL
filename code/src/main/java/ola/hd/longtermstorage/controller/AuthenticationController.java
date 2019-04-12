@@ -1,12 +1,15 @@
 package ola.hd.longtermstorage.controller;
 
 import ola.hd.longtermstorage.component.TokenProvider;
+import ola.hd.longtermstorage.domain.LdapUser;
 import ola.hd.longtermstorage.domain.TokenResponse;
+import ola.hd.longtermstorage.repository.ldap.LdapUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.LdapShaPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,7 +29,6 @@ public class AuthenticationController {
 
     @PostMapping(value = "/login")
     public ResponseEntity<TokenResponse> login(@RequestParam String username, @RequestParam String password) {
-
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
         );

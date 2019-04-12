@@ -5,15 +5,16 @@ import org.springframework.ldap.odm.annotations.Entry;
 import org.springframework.ldap.odm.annotations.Id;
 
 import javax.naming.Name;
+import java.util.Set;
 
 @Entry(
-        base = "ou=people",
+        base = "ou=Customers",
         objectClasses = {"inetOrgPerson", "organizationalPerson", "person", "top"}
 )
-public class LdapUser {
+public final class LdapUser {
 
     @Id
-    private Name id;
+    private Name dn;
 
     @Attribute(name = "uid")
     private String username;
@@ -21,13 +22,9 @@ public class LdapUser {
     @Attribute(name = "userPassword")
     private String password;
 
-    public Name getId() {
-        return id;
-    }
+    private String cn;
 
-    public void setId(Name id) {
-        this.id = id;
-    }
+    private Set<String> userServices;
 
     public String getUsername() {
         return username;
@@ -43,5 +40,29 @@ public class LdapUser {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getCn() {
+        return cn;
+    }
+
+    public void setCn(String cn) {
+        this.cn = cn;
+    }
+
+    public Name getDn() {
+        return dn;
+    }
+
+    public void setDn(Name dn) {
+        this.dn = dn;
+    }
+
+    public Set<String> getUserServices() {
+        return userServices;
+    }
+
+    public void setUserServices(Set<String> userServices) {
+        this.userServices = userServices;
     }
 }

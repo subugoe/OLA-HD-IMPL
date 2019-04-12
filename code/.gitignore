@@ -25,3 +25,6 @@ pom.xml.versionsBackup
 /dist/
 /nbdist/
 /.nb-gradle/
+
+src/main/resources/application-production.properties
+upload-temp/
