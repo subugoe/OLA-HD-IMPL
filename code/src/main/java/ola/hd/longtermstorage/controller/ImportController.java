@@ -87,7 +87,11 @@ public class ImportController {
 
     @ApiOperation(value = "Import a ZIP file into a system. It may be an independent ZIP, or a new version of another ZIP. " +
             "In the second case, a PID of the previous ZIP must be provided.",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+    authorizations = {
+            @Authorization(value = "basicAuth"),
+            @Authorization(value = "bearer")
+    })
     @ApiResponses(value = {
             @ApiResponse(code = 202, message = "The ZIP has a valid BagIt structure. The system is saving it to the archive.",
                     response = ResponseMessage.class,
@@ -95,6 +99,7 @@ public class ImportController {
                             @ResponseHeader(name = "Location", description = "The PID of the ZIP.", response = String.class)
                     }),
             @ApiResponse(code = 400, message = "The ZIP has an invalid BagIt structure.", response = ResponseMessage.class),
+            @ApiResponse(code = 401, message = "Invalid credentials.", response = ResponseMessage.class),
             @ApiResponse(code = 415, message = "The request is not a multipart request.", response = ResponseMessage.class)
     })
     @ApiImplicitParams(value = {

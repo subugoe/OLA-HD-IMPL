@@ -4,13 +4,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.Contact;
+import springfox.documentation.service.*;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @Configuration
@@ -37,6 +37,15 @@ public class SwaggerConfig {
                 .build()
                 .apiInfo(API_INFO)
                 .protocols(Set.of("http"))
+                .securitySchemes(buildSecuritySchemes())
                 .useDefaultResponseMessages(false);
+    }
+
+    private List<SecurityScheme> buildSecuritySchemes() {
+        List<SecurityScheme> schemes = new ArrayList<>();
+        schemes.add(new BasicAuth("basicAuth"));
+        schemes.add(new ApiKey("bearer", "Authorization", "header"));
+
+        return schemes;
     }
 }

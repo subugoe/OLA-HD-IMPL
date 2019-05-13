@@ -41,8 +41,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     .and()
                 .addFilterBefore(new JwtFilter(this.tokenProvider), BasicAuthenticationFilter.class)
                 .authorizeRequests()
-                    .antMatchers("/bag").authenticated()
-                    .anyRequest().permitAll()
+                    .antMatchers("/export",
+                            "/login",
+                            "/search",
+                            "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
+                    .anyRequest().authenticated()
                     .and()
                 .httpBasic();
         // @formatter:on
