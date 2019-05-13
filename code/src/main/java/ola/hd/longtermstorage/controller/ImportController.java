@@ -41,6 +41,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.context.request.ServletWebRequest;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
@@ -104,11 +105,11 @@ public class ImportController {
     })
     @ApiImplicitParams(value = {
             @ApiImplicitParam(dataType = "__file", name = "file", value = "The file to be imported.", required = true, paramType = "form"),
-            @ApiImplicitParam(dataType = "String", name = "prev", value = "The PID of the previous version", paramType = "form")
+            @ApiImplicitParam(dataType = "string", name = "prev", value = "The PID of the previous version", paramType = "form")
     })
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     @PostMapping(value = "/bag", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> importData(HttpServletRequest request, Principal principal) throws IOException, FileUploadException, URISyntaxException {
+    public ResponseEntity<?> importData(HttpServletRequest request, @ApiIgnore Principal principal) throws IOException, FileUploadException, URISyntaxException {
 
         String username = principal.getName();
         TrackingInfo info = new TrackingInfo(username, Status.PROCESSING, "Processing...", null);
