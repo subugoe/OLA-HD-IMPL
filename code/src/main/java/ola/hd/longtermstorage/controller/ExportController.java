@@ -1,9 +1,6 @@
 package ola.hd.longtermstorage.controller;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.*;
 import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.service.ExportService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +33,8 @@ public class ExportController {
                     response = ResponseMessage.class)
     })
     @GetMapping(value = "/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<Resource> export(@RequestParam("id") String id) throws IOException {
+    public ResponseEntity<Resource> export(@ApiParam(value = "The PID or the PPN of the work.", required = true)
+                                               @RequestParam("id") String id) throws IOException {
         byte[] data = exportService.export(id);
         ByteArrayResource resource = new ByteArrayResource(data);
 

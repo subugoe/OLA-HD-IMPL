@@ -34,10 +34,7 @@ public class AuthenticationController {
             @ApiResponse(code = 401, message = "Invalid credentials.", response = ResponseMessage.class)
     })
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<TokenResponse> login(@ApiParam(value = "Username", required = true)
-                                                   @RequestParam String username,
-                                               @ApiParam(value = "Password", required = true)
-                                               @RequestParam String password) {
+    public ResponseEntity<TokenResponse> login(@RequestParam String username, @RequestParam String password) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
         );
