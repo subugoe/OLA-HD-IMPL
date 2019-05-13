@@ -33,7 +33,7 @@ public class AuthenticationController {
             @ApiResponse(code = 200, message = "Login successfully", response = TokenResponse.class),
             @ApiResponse(code = 401, message = "Invalid credentials.", response = ResponseMessage.class)
     })
-    @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/login", consumes = MediaType.MULTIPART_FORM_DATA_VALUE ,produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<TokenResponse> login(@RequestParam String username, @RequestParam String password) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
