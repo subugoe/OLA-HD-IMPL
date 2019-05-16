@@ -17,8 +17,10 @@ services:
       args:
         app_env: ${APP_ENV}
     command: java -jar target/long-term-storage-0.0.1-SNAPSHOT.jar
-    mem_limit: 6GB
-    memswap_limit: 6G
+    deploy:
+      resources:
+        limits:
+          memory: 6GB
     ports:
       - "$OLA_HD_EXTERNAL_PORT:$OLA_HD_PORT"
     volumes:
