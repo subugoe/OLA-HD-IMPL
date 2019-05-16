@@ -1,6 +1,5 @@
-#docker-compose stop
-#docker-compose rm -f
-docker-compose down
+#!/usr/bin/env bash
+docker-compose down --remove-orphans
 
 rm -rf docker/ola-hd_service/code
 cp -r code/ docker/ola-hd_service/code
