@@ -12,7 +12,7 @@ RUN apt-get update \
 COPY ./code/ /ola-hd/code
 WORKDIR /ola-hd/code
 
-RUN mvn clean package
+RUN mvn clean package -DskipTests
 
 
 # see CMD in docker-compose.yml
