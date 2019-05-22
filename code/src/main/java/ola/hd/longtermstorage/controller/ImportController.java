@@ -29,6 +29,7 @@ import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -75,6 +76,9 @@ public class ImportController {
     private final ExecutorWrapper executor;
 
     private MutexFactory<String> mutexFactory;
+
+    @Value("${ola.hd.upload.dir}")
+    private String uploadDir;
 
     @Autowired
     public ImportController(ImportService importService, TrackingRepository trackingRepository, PidService pidService,
@@ -134,7 +138,7 @@ public class ImportController {
         UUID uuid = UUID.randomUUID();
 
         // Temporary directory
-        String tempDir = "upload-temp" + File.separator + uuid;
+        String tempDir = uploadDir + File.separator + uuid;
 
         // The uploaded file
         File targetFile = null;
