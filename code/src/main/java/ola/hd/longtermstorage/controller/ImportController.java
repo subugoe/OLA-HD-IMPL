@@ -15,7 +15,7 @@ import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.domain.Status;
 import ola.hd.longtermstorage.domain.TrackingInfo;
 import ola.hd.longtermstorage.repository.mongo.TrackingRepository;
-import ola.hd.longtermstorage.service.ImportService;
+import ola.hd.longtermstorage.service.ArchiveManagerService;
 import ola.hd.longtermstorage.service.PidService;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
@@ -67,7 +67,7 @@ public class ImportController {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportController.class);
 
-    private final ImportService importService;
+    private final ArchiveManagerService archiveManagerService;
 
     private final TrackingRepository trackingRepository;
 
@@ -81,9 +81,9 @@ public class ImportController {
     private String uploadDir;
 
     @Autowired
-    public ImportController(ImportService importService, TrackingRepository trackingRepository, PidService pidService,
+    public ImportController(ArchiveManagerService archiveManagerService, TrackingRepository trackingRepository, PidService pidService,
                             ExecutorWrapper executor, MutexFactory<String> mutexFactory) {
-        this.importService = importService;
+        this.archiveManagerService = archiveManagerService;
         this.trackingRepository = trackingRepository;
         this.pidService = pidService;
         this.executor = executor;
@@ -303,7 +303,7 @@ public class ImportController {
                 try {
                     // Import files
                     List<AbstractMap.SimpleImmutableEntry<String, String>> metaData =
-                            Failsafe.with(retryPolicy).get(() -> importService.importZipFile(Paths.get(destination), pid, bagInfos, finalPrev));
+                            Failsafe.with(retryPolicy).get(() -> archiveManagerService.importZipFile(Paths.get(destination), pid, bagInfos, finalPrev));
 
                     // Point to the previous version
                     metaData.add(new AbstractMap.SimpleImmutableEntry<>("PREVIOUS-VERSION", finalPrev));
@@ -354,7 +354,7 @@ public class ImportController {
                 try {
                     // Import files
                     List<AbstractMap.SimpleImmutableEntry<String, String>> metaData =
-                            Failsafe.with(retryPolicy).get(() -> importService.importZipFile(Paths.get(destination), pid, bagInfos));
+                            Failsafe.with(retryPolicy).get(() -> archiveManagerService.importZipFile(Paths.get(destination), pid, bagInfos));
 
                     // Meta-data from the bag-info.txt
                     metaData.addAll(bagInfos);

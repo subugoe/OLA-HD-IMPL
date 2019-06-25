@@ -5,7 +5,7 @@ import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.List;
 
-public interface ImportService {
+public interface ArchiveManagerService {
 
     /**
      * Import a new ZIP file to the system
@@ -34,4 +34,14 @@ public interface ImportService {
                                                                          String pid,
                                                                          List<AbstractMap.SimpleImmutableEntry<String, String>> metaData,
                                                                          String prevPid) throws IOException;
+
+    /**
+     * Export an archive from the hard drive
+     * @param identifier Identifier of the archive (PID, PPN,...)
+     * @return The zip file of the archive
+     * @throws IOException Thrown if something's wrong when connecting to the archive system
+     */
+    byte[] export(String identifier) throws IOException;
+
+    void moveFromTapeToDisk(String identifier);
 }

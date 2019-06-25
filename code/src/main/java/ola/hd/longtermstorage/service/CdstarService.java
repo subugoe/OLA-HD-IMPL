@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class CdstarService implements ImportService, ExportService {
+public class CdstarService implements ArchiveManagerService {
 
     @Value("${cdstar.url}")
     private String url;
@@ -439,6 +439,14 @@ public class CdstarService implements ImportService, ExportService {
     public byte[] export(String identifier) throws IOException {
         String archiveId = getArchiveIdFromIdentifier(identifier, onlineProfile);
         return exportArchive(archiveId);
+    }
+
+    @Override
+    public void moveFromTapeToDisk(String identifier) {
+
+        // TODO: Check if the archive is already on a hard drive
+        //  If yes, exit
+        //  Otherwise, update the archive profile to a hot profile
     }
 
     private String getArchiveIdFromIdentifier(String identifier, String profile) throws IOException {
