@@ -4,6 +4,7 @@ import okhttp3.*;
 import ola.hd.longtermstorage.service.PidService;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +20,13 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+@Ignore("Ignore the performance test")
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class PerformanceTests {
 
     private final String URL = "http://141.5.105.253:8080/bag";
-    private final String TOKEN = "";
+    private final String TOKEN = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZG9hbiIsImlhdCI6MTU1NzkyMzQyNSwiZXhwIjoxNTU5NzIzNDI1LCJhdXRoIjoiUk9MRV9VU0VSIn0.hq0eJwjpI7Fja4agQhTKINhAJsPDlSf4kbX65JjTLf6-uIOunxqHFoP6nPyfIhIcQ2Vw5QKHmWlbaCLiUy4yVQ";
     private final String APPLICATION_ZIP = "application/zip";
     private final String FILE_PATH = "/Users/tdoan/OCR-D-LZA/sample_data/benner_herrnhuterey04_1748.ocrd.zip";
     private List<String> pids = new ArrayList<>();
@@ -60,9 +62,7 @@ public class PerformanceTests {
     }
 
     private void upload() throws IOException {
-        OkHttpClient client = new OkHttpClient.Builder()
-                .readTimeout(30, TimeUnit.SECONDS)
-                .build();
+        OkHttpClient client = new OkHttpClient();
 
         File file = new File(FILE_PATH);
 
