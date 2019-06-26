@@ -1,30 +1,20 @@
 version: "3.7"
 services:
-
   mongo:
     image: mongo
     restart: always
     ports:
-      - "$MONGO_EXTERNAL_PORT:$MONGO_PORT"
-    env_file:
-      - ./.env
+      - "${MONGO_EXTERNAL_PORT}:${MONGO_PORT}"
     volumes:
       - /data/mongodb:/data/db
 
   ola-hd:
     build:
-      context: docker/ola-hd_service
-      args:
-        app_env: ${APP_ENV}
-    command: java -Xms6G -Xmx6G -jar -Dspring.profiles.active=production target/long-term-storage-0.0.1-SNAPSHOT.jar
+      context: code/
+    command: java -Xms${OLA_HD_MIN_MEMORY} -Xmx${OLA_HD_MAX_MEMORY} -jar -Dspring.profiles.active=production --server.port=${OLA_HD_PORT} target/long-term-storage-0.0.1-SNAPSHOT.jar
     deploy:
       resources:
         limits:
           memory: 8GB
     ports:
-      - "$OLA_HD_EXTERNAL_PORT:$OLA_HD_PORT"
-    volumes:
-      - ./data:/path/to/cdstar/data
-    working_dir: /ola-hd/code
-    env_file:
-      - ./.env
+      - "${OLA_HD_EXTERNAL_PORT}:${OLA_HD_PORT}"
