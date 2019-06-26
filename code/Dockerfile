@@ -4,6 +4,6 @@ RUN apt-get update \
     && apt-get install -y maven --no-install-recommends
 
 WORKDIR /ola-hd/code
-COPY ./code/ /ola-hd/code
+COPY . .
 
 RUN mvn clean package -DskipTests
