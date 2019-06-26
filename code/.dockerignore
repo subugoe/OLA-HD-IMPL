@@ -1,0 +1,12 @@
+### IntelliJ IDEA ###
+.idea
+*.iml
+
+### Maven Wrapper ###
+.mvn
+mvnw
+mvnw.cmd
+
+### Docker ###
+.dockerignore
+Dockerfile
