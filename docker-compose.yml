@@ -16,7 +16,7 @@ services:
       context: docker/ola-hd_service
       args:
         app_env: ${APP_ENV}
-    command: java -Xms6G -Xmx6G -jar target/long-term-storage-0.0.1-SNAPSHOT.jar
+    command: java -Xms6G -Xmx6G -jar -Dspring.profiles.active=production target/long-term-storage-0.0.1-SNAPSHOT.jar
     deploy:
       resources:
         limits:
