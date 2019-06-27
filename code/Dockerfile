@@ -6,4 +6,4 @@ RUN apt-get update \
 WORKDIR /ola-hd/code
 COPY . .
 
-RUN mvn clean package -DskipTests
+RUN mvn --no-transfer-progress clean package -DskipTests
