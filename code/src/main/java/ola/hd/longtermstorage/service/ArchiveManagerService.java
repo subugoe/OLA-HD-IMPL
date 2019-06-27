@@ -43,5 +43,9 @@ public interface ArchiveManagerService {
      */
     byte[] export(String identifier) throws IOException;
 
+    /**
+     * Move an archive from the tape to the hard drive
+     * @param identifier The identifier of the archive
+     */
     void moveFromTapeToDisk(String identifier);
 }
