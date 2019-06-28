@@ -44,6 +44,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     .antMatchers("/export",
                             "/login",
                             "/search",
+                            "/docs",
                             "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
                     .anyRequest().authenticated()
                     .and()
