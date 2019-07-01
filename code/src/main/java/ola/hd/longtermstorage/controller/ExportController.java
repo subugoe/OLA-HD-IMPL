@@ -59,7 +59,7 @@ public class ExportController {
     @GetMapping(value = "/export-request", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<?> fullExportRequest(@ApiParam(value = "The PID or the PPN of the work.", required = true)
                                                    @RequestParam("id") String id,
-                                               @ApiIgnore Principal principal) {
+                                               @ApiIgnore Principal principal) throws IOException {
 
         // Move the archive from tape to disk
         archiveManagerService.moveFromTapeToDisk(id);

@@ -442,11 +442,48 @@ public class CdstarService implements ArchiveManagerService {
     }
 
     @Override
-    public void moveFromTapeToDisk(String identifier) {
+    public void moveFromTapeToDisk(String identifier) throws IOException {
 
-        // TODO: Check if the archive is already on a hard drive
-        //  If yes, exit
-        //  Otherwise, update the archive profile to a hot profile
+        // Get cold-archive ID from the PID/PPN
+        String archiveId = getArchiveIdFromIdentifier(identifier, offlineProfile);
+
+        // Change the profile of the archive to a hot profile
+        updateProfile(archiveId, onlineProfile);
+
+    }
+
+    @Override
+    public void moveFromDiskToTape(String identifier) throws IOException {
+
+        // Get hot-archive ID from the PID/PPN
+        String archiveId = getArchiveIdFromIdentifier(identifier, onlineProfile);
+
+        // Change the profile of the archive to a cold profile
+        updateProfile(archiveId, offlineProfile);
+    }
+
+    private void updateProfile(String archiveId, String newProfile) throws IOException {
+        String fullUrl = url + vault + "/" + archiveId;
+        OkHttpClient client = new OkHttpClient();
+
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("profile", newProfile)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(fullUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .post(requestBody)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+
+                // Something is wrong, throw the exception
+                throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot update archive profile");
+            }
+        }
     }
 
     private String getArchiveIdFromIdentifier(String identifier, String profile) throws IOException {
