@@ -2,11 +2,11 @@ version: "3.7"
 services:
   mongo:
     image: mongo
-    restart: always
-    ports:
-      - "${MONGO_EXTERNAL_PORT}:${MONGO_PORT}"
+    restart: on-failure
     volumes:
       - /data/mongodb:/data/db
+    networks:
+      - ola-hd
 
   ola-hd:
     build:
@@ -18,3 +18,8 @@ services:
           memory: 8GB
     ports:
       - "${OLA_HD_EXTERNAL_PORT}:${OLA_HD_PORT}"
+    networks:
+      - ola-hd
+
+networks:
+  ola-hd:
