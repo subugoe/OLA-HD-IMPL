@@ -62,7 +62,7 @@ public class ExportController {
             @ApiResponse(code = 404, message = "An archive with the specified identifier was not found.",
                     response = ResponseMessage.class)
     })
-    @GetMapping(value = "/export-request", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = "/export-request", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> fullExportRequest(@ApiParam(value = "The PID or the PPN of the work.", required = true)
                                                    @RequestParam("id") String id,
                                                @ApiIgnore Principal principal) throws IOException {
