@@ -20,7 +20,7 @@ public class TrackingInfo {
     private Instant timestamp;
 
     // TrackingStatus of the action (e.g. processing, success, failed)
-    private TrackingStatus trackingStatus;
+    private TrackingStatus status;
 
     // The message goes with the status (e.g. reason of failure)
     private String message;
@@ -39,9 +39,9 @@ public class TrackingInfo {
         // this one is protected since it shouldn't be used directly
     }
 
-    public TrackingInfo(String username, TrackingStatus trackingStatus, String message, String pid) {
+    public TrackingInfo(String username, TrackingStatus status, String message, String pid) {
         this.username = username;
-        this.trackingStatus = trackingStatus;
+        this.status = status;
         this.message = message;
         this.pid = pid;
         this.timestamp = Instant.now();
@@ -70,12 +70,12 @@ public class TrackingInfo {
         this.username = username;
     }
 
-    public TrackingStatus getTrackingStatus() {
-        return trackingStatus;
+    public TrackingStatus getStatus() {
+        return status;
     }
 
-    public void setTrackingStatus(TrackingStatus trackingStatus) {
-        this.trackingStatus = trackingStatus;
+    public void setStatus(TrackingStatus status) {
+        this.status = status;
     }
 
     public String getMessage() {

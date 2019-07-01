@@ -71,8 +71,7 @@ public class ExportController {
         archiveManagerService.moveFromTapeToDisk(id);
 
         // Save the request info to the database
-        String username = principal.getName();
-        ExportRequest exportRequest = new ExportRequest(username, id, ArchiveStatus.PENDING);
+        ExportRequest exportRequest = new ExportRequest(principal.getName(), id, ArchiveStatus.PENDING);
         exportRequestRepository.save(exportRequest);
 
         return ResponseEntity.accepted()
