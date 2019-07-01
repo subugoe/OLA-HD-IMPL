@@ -1,7 +1,10 @@
 package ola.hd.longtermstorage.controller;
 
 import io.swagger.annotations.*;
+import ola.hd.longtermstorage.domain.ArchiveStatus;
+import ola.hd.longtermstorage.domain.ExportRequest;
 import ola.hd.longtermstorage.domain.ResponseMessage;
+import ola.hd.longtermstorage.repository.mongo.ExportRequestRepository;
 import ola.hd.longtermstorage.service.ArchiveManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -23,9 +26,12 @@ public class ExportController {
 
     private final ArchiveManagerService archiveManagerService;
 
+    private final ExportRequestRepository exportRequestRepository;
+
     @Autowired
-    public ExportController(ArchiveManagerService archiveManagerService) {
+    public ExportController(ArchiveManagerService archiveManagerService, ExportRequestRepository exportRequestRepository) {
         this.archiveManagerService = archiveManagerService;
+        this.exportRequestRepository = exportRequestRepository;
     }
 
     @ApiOperation(value = "Quickly export a ZIP file via PID. This ZIP file only contains files stored on hard disks.")
@@ -64,8 +70,10 @@ public class ExportController {
         // Move the archive from tape to disk
         archiveManagerService.moveFromTapeToDisk(id);
 
-        // TODO: Save the request info to the database
+        // Save the request info to the database
         String username = principal.getName();
+        ExportRequest exportRequest = new ExportRequest(username, id, ArchiveStatus.PENDING);
+        exportRequestRepository.save(exportRequest);
 
         return ResponseEntity.accepted()
                 .body(new ResponseMessage(HttpStatus.ACCEPTED, "Your request is being processed."));

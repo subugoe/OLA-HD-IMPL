@@ -1,6 +1,6 @@
 package ola.hd.longtermstorage.domain;
 
-public enum Status {
+public enum TrackingStatus {
     PROCESSING,
     SUCCESS,
     FAILED

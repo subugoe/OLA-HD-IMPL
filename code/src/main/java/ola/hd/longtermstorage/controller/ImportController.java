@@ -12,7 +12,7 @@ import net.lingala.zip4j.exception.ZipException;
 import ola.hd.longtermstorage.component.ExecutorWrapper;
 import ola.hd.longtermstorage.component.MutexFactory;
 import ola.hd.longtermstorage.domain.ResponseMessage;
-import ola.hd.longtermstorage.domain.Status;
+import ola.hd.longtermstorage.domain.TrackingStatus;
 import ola.hd.longtermstorage.domain.TrackingInfo;
 import ola.hd.longtermstorage.repository.mongo.TrackingRepository;
 import ola.hd.longtermstorage.service.ArchiveManagerService;
@@ -116,7 +116,7 @@ public class ImportController {
     public ResponseEntity<?> importData(HttpServletRequest request, @ApiIgnore Principal principal) throws IOException, FileUploadException, URISyntaxException {
 
         String username = principal.getName();
-        TrackingInfo info = new TrackingInfo(username, Status.PROCESSING, "Processing...", null);
+        TrackingInfo info = new TrackingInfo(username, TrackingStatus.PROCESSING, "Processing...", null);
 
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
         if (!isMultipart) {
@@ -124,7 +124,7 @@ public class ImportController {
             String message = "The request must be multipart request.";
 
             // Save to the tracking database
-            info.setStatus(Status.FAILED);
+            info.setTrackingStatus(TrackingStatus.FAILED);
             info.setMessage(message);
             trackingRepository.save(info);
 
@@ -173,7 +173,7 @@ public class ImportController {
                     String message = "Only 1 zip file is allow.";
 
                     // Save to the tracking database
-                    info.setStatus(Status.FAILED);
+                    info.setTrackingStatus(TrackingStatus.FAILED);
                     info.setMessage(message);
                     trackingRepository.save(info);
 
@@ -205,7 +205,7 @@ public class ImportController {
             String message = "The request must contain 1 zip file.";
 
             // Save to the tracking database
-            info.setStatus(Status.FAILED);
+            info.setTrackingStatus(TrackingStatus.FAILED);
             info.setMessage(message);
             trackingRepository.save(info);
 
@@ -224,7 +224,7 @@ public class ImportController {
             String message = "The file must be in the ZIP format";
 
             // Save to the tracking database
-            info.setStatus(Status.FAILED);
+            info.setTrackingStatus(TrackingStatus.FAILED);
             info.setMessage(message);
             trackingRepository.save(info);
 
@@ -268,7 +268,7 @@ public class ImportController {
             String message = "Invalid file input. The uploaded file must be a ZIP file with BagIt structure.";
 
             // Save to the tracking database
-            info.setStatus(Status.FAILED);
+            info.setTrackingStatus(TrackingStatus.FAILED);
             info.setMessage(message);
             trackingRepository.save(info);
 
@@ -324,7 +324,7 @@ public class ImportController {
 
 
                     // Save success data to the tracking database
-                    info.setStatus(Status.SUCCESS);
+                    info.setTrackingStatus(TrackingStatus.SUCCESS);
                     info.setMessage("Data has been successfully imported.");
                     info.setPreviousVersion(finalPrev);
                     trackingRepository.save(info);
@@ -366,7 +366,7 @@ public class ImportController {
                     pidService.updatePid(pid, metaData);
 
                     // Save success data to the tracking database
-                    info.setStatus(Status.SUCCESS);
+                    info.setTrackingStatus(TrackingStatus.SUCCESS);
                     info.setMessage("Data has been successfully imported.");
                     trackingRepository.save(info);
 
@@ -404,7 +404,7 @@ public class ImportController {
         logger.error(ex.getMessage(), ex);
 
         // Save the failure data to the tracking database
-        info.setStatus(Status.FAILED);
+        info.setTrackingStatus(TrackingStatus.FAILED);
         info.setMessage(ex.getMessage());
 
         // Delete the PID in the tracking database

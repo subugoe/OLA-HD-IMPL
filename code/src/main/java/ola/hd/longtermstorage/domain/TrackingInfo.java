@@ -13,15 +13,14 @@ public class TrackingInfo {
     @Id
     private String id;
 
-    // TODO: Maybe a @DBRef is needed here later
     // Who perform the action
     private String username;
 
     //@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private Instant timestamp;
 
-    // Status of the action (e.g. processing, success, failed)
-    private Status status;
+    // TrackingStatus of the action (e.g. processing, success, failed)
+    private TrackingStatus trackingStatus;
 
     // The message goes with the status (e.g. reason of failure)
     private String message;
@@ -40,9 +39,9 @@ public class TrackingInfo {
         // this one is protected since it shouldn't be used directly
     }
 
-    public TrackingInfo(String username, Status status, String message, String pid) {
+    public TrackingInfo(String username, TrackingStatus trackingStatus, String message, String pid) {
         this.username = username;
-        this.status = status;
+        this.trackingStatus = trackingStatus;
         this.message = message;
         this.pid = pid;
         this.timestamp = Instant.now();
@@ -71,12 +70,12 @@ public class TrackingInfo {
         this.username = username;
     }
 
-    public Status getStatus() {
-        return status;
+    public TrackingStatus getTrackingStatus() {
+        return trackingStatus;
     }
 
-    public void setStatus(Status status) {
-        this.status = status;
+    public void setTrackingStatus(TrackingStatus trackingStatus) {
+        this.trackingStatus = trackingStatus;
     }
 
     public String getMessage() {
