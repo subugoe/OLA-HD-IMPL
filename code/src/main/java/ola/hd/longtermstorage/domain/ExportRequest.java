@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Document(collection = "exportRequest")
 public class ExportRequest {
@@ -21,6 +22,9 @@ public class ExportRequest {
 
     private ArchiveStatus status;
 
+    // Time when the archive should be deleted from the hard drive
+    private Instant availableUntil;
+
     protected ExportRequest() {
         // no-args constructor required by JPA spec
         // this one is protected since it shouldn't be used directly
@@ -31,6 +35,9 @@ public class ExportRequest {
         this.pid = pid;
         this.status = status;
         this.timestamp = Instant.now();
+
+        // An archive will be available on hard drive for at least 7 days
+        this.availableUntil = this.timestamp.plus(7, ChronoUnit.DAYS);
     }
 
     public String getId() {
@@ -71,5 +78,13 @@ public class ExportRequest {
 
     public void setStatus(ArchiveStatus status) {
         this.status = status;
+    }
+
+    public Instant getAvailableUntil() {
+        return availableUntil;
+    }
+
+    public void setAvailableUntil(Instant availableUntil) {
+        this.availableUntil = availableUntil;
     }
 }
