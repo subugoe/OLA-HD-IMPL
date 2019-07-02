@@ -4,9 +4,11 @@ services:
     image: mongo
     restart: on-failure
     volumes:
-      - /data/mongodb:/data/db
+      - /data/db
     networks:
       - ola-hd
+    env_file:
+      - .env
 
   ola-hd:
     build:
@@ -20,6 +22,8 @@ services:
       - "${OLA_HD_EXTERNAL_PORT}:${OLA_HD_PORT}"
     networks:
       - ola-hd
+    env_file:
+      - .env
 
 networks:
   ola-hd:
