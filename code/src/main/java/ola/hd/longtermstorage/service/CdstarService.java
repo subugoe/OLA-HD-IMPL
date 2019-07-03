@@ -438,8 +438,17 @@ public class CdstarService implements ArchiveManagerService {
     }
 
     @Override
-    public byte[] export(String identifier) throws IOException {
-        String archiveId = getArchiveIdFromIdentifier(identifier, onlineProfile);
+    public byte[] export(String identifier, String type) throws IOException {
+
+        String archiveId;
+
+        // Quick export?
+        if (type.equals("quick")) {
+            archiveId = getArchiveIdFromIdentifier(identifier, onlineProfile);
+        } else {
+            // Full export
+            archiveId = getArchiveIdFromIdentifier(identifier, offlineProfile);
+        }
         return exportArchive(archiveId);
     }
 

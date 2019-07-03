@@ -39,10 +39,11 @@ public interface ArchiveManagerService {
      * Export an archive from the hard drive
      *
      * @param identifier   The public identifier of the archive (PID, PPN,...)
+     * @param type         Full export or quick export
      * @return             The zip file of the archive
      * @throws IOException Thrown if something's wrong when connecting to the archive system
      */
-    byte[] export(String identifier) throws IOException;
+    byte[] export(String identifier, String type) throws IOException;
 
     /**
      * Move an archive from a tape to a hard drive

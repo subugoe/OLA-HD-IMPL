@@ -44,7 +44,7 @@ public class ExportController {
     @GetMapping(value = "/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<Resource> export(@ApiParam(value = "The PID or the PPN of the work.", required = true)
                                                @RequestParam("id") String id) throws IOException {
-        byte[] data = archiveManagerService.export(id);
+        byte[] data = archiveManagerService.export(id, "quick");
         ByteArrayResource resource = new ByteArrayResource(data);
 
         return ResponseEntity.ok()
@@ -76,5 +76,25 @@ public class ExportController {
 
         return ResponseEntity.accepted()
                 .body(new ResponseMessage(HttpStatus.ACCEPTED, "Your request is being processed."));
+    }
+
+    @ApiOperation(value = "Export the cold archive which was already moved to the hard drive.")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "An archive with the specified identifier was found.",
+                    response = byte[].class),
+            @ApiResponse(code = 404, message = "An archive with the specified identifier was not found.",
+                    response = ResponseMessage.class)
+    })
+    @GetMapping(value = "/full-export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<Resource> fullExport(@ApiParam(value = "The PID or the PPN of the work.", required = true)
+                                                   @RequestParam("id") String id) throws IOException {
+
+        byte[] data = archiveManagerService.export(id, "full");
+        ByteArrayResource resource = new ByteArrayResource(data);
+
+        return ResponseEntity.ok()
+                .contentLength(data.length)
+                .contentType(MediaType.parseMediaType("application/zip"))
+                .body(resource);
     }
 }
