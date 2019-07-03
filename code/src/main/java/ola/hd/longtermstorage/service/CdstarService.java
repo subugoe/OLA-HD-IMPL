@@ -449,6 +449,12 @@ public class CdstarService implements ArchiveManagerService {
             // Full export
             archiveId = getArchiveIdFromIdentifier(identifier, offlineProfile);
         }
+
+        // Check if the archive state is ready for export (open state)
+        if (!isArchiveOpen(archiveId)) {
+            throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "The archive is still on tape. Please make a full export request first.");
+        }
+
         return exportArchive(archiveId);
     }
 
@@ -573,6 +579,38 @@ public class CdstarService implements ArchiveManagerService {
 
             // Cannot get the archive ID? Throw the exception
             throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot export the archive " + archiveId);
+        }
+    }
+
+    private boolean isArchiveOpen(String archiveId) throws IOException {
+        String fullUrl = url + vault + "/" + archiveId;
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(fullUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .get()
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                if (response.body() != null) {
+                    String bodyString = response.body().string();
+
+                    // Parse the returned JSON
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode root = mapper.readTree(bodyString);
+                    String state = root.get("state").asText();
+
+                    // Open-state archive
+                    return state.equals("open");
+
+                }
+            }
+
+            // Cannot get the archive state? Throw the exception
+            throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Error when getting the archive state.");
         }
     }
 }
