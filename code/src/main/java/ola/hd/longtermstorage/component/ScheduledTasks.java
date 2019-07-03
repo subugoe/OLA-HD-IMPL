@@ -32,7 +32,7 @@ public class ScheduledTasks {
      * Run at 04:00 every Monday. Initial delay: 2 minutes
      * @throws IOException Thrown if something's wrong when connecting to different services
      */
-    @Scheduled(cron = "0 0 4 ? * MON *", initialDelay = 120000)
+    @Scheduled(cron = "0 0 4 ? * MON")
     public void cleanStorage() throws IOException {
 
         // Get all online archive requests, order by timestamp descending
