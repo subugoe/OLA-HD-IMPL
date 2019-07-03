@@ -26,7 +26,13 @@ public class ScheduledTasks {
         this.archiveManagerService = archiveManagerService;
     }
 
-    @Scheduled(fixedDelay = 5000)
+    /**
+     * When users request to export data from tapes, it must be moved to disks first. After some time, this background
+     * job will move data back to tapes.
+     * Run at 04:00 every Monday. Initial delay: 2 minutes
+     * @throws IOException Thrown if something's wrong when connecting to different services
+     */
+    @Scheduled(cron = "0 0 4 ? * MON *", initialDelay = 120000)
     public void cleanStorage() throws IOException {
 
         // Get all online archive requests, order by timestamp descending

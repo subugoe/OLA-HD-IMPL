@@ -284,19 +284,21 @@ public class CdstarService implements ArchiveManagerService {
 
     private String createArchive(String txId, boolean isOffline) throws IOException {
         String fullUrl = url + vault;
+        String profile = onlineProfile;
+
+        if (isOffline) {
+            profile = offlineProfile;
+        }
 
         OkHttpClient client = new OkHttpClient();
 
-        // To create an online archive, just send an empty body
-        RequestBody requestBody = RequestBody.create(null, "");
-
-        // To createa an offline archive, set an appropriate profile for it
-        if (isOffline) {
-            requestBody = new MultipartBody.Builder()
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart("profile", offlineProfile)
-                    .build();
-        }
+        // Because the profile can be changed later due to the data transfer between disk and tape,
+        // We need this dc:type to keep track of the original purpose of the archive
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("profile", profile)
+                .addFormDataPart("meta:dc:type", profile)
+                .build();
 
         Request request = new Request.Builder()
                 .url(fullUrl)
@@ -449,7 +451,6 @@ public class CdstarService implements ArchiveManagerService {
 
         // Change the profile of the archive to a hot profile
         updateProfile(archiveId, onlineProfile);
-
     }
 
     @Override
@@ -486,11 +487,11 @@ public class CdstarService implements ArchiveManagerService {
         }
     }
 
-    private String getArchiveIdFromIdentifier(String identifier, String profile) throws IOException {
+    private String getArchiveIdFromIdentifier(String identifier, String type) throws IOException {
         String fullUrl = url + vault;
 
         // Search for archive with specified identifier (PPN, PID)
-        String query = String.format("dcIdentifier:\"%s\" AND profile:%s", identifier, profile);
+        String query = String.format("dcIdentifier:\"%s\" AND dcType:%s", identifier, type);
 
         // Sort by modified time in descending order
         String order = "-modified";

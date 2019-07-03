@@ -37,21 +37,26 @@ public interface ArchiveManagerService {
 
     /**
      * Export an archive from the hard drive
-     * @param identifier Identifier of the archive (PID, PPN,...)
-     * @return The zip file of the archive
+     *
+     * @param identifier   The public identifier of the archive (PID, PPN,...)
+     * @return             The zip file of the archive
      * @throws IOException Thrown if something's wrong when connecting to the archive system
      */
     byte[] export(String identifier) throws IOException;
 
     /**
      * Move an archive from a tape to a hard drive
-     * @param identifier The identifier of the archive
+     *
+     * @param identifier   The public identifier of the archive (PID, PPN,...)
+     * @throws IOException Thrown if something's wrong when connecting to the archive services
      */
     void moveFromTapeToDisk(String identifier) throws IOException;
 
     /**
      * Move an archive from a hard drive to a tape
-     * @param identifier The identifier of the archive
+     *
+     * @param identifier   The public identifier of the archive (PID, PPN,...)
+     * @throws IOException Thrown if something's wrong when connecting to the archive services
      */
     void moveFromDiskToTape(String identifier) throws IOException;
 }
