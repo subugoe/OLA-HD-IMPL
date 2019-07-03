@@ -4,7 +4,7 @@ services:
     image: mongo
     restart: on-failure
     volumes:
-      - /data/db
+      - ~/ola-hd-data/mongodb:/data/db
     networks:
       - ola-hd
     env_file:
