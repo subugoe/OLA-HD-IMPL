@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import ola.hd.longtermstorage.component.MutexFactory;
+import ola.hd.longtermstorage.domain.SearchRequest;
+import ola.hd.longtermstorage.domain.SearchResults;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class CdstarService implements ArchiveManagerService {
+public class CdstarService implements ArchiveManagerService, SearchService {
 
     @Value("${cdstar.url}")
     private String url;
@@ -611,6 +613,43 @@ public class CdstarService implements ArchiveManagerService {
 
             // Cannot get the archive state? Throw the exception
             throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Error when getting the archive state.");
+        }
+    }
+
+    @Override
+    public SearchResults search(SearchRequest searchRequest) throws IOException {
+        String fullUrl = url + vault;
+
+        // Only search on archives on hard drive and on the latest version
+        String query = String.format("(%s) AND profile:default AND NOT _exists_:dcRelation", searchRequest.getQuery());
+
+        // Construct the URL
+        HttpUrl httpUrl = HttpUrl.parse(fullUrl).newBuilder()
+                .addQueryParameter("q", query)
+                .addQueryParameter("limit", searchRequest.getLimit() + "")
+                .build();
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(httpUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .get()
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                if (response.body() != null) {
+                    String bodyString = response.body().string();
+
+                    // Parse the returned JSON
+                    ObjectMapper mapper = new ObjectMapper();
+                    return mapper.readValue(bodyString, SearchResults.class);
+                }
+            }
+
+            // Cannot search? Throw exception
+            throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Error when performing search.");
         }
     }
 }

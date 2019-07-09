@@ -1,13 +1,17 @@
 package ola.hd.longtermstorage.service;
 
 import ola.hd.longtermstorage.domain.SearchRequest;
-import ola.hd.longtermstorage.domain.SearchResult;
-import org.xml.sax.SAXException;
+import ola.hd.longtermstorage.domain.SearchResults;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.util.List;
 
 public interface SearchService {
-    List<SearchResult> search(SearchRequest searchRequest) throws IOException, ParserConfigurationException, SAXException;
+
+    /**
+     * Used to perform search on the storage
+     * @param searchRequest And instance of the {@link SearchRequest} class.
+     * @return              The search result.
+     * @throws IOException  Thrown when there is a problem with the search.
+     */
+    SearchResults search(SearchRequest searchRequest) throws IOException;
 }

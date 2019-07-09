@@ -7,7 +7,7 @@ public class SearchRequest {
 
     public SearchRequest(String query) {
         this.query = query;
-        this.limit = 200;
+        this.limit = 1000;
     }
 
     public SearchRequest(String query, int limit) {
@@ -30,8 +30,8 @@ public class SearchRequest {
     public void setLimit(int limit) {
 
         // Max number of return results
-        if (limit > 200) {
-            limit = 200;
+        if (limit > 1000) {
+            limit = 1000;
         }
         this.limit = limit;
     }
