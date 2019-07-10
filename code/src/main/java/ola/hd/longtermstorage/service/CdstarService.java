@@ -46,6 +46,9 @@ public class CdstarService implements ArchiveManagerService, SearchService {
     @Value("${cdstar.onlineProfile}")
     private String onlineProfile;
 
+    @Value("${cdstar.mirrorProfile}")
+    private String mirrorProfile;
+
     @Value("${offline.mimeTypes}")
     private String offlineMimeTypes;
 
@@ -294,12 +297,9 @@ public class CdstarService implements ArchiveManagerService, SearchService {
 
         OkHttpClient client = new OkHttpClient();
 
-        // Because the profile can be changed later due to the data transfer between disk and tape,
-        // We need this dc:type to keep track of the original purpose of the archive
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("profile", profile)
-                .addFormDataPart("meta:dc:type", profile)
                 .build();
 
         Request request = new Request.Builder()
@@ -449,11 +449,11 @@ public class CdstarService implements ArchiveManagerService, SearchService {
             archiveId = getArchiveIdFromIdentifier(identifier, onlineProfile);
         } else {
             // Full export
-            archiveId = getArchiveIdFromIdentifier(identifier, offlineProfile);
+            archiveId = getArchiveIdFromIdentifier(identifier, mirrorProfile);
         }
 
         // Check if the archive state is ready for export (open state)
-        if (!isArchiveOpen(archiveId)) {
+        if (archiveId.equals("NOT_FOUND") || !isArchiveOpen(archiveId)) {
             throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "The archive is still on tape. Please make a full export request first.");
         }
 
@@ -466,15 +466,15 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         // Get cold-archive ID from the PID/PPN
         String archiveId = getArchiveIdFromIdentifier(identifier, offlineProfile);
 
-        // Change the profile of the archive to a hot profile
-        updateProfile(archiveId, onlineProfile);
+        // Change the profile of the archive to a mirror profile
+        updateProfile(archiveId, mirrorProfile);
     }
 
     @Override
     public void moveFromDiskToTape(String identifier) throws IOException {
 
-        // Get hot-archive ID from the PID/PPN
-        String archiveId = getArchiveIdFromIdentifier(identifier, onlineProfile);
+        // Get mirror-archive ID from the PID/PPN
+        String archiveId = getArchiveIdFromIdentifier(identifier, mirrorProfile);
 
         // Change the profile of the archive to a cold profile
         updateProfile(archiveId, offlineProfile);
@@ -504,11 +504,11 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         }
     }
 
-    private String getArchiveIdFromIdentifier(String identifier, String type) throws IOException {
+    private String getArchiveIdFromIdentifier(String identifier, String profile) throws IOException {
         String fullUrl = url + vault;
 
         // Search for archive with specified identifier (PPN, PID)
-        String query = String.format("dcIdentifier:\"%s\" AND dcType:%s", identifier, type);
+        String query = String.format("dcIdentifier:\"%s\" AND profile:%s", identifier, profile);
 
         // Sort by modified time in descending order
         String order = "-modified";
@@ -548,7 +548,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                     }
 
                     // Archive not found
-                    throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "The archive with identifier " + identifier + " could not be found.");
+                    return "NOT_FOUND";
                 }
             }
 
@@ -606,7 +606,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                     String state = root.get("state").asText();
 
                     // Open-state archive
-                    return state.equals("open");
+                    return state.equals("open") || state.equals("locked");
 
                 }
             }
