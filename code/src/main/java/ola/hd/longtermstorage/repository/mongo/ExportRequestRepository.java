@@ -10,5 +10,7 @@ import java.util.List;
 @Repository
 public interface ExportRequestRepository extends MongoRepository<ExportRequest, String> {
 
+    List<ExportRequest> findByStatus(ArchiveStatus status);
+
     List<ExportRequest> findByStatusOrderByTimestampDesc(ArchiveStatus status);
 }

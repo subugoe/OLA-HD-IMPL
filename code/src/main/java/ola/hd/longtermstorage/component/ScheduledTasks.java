@@ -29,7 +29,7 @@ public class ScheduledTasks {
     /**
      * When users request to export data from tapes, it must be moved to disks first. After some time, this background
      * job will move data back to tapes.
-     * Run at 04:00 every Monday. Initial delay: 2 minutes
+     * Run at 04:00 every Monday.
      * @throws IOException Thrown if something's wrong when connecting to different services
      */
     @Scheduled(cron = "0 0 4 ? * MON")
@@ -81,6 +81,58 @@ public class ScheduledTasks {
                     // No new available time -> the archive was moved to tape already
                     // Update the request status
                     request.setStatus(ArchiveStatus.DELETED);
+                }
+            }
+        }
+
+        exportRequestRepository.saveAll(requests);
+    }
+
+    /**
+     * Check the status of the archive of each export request and update the database.
+     * Run once a day, at 1 AM
+     */
+    @Scheduled(cron = "0 0 1 * * ?")
+    public void updateRequestStatus() throws IOException {
+
+        // Get all pending archive requests
+        List<ExportRequest> requests = exportRequestRepository.findByStatus(ArchiveStatus.PENDING);
+
+        // PID - ArchiveStatus. If the ArchiveStatus is ONLINE, change all subsequent request statuses to ONLINE,
+        // Otherwise, do nothing
+        HashMap<String, ArchiveStatus> statuses = new HashMap<>();
+
+        for (ExportRequest request : requests) {
+            String pid = request.getPid();
+
+            // First new PID encountered?
+            if (!statuses.containsKey(pid)) {
+
+                // If the archive is ready on disk
+                if (archiveManagerService.isArchiveOnDisk(pid)) {
+
+                    // Update the database
+                    request.setStatus(ArchiveStatus.ONLINE);
+
+                    // Tell the other to change status, too
+                    statuses.put(pid, ArchiveStatus.ONLINE);
+
+                } else {
+
+                    // The archive is not ready yet
+                    // Notify the same archive requests so that they won't have to check again
+                    statuses.put(pid, ArchiveStatus.PENDING);
+                }
+            } else {
+
+                // Subsequent PID encountered
+                ArchiveStatus archiveStatus = statuses.get(pid);
+
+                // The archive is ready
+                if (archiveStatus == ArchiveStatus.ONLINE) {
+
+                    // Update the database
+                    request.setStatus(ArchiveStatus.ONLINE);
                 }
             }
         }
