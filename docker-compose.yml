@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   mongo:
-    image: mongo
+    image: mongo:4.0.10
     restart: on-failure
     volumes:
       - ~/ola-hd-data/mongodb:/data/db
@@ -20,6 +20,8 @@ services:
           memory: 8GB
     ports:
       - "${OLA_HD_EXTERNAL_PORT}:${OLA_HD_PORT}"
+    depends_on:
+      - mongo
     networks:
       - ola-hd
     env_file:
