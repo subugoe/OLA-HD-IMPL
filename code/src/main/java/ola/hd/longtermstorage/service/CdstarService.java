@@ -467,7 +467,9 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         String archiveId = getArchiveIdFromIdentifier(identifier, offlineProfile);
 
         // Change the profile of the archive to a mirror profile
-        updateProfile(archiveId, mirrorProfile);
+        if (!archiveId.equals("NOT_FOUND")) {
+            updateProfile(archiveId, mirrorProfile);
+        }
     }
 
     @Override
@@ -477,7 +479,9 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         String archiveId = getArchiveIdFromIdentifier(identifier, mirrorProfile);
 
         // Change the profile of the archive to a cold profile
-        updateProfile(archiveId, offlineProfile);
+        if (!archiveId.equals("NOT_FOUND")) {
+            updateProfile(archiveId, offlineProfile);
+        }
     }
 
     private void updateProfile(String archiveId, String newProfile) throws IOException {
