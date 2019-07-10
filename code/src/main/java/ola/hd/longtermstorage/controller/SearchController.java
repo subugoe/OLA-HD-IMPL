@@ -23,7 +23,7 @@ public class SearchController {
     }
 
     @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> search(@RequestParam String query, @RequestParam(defaultValue = "1000") int limit) throws IOException {
+    public ResponseEntity<?> search(@RequestParam(name = "q") String query, @RequestParam(defaultValue = "1000") int limit) throws IOException {
 
         SearchRequest searchRequest = new SearchRequest(query, limit);
 
