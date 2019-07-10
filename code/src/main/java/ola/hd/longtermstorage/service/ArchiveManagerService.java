@@ -13,7 +13,7 @@ public interface ArchiveManagerService {
      * @param extractedDir The path to the folder where the ZIP file was extracted
      * @param pid          The PID which was assigned for this file
      * @param metaData     The list of meta-data of this ZIP
-     * @return Meta-data from the import process (e.g. URL to archive on disk / tape)
+     * @return             Meta-data from the import process (e.g. URL to archive on disk / tape)
      * @throws IOException Thrown if something's wrong when connecting to different services
      */
     List<AbstractMap.SimpleImmutableEntry<String, String>> importZipFile(Path extractedDir,
@@ -27,7 +27,7 @@ public interface ArchiveManagerService {
      * @param pid          The PID which was assigned for this file
      * @param metaData     The list of meta-data of this ZIP
      * @param prevPid      The PID of the previous version
-     * @return Meta-data from the import process (e.g. URL to archive on disk / tape)
+     * @return             Meta-data from the import process (e.g. URL to archive on disk / tape)
      * @throws IOException Thrown if something's wrong when connecting to different services
      */
     List<AbstractMap.SimpleImmutableEntry<String, String>> importZipFile(Path extractedDir,
@@ -60,4 +60,12 @@ public interface ArchiveManagerService {
      * @throws IOException Thrown if something's wrong when connecting to the archive services
      */
     void moveFromDiskToTape(String identifier) throws IOException;
+
+    /**
+     * Check if an archive is on disk so that it can be exported.
+     * @param identifier   The public identifier of the archive (PID, PPN,...)
+     * @return             True if the archive is ready on the hard drive, false otherwise.
+     * @throws IOException Thrown if something's wrong when connecting to the archive services
+     */
+    boolean isArchiveOnDisk(String identifier) throws IOException;
 }

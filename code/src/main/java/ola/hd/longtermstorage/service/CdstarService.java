@@ -656,4 +656,16 @@ public class CdstarService implements ArchiveManagerService, SearchService {
             throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Error when performing search.");
         }
     }
+
+    @Override
+    public boolean isArchiveOnDisk(String identifier) throws IOException {
+
+        String archiveId = getArchiveIdFromIdentifier(identifier, mirrorProfile);
+
+        if (archiveId.equals("NOT_FOUND")) {
+            return false;
+        }
+
+        return isArchiveOpen(archiveId);
+    }
 }
