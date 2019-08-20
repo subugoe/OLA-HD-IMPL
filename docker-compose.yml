@@ -12,7 +12,7 @@ services:
 
   ola-hd:
     build:
-      context: code/
+      context: back-end/
     command: java -Xms${OLA_HD_MIN_MEMORY} -Xmx${OLA_HD_MAX_MEMORY} -jar -Dspring.profiles.active=production -Dserver.port=${OLA_HD_PORT} target/long-term-storage-0.0.1-SNAPSHOT.jar
     deploy:
       resources:
