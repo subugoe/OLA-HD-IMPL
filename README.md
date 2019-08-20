@@ -1,4 +1,12 @@
-# Storage and archiving via CDStar as docker service
+# OLA-HD: A Long-term Archive System
+OLA-HD is a mixture between an archive system and a repository.
+The input is a `.zip` file whose content is structure as [BagIt](https://tools.ietf.org/html/rfc8493).
+The bag will be validated before any further actions take place.
+Data uploaded to the system will be stored in both tapes and hard drives.
+The separation rules are defined in the configuration file.
+
+In addition, each uploaded zip get a persistent identifier (PID).
+This PID can be used for sharing, citing, and versioning purposes.
 
 ## Introduction
 
