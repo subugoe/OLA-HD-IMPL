@@ -452,9 +452,14 @@ public class CdstarService implements ArchiveManagerService, SearchService {
             archiveId = getArchiveIdFromIdentifier(identifier, mirrorProfile);
         }
 
-        // Check if the archive state is ready for export (open state)
-        if (archiveId.equals("NOT_FOUND") || !isArchiveOpen(archiveId)) {
-            throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "The archive is still on tape. Please make a full export request first.");
+        // Archive not found
+        if (archiveId.equals("NOT_FOUND")) {
+            throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Archive not found.");
+        }
+
+        // The archive can't be exported because it is still on tape
+        if (!isArchiveOpen(archiveId)) {
+            throw new HttpClientErrorException(HttpStatus.CONFLICT, "The archive is still on tape. Please make a full export request first.");
         }
 
         return exportArchive(archiveId);
@@ -470,6 +475,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         if (!archiveId.equals("NOT_FOUND")) {
             updateProfile(archiveId, mirrorProfile);
         }
+        throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Archive not found.");
     }
 
     @Override
@@ -482,6 +488,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         if (!archiveId.equals("NOT_FOUND")) {
             updateProfile(archiveId, offlineProfile);
         }
+        throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Archive not found.");
     }
 
     private void updateProfile(String archiveId, String newProfile) throws IOException {

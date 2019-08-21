@@ -83,6 +83,8 @@ public class ExportController {
             @ApiResponse(code = 200, message = "An archive with the specified identifier was found.",
                     response = byte[].class),
             @ApiResponse(code = 404, message = "An archive with the specified identifier was not found.",
+                    response = ResponseMessage.class),
+            @ApiResponse(code = 409, message = "The archive is still on tape. A full export request must be made first.",
                     response = ResponseMessage.class)
     })
     @GetMapping(value = "/full-export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
