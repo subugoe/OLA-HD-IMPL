@@ -1,8 +1,7 @@
 ## OLA-HD: A Long-term Archive System
 OLA-HD is a mixture between an archive system and a repository.
 The input is a `.zip` file whose content is structure as [BagIt](https://tools.ietf.org/html/rfc8493 "BagIt RFC").
-We refer to this `.zip` file as a _work_.
-The work content will be validated before any further actions take place.
+The zip content will be validated before any further actions take place.
 Data uploaded to the system will be stored in both tapes and hard drives.
 The separation rules are defined in the configuration file.
 In addition, each uploaded zip get a persistent identifier (PID).
@@ -86,7 +85,31 @@ Currently, OLA-HD supports meta-data from [Dublin Core](https://www.dublincore.o
 To use it, prepend the meta-data with `dc`, e.g. `/search?q=dcCreator:John`
 
 **IMPORTANT**: a PID always contains a forward slash, which is a special character.
-For that reason, search by identifier can only be perform as a phrase search and the double quote must be encoded as `%22`.
+For that reason, search by identifier (PID) can only be perform as a phrase search and the double quote must be encoded as `%22`.
 ```
-curl -X GET http://your.domain.com/search?q=dcIdentifier:%2221.T11998/0000-001A-338B-E%22
+curl -X GET http://your.domain.com/search?q=dcIdentifier:%22your-identifier%22
+```
+
+### Quick export
+Data stored on hard drives can be quickly and publicly exported.
+To do so, send a `GET` request to the `/export` endpoint.
+The `id` must be provided as a URL parameter.
+```
+curl -X GET http://your.domain.com/export?id=your-id
+```
+
+### Full export request
+To initiate the data movement process from tapes to hard drives, a full export request must be made.
+In the request, the identifier of the file is specified.
+Then, the archive manager will move this file from tapes to hard drives.
+This process takes quite long, hours or days, depending on the real situation.
+To send the request, simply send a `GET` request to the `export-request` endpoint with the `id`.
+```
+curl -X GET http://your.domain.com/export-request?id=your-id
+```
+
+### Full export
+After the export request was successfully fulfilled, the full export can be made.
+```
+curl -X GET http://your.domain.com/full-export?id=your-id
 ```
