@@ -41,7 +41,10 @@ public class ExportController {
             @ApiResponse(code = 404, message = "An archive with the specified identifier was not found.",
                     response = ResponseMessage.class)
     })
-    @GetMapping(value = "/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = "/export", produces = {
+            MediaType.APPLICATION_OCTET_STREAM_VALUE,
+            MediaType.APPLICATION_JSON_VALUE
+    })
     public ResponseEntity<Resource> export(@ApiParam(value = "The PID or the PPN of the work.", required = true)
                                            @RequestParam("id") String id) throws IOException {
         byte[] data = archiveManagerService.export(id, "quick");
