@@ -53,7 +53,11 @@ public class ExportController {
                 .body(resource);
     }
 
-    @ApiOperation(value = "Send a request to export data on tapes")
+    @ApiOperation(value = "Send a request to export data on tapes.",
+            authorizations = {
+                    @Authorization(value = "basicAuth"),
+                    @Authorization(value = "bearer")
+            })
     @ApiResponses({
             @ApiResponse(code = 200, message = "The archive is already on the hard drive.",
                     response = byte[].class),
@@ -78,7 +82,11 @@ public class ExportController {
                 .body(new ResponseMessage(HttpStatus.ACCEPTED, "Your request is being processed."));
     }
 
-    @ApiOperation(value = "Export the cold archive which was already moved to the hard drive.")
+    @ApiOperation(value = "Export the cold archive which was already moved to the hard drive.",
+            authorizations = {
+                    @Authorization(value = "basicAuth"),
+                    @Authorization(value = "bearer")
+            })
     @ApiResponses({
             @ApiResponse(code = 200, message = "An archive with the specified identifier was found.",
                     response = byte[].class),
