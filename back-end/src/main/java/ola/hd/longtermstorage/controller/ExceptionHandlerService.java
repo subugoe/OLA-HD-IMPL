@@ -27,11 +27,8 @@ public class ExceptionHandlerService extends ResponseEntityExceptionHandler {
         String message = ex.getStatusText();
         String uri = request.getRequest().getRequestURI();
 
-        // Log the error
-        logger.info(message);
-
-        // Let the parent process further
-        return handleExceptionInternal(ex, new ResponseMessage(status, message, uri), null, status, request);
+        // Return the error message
+        return new ResponseEntity<>(new ResponseMessage(status, message, uri), status);
     }
 
     @ExceptionHandler({Exception.class, HttpServerErrorException.class})
