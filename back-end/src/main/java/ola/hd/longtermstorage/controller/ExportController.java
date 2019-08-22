@@ -43,7 +43,7 @@ public class ExportController {
     })
     @GetMapping(value = "/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<Resource> export(@ApiParam(value = "The PID or the PPN of the work.", required = true)
-                                               @RequestParam("id") String id) throws IOException {
+                                           @RequestParam("id") String id) throws IOException {
         byte[] data = archiveManagerService.export(id, "quick");
         ByteArrayResource resource = new ByteArrayResource(data);
 
@@ -68,7 +68,7 @@ public class ExportController {
     })
     @GetMapping(value = "/export-request", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> fullExportRequest(@ApiParam(value = "The PID or the PPN of the work.", required = true)
-                                                   @RequestParam("id") String id,
+                                               @RequestParam("id") String id,
                                                @ApiIgnore Principal principal) throws IOException {
 
         // Move the archive from tape to disk
@@ -95,9 +95,12 @@ public class ExportController {
             @ApiResponse(code = 409, message = "The archive is still on tape. A full export request must be made first.",
                     response = ResponseMessage.class)
     })
-    @GetMapping(value = "/full-export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = "/full-export", produces = {
+            MediaType.APPLICATION_OCTET_STREAM_VALUE,
+            MediaType.APPLICATION_JSON_VALUE
+    })
     public ResponseEntity<Resource> fullExport(@ApiParam(value = "The PID or the PPN of the work.", required = true)
-                                                   @RequestParam("id") String id) throws IOException {
+                                               @RequestParam("id") String id) throws IOException {
 
         byte[] data = archiveManagerService.export(id, "full");
         ByteArrayResource resource = new ByteArrayResource(data);
