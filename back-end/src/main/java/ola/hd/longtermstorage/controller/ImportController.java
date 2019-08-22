@@ -93,10 +93,10 @@ public class ImportController {
     @ApiOperation(value = "Import a ZIP file into a system. It may be an independent ZIP, or a new version of another ZIP. " +
             "In the second case, a PID of the previous ZIP must be provided.",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-    authorizations = {
-            @Authorization(value = "basicAuth"),
-            @Authorization(value = "bearer")
-    })
+            authorizations = {
+                    @Authorization(value = "basicAuth"),
+                    @Authorization(value = "bearer")
+            })
     @ApiResponses(value = {
             @ApiResponse(code = 202, message = "The ZIP has a valid BagIt structure. The system is saving it to the archive.",
                     response = ResponseMessage.class,
