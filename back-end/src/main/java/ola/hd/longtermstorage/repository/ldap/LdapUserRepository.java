@@ -6,7 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LdapUserRepository extends LdapRepository<LdapUser> {
-
     LdapUser findByUsername(String username);
-    LdapUser findByUsernameAndPassword(String username, String password);
 }
