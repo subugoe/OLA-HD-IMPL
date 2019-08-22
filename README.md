@@ -95,7 +95,7 @@ Data stored on hard drives can be quickly and publicly exported.
 To do so, send a `GET` request to the `/export` endpoint.
 The `id` must be provided as a URL parameter.
 ```
-curl -X GET http://your.domain.com/export?id=your-id
+curl -X GET http://your.domain.com/export?id=your-id --output export.zip
 ```
 
 ### Full export request
@@ -111,5 +111,5 @@ curl -X GET http://your.domain.com/export-request?id=your-id
 ### Full export
 After the export request was successfully fulfilled, the full export can be made.
 ```
-curl -X GET http://your.domain.com/full-export?id=your-id
+curl -X GET http://your.domain.com/full-export?id=your-id --output export.zip
 ```
