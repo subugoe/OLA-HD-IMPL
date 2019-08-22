@@ -52,7 +52,7 @@ public class ExceptionHandlerService extends ResponseEntityExceptionHandler {
         String message = ex.getMessage();
         String uri = request.getRequest().getRequestURI();
 
-        // Let the parent process further
-        return handleExceptionInternal(ex, new ResponseMessage(status, message, uri), null, status, request);
+        // Return the error message
+        return new ResponseEntity<>(new ResponseMessage(status, message, uri), status);
     }
 }
