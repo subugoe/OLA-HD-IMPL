@@ -65,12 +65,12 @@ public class MyLdapAuthenticationProvider implements AuthenticationProvider {
                 }
 
                 // User is not allowed to use the service
-                throw new BadCredentialsException("This user is not allowed to use the LZA service.");
+                throw new BadCredentialsException("Full authentication is required to access this resource.");
             }
         }
 
         // Incorrect username or password
-        throw new BadCredentialsException("Incorrect username or password.");
+        throw new BadCredentialsException("Full authentication is required to access this resource.");
     }
 
     @Override
