@@ -632,7 +632,8 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         String fullUrl = url + vault;
 
         // Only search on archives on hard drive and on the latest version
-        String query = String.format("(%s) AND profile:default AND NOT _exists_:dcRelation", searchRequest.getQuery());
+        //String query = String.format("(%s) AND profile:default AND NOT _exists_:dcRelation", searchRequest.getQuery());
+        String query = String.format("(%s) AND NOT _exists_:dcRelation", searchRequest.getQuery());
 
         // Construct the URL
         HttpUrl httpUrl = HttpUrl.parse(fullUrl).newBuilder()
