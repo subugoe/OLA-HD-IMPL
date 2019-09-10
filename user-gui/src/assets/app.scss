@@ -1,0 +1,46 @@
+@import "~bootstrap/scss/bootstrap";
+@import "~@fortawesome/fontawesome-free/css/all.css";
+
+// Define colors
+$primary: rgb(0, 158, 224);
+$secondary: rgb(75, 88, 95);
+
+#app {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.navbar {
+
+  .navbar-brand {
+    img {
+      height: 50px;
+    }
+  }
+
+  .fa.fa-bars {
+    color: $secondary;
+  }
+
+  .navbar-nav {
+
+    .nav-item {
+      padding-top: 15px;
+      padding-bottom: 15px;
+
+      a {
+        text-transform: uppercase;
+        color: $primary;
+      }
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background-color: $primary;
+
+      a {
+        color: white;
+      }
+    }
+  }
+}
