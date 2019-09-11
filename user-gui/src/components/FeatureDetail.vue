@@ -4,7 +4,7 @@
 
             <!-- Feature Detail -->
             <div class="row">
-                <div class="col-sm-12 col-md-6 align-self-center">
+                <div class="col-md-6 align-self-center">
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">PID Support</h5>
@@ -17,17 +17,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-12 col-md-6 p-0">
+                <div class="col-md-6 p-0">
                     <img src="../assets/images/cog-wheels.jpg" alt="Cog wheel" class="img-fit">
                 </div>
             </div>
 
             <!-- Feature Detail -->
             <div class="row">
-                <div class="col-sm-12 col-md-6 p-0">
-                    <img src="../assets/images/book.jpg" alt="Archive" class="img-fit">
-                </div>
-                <div class="col-sm-12 col-md-6 align-self-center">
+                <div class="col-md-6 align-self-center order-md-2">
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Long Term Archive</h5>
@@ -40,11 +37,14 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-md-6 p-0 order-md-1">
+                    <img src="../assets/images/book.jpg" alt="Archive" class="img-fit">
+                </div>
             </div>
 
             <!-- Feature Detail -->
             <div class="row">
-                <div class="col-sm-12 col-md-6 align-self-center">
+                <div class="col-md-6 align-self-center">
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Easy to Use</h5>
@@ -57,7 +57,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-12 col-md-6 p-0">
+                <div class="col-md-6 p-0">
                     <img src="../assets/images/hot-air-balloon.jpg" alt="Hot air ballon" class="img-fit">
                 </div>
             </div>
@@ -74,8 +74,6 @@
 
 <style lang="scss" scoped>
     #feature-detail .row {
-        height: 300px;
-
         .card {
             background-color: transparent;
             border: none;
