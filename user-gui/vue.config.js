@@ -1,3 +1,13 @@
 module.exports = {
-    lintOnSave: false
+    lintOnSave: false,
+    css: {
+        loaderOptions: {
+            sass: {
+                data: `
+                @import "~bootstrap/scss/bootstrap";
+                @import "@/assets/scss/_variable";
+                `
+            }
+        }
+    }
 };

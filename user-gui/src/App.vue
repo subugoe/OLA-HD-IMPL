@@ -14,7 +14,7 @@
                     aria-expanded="false"
                     aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon">
-                    <i class="fa fa-bars"></i>
+                    <i class="fa fa-bars fa-lg"></i>
                 </span>
             </button>
 
@@ -39,3 +39,39 @@
         <router-view/>
     </div>
 </template>
+
+<style lang="scss" scoped>
+    .navbar {
+
+        .navbar-brand {
+            img {
+                height: 50px;
+            }
+        }
+
+        .fa.fa-bars {
+            color: $secondary;
+        }
+
+        .navbar-nav {
+
+            .nav-item {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+
+                a {
+                    text-transform: uppercase;
+                    color: $primary;
+                }
+            }
+
+            .nav-item:hover, .nav-item.active {
+                background-color: $primary;
+
+                a {
+                    color: white;
+                }
+            }
+        }
+    }
+</style>
