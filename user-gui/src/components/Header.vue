@@ -13,7 +13,7 @@
                     <form>
                         <div class="form-group position-relative">
                             <input type="text" id="search-box" class="form-control" placeholder="Enter your search here">
-                            <i class="fa fa-search fa-lg"></i>
+                            <i class="fas fa-search fa-lg"></i>
                         </div>
                     </form>
                 </div>
@@ -50,10 +50,10 @@
         .header-text {
             color: white;
             font-weight: bold;
-            font-size: 2rem;
+            font-size: 1.5rem;
 
-            @include media-breakpoint-down(sm) {
-                font-size: 1.5rem;
+            @include media-breakpoint-up(sm) {
+                font-size: 2rem;
             }
 
             @include media-breakpoint-up(xl) {
@@ -72,6 +72,7 @@
             position: absolute;
             right: 0;
             padding: 11px 10px;
+            color: $secondary;
         }
     }
 </style>
