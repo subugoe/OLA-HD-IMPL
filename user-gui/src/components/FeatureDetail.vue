@@ -7,8 +7,8 @@
                 <div class="col-md-6 align-self-center">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">PID Support</h5>
-                            <p class="card-text">
+                            <h3 class="card-title">PID Support</h3>
+                            <p class="card-text lead">
                                 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
                                 Integer laoreet tellus a felis bibendum ullamcorper.
                                 Vestibulum gravida vitae nunc nec venenatis.
@@ -27,8 +27,8 @@
                 <div class="col-md-6 align-self-center order-md-2">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Long Term Archive</h5>
-                            <p class="card-text">
+                            <h3 class="card-title">Long Term Archive</h3>
+                            <p class="card-text lead">
                                 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
                                 Integer laoreet tellus a felis bibendum ullamcorper.
                                 Vestibulum gravida vitae nunc nec venenatis.
@@ -47,8 +47,8 @@
                 <div class="col-md-6 align-self-center">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Easy to Use</h5>
-                            <p class="card-text">
+                            <h3 class="card-title">Easy to Use</h3>
+                            <p class="card-text lead">
                                 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
                                 Integer laoreet tellus a felis bibendum ullamcorper.
                                 Vestibulum gravida vitae nunc nec venenatis.
