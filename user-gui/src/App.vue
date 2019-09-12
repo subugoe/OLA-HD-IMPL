@@ -2,9 +2,10 @@
     <div id="app">
 
         <!-- Navigation -->
-        <nav class="navbar navbar-expand-sm bg-light p-0">
+        <nav class="navbar navbar-expand-md bg-light p-0">
             <router-link tag="a" to="/" class="navbar-brand p-2">
-                <img src="./assets/logo-gwdg-full.png" alt="Brand logo">
+                <img src="./assets/logo-gwdg-full.png" alt="Brand logo" class="mr-2 mr-md-4">
+                <img src="./assets/logo-sub.png" alt="Brand logo">
             </router-link>
 
             <!-- Hamburger button -->
@@ -37,15 +38,30 @@
             </div>
         </nav>
         <router-view/>
+        <app-footer></app-footer>
     </div>
 </template>
+
+<script>
+    import Footer from './components/Footer';
+
+    export default {
+        components: {
+            appFooter: Footer
+        }
+    }
+</script>
 
 <style lang="scss" scoped>
     .navbar {
 
         .navbar-brand {
             img {
-                height: 50px;
+                height: 30px;
+
+                @include media-breakpoint-up(sm) {
+                    height: 50px;
+                }
             }
         }
 
