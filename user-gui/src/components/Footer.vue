@@ -1,5 +1,5 @@
 <template>
-    <section id="footer">
+    <footer>
         <div class="container-fluid">
             <div class="row py-3">
                 <div class="col-md-7 align-self-center text-center text-md-left">
@@ -26,7 +26,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </footer>
 </template>
 
 <script>
@@ -35,8 +35,34 @@
     }
 </script>
 
+<!-- To keep the footer at the bottom of the page -->
+<style lang="scss">
+    html, body {
+        height: 100%;
+        position: relative;
+    }
+
+    #app {
+        min-height: 100vh; /* will cover the 100% of viewport */
+        overflow: hidden;
+        display: block;
+        position: relative;
+        padding-bottom: 80px; /* height of your footer */
+
+        @include media-breakpoint-up(sm) {
+            padding-bottom: 56px;
+        }
+    }
+
+    footer {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+    }
+</style>
+
 <style lang="scss" scoped>
-    #footer {
+    footer {
         background-color: $secondary;
         color: white;
 
