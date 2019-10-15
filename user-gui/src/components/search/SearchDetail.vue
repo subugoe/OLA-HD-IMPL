@@ -27,7 +27,7 @@
         </div>
 
         <!-- Version -->
-        <div class="row mt-4">
+        <div class="row my-4">
             <div class="col">
                 <div class="card">
                     <div class="card-header">
@@ -51,7 +51,7 @@
     export default {
         data() {
             return {
-                value: null,
+                value: [],
                 options: [
                     {
                         id: 'a',
