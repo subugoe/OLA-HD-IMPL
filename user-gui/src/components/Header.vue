@@ -10,18 +10,12 @@
 
             <div class="row">
                 <div class="col-md-6 col-sm-8 mx-auto">
-                    <form>
-<!--                        <div class="form-group position-relative">-->
-<!--                            <input type="text" id="search-box" class="form-control" placeholder="Enter your search here">-->
-<!--                            <button type="submit" class="btn">-->
-<!--                                <i class="fas fa-search fa-lg"></i>-->
-<!--                            </button>-->
-<!--                        </div>-->
+                    <form @submit.prevent="submit">
                         <div class="input-group position-relative">
                             <label for="search-box" class="sr-only">Search box</label>
-                            <input type="text" id="search-box" class="form-control" placeholder="Enter your search here">
+                            <input type="text" id="search-box" class="form-control" placeholder="Enter your search here" v-model="query">
                             <div class="input-group-append">
-                                <button class="btn">
+                                <button class="btn" type="submit">
                                     <i class="fas fa-search fa-lg"></i>
                                 </button>
                             </div>
@@ -36,7 +30,21 @@
 
 <script>
     export default {
-        name: "Header"
+        data() {
+            return {
+                query: ''
+            }
+        },
+        methods: {
+            submit() {
+                this.$router.push({
+                    name: 'search',
+                    query: {
+                        q: this.query
+                    }
+                }).catch(err => {}); // To ignore the Navigation Duplicated error
+            }
+        }
     }
 </script>
 
@@ -84,6 +92,7 @@
             .input-group-append {
                 position: absolute;
                 right: 0;
+                z-index: 99;
             }
 
             i {
