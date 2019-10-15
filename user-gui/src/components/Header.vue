@@ -32,7 +32,7 @@
     export default {
         data() {
             return {
-                query: ''
+                query: this.$route.query['q']
             }
         },
         methods: {
