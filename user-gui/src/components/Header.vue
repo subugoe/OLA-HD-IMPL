@@ -11,10 +11,22 @@
             <div class="row">
                 <div class="col-md-6 col-sm-8 mx-auto">
                     <form>
-                        <div class="form-group position-relative">
+<!--                        <div class="form-group position-relative">-->
+<!--                            <input type="text" id="search-box" class="form-control" placeholder="Enter your search here">-->
+<!--                            <button type="submit" class="btn">-->
+<!--                                <i class="fas fa-search fa-lg"></i>-->
+<!--                            </button>-->
+<!--                        </div>-->
+                        <div class="input-group position-relative">
+                            <label for="search-box" class="sr-only">Search box</label>
                             <input type="text" id="search-box" class="form-control" placeholder="Enter your search here">
-                            <i class="fas fa-search fa-lg"></i>
+                            <div class="input-group-append">
+                                <button class="btn">
+                                    <i class="fas fa-search fa-lg"></i>
+                                </button>
+                            </div>
                         </div>
+
                     </form>
                 </div>
             </div>
@@ -68,11 +80,15 @@
             padding-right: 40px;
         }
 
-        .form-control + i {
-            position: absolute;
-            right: 0;
-            padding: 11px 10px;
-            color: $secondary;
+        form {
+            .input-group-append {
+                position: absolute;
+                right: 0;
+            }
+
+            i {
+                color: $secondary;
+            }
         }
     }
 </style>
