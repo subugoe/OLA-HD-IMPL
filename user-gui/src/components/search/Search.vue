@@ -57,7 +57,7 @@
         },
         watch: {
             '$route': 'search'
-        },
+        }
     }
 </script>
 
