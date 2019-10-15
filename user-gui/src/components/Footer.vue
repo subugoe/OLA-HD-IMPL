@@ -49,6 +49,10 @@
         position: relative;
         padding-bottom: 80px; /* height of your footer */
 
+        @include media-breakpoint-down(xs) {
+            padding-bottom: 104px;
+        }
+
         @include media-breakpoint-up(sm) {
             padding-bottom: 56px;
         }
