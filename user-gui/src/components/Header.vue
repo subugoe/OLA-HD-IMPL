@@ -15,7 +15,7 @@
                             <label for="search-box" class="sr-only">Search box</label>
                             <input type="text" id="search-box" class="form-control" placeholder="Enter your search here" v-model="query">
                             <div class="input-group-append">
-                                <button class="btn" type="submit">
+                                <button class="btn btn-sm btn-link" type="submit">
                                     <i class="fas fa-search fa-lg"></i>
                                 </button>
                             </div>
@@ -37,12 +37,14 @@
         },
         methods: {
             submit() {
+                // Don't submit the form if the query is empty
+
                 this.$router.push({
                     name: 'search',
                     query: {
                         q: this.query
                     }
-                }).catch(err => {}); // To ignore the Navigation Duplicated error
+                }).catch(() => {}); // To ignore the Navigation Duplicated error
             }
         }
     }
@@ -86,12 +88,19 @@
             border: 3px solid $primary;
             display: inline;
             padding-right: 40px;
+
+            // Remove glow
+            outline: none;
+            -webkit-box-shadow: none !important;
+            -moz-box-shadow: none !important;
+            box-shadow: none !important;
         }
 
         form {
             .input-group-append {
                 position: absolute;
-                right: 0;
+                right: 3px;
+                top: 3px;
                 z-index: 99;
             }
 
