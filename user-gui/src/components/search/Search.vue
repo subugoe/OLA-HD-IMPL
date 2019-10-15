@@ -2,9 +2,9 @@
     <div class="container">
 
         <!-- Search status -->
-        <div class="row pt-3">
-            <p class="mr-auto">15 results (20 ms)</p>
-            <p class="text-right">Showing 1 - 12</p>
+        <div class="row my-3">
+            <div class="col-6">15 results (20 ms)</div>
+            <div class="col-6 text-right">Showing 1 - 12</div>
         </div>
 
         <!-- Search result -->
