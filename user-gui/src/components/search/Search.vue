@@ -29,7 +29,8 @@
 </template>
 
 <script>
-    import SearchResult from './SearchResult'
+    import lzaApi from '@/services/lzaApi';
+    import SearchResult from './SearchResult';
 
     export default {
         props: {
@@ -48,7 +49,8 @@
             search() {
                 this.loading = true;
                 setTimeout(() => {
-                   this.loading = false;
+                    this.loading = false;
+                    lzaApi.search();
                 }, 2000);
             }
         },
