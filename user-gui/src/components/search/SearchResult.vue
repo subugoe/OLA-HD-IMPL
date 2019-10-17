@@ -2,23 +2,24 @@
     <div class="card">
         <div class="card-header">
             <i class="fas fa-download float-right"></i>
-            <h5>Title</h5>
+            <h5>{{ title }}</h5>
         </div>
         <div class="card-body">
             <table class="table table-borderless table-sm">
                 <tbody>
                     <tr>
-                        <td>PID:</td>
-                        <td>1234</td>
+                        <td>Archive ID:</td>
+                        <td>{{ item.id }}</td>
                     </tr>
                     <tr>
-                        <td>Identifier:</td>
-                        <td>1234</td>
+                        <td>Type:</td>
+                        <td>{{ item.type }}</td>
                     </tr>
-                    <tr>
-                        <td>Date:</td>
-                        <td>14.10.2019</td>
-                    </tr>
+                    <!-- TODO: Display created / modified date and size -->
+<!--                    <tr>-->
+<!--                        <td>Date:</td>-->
+<!--                        <td>14.10.2019</td>-->
+<!--                    </tr>-->
                 </tbody>
             </table>
         </div>
@@ -27,7 +28,17 @@
 
 <script>
     export default {
-        name: "SearchResult"
+        props: {
+            item: Object
+        },
+        computed: {
+            title() {
+                if (this.item.name) {
+                    return this.item.name;
+                }
+                return 'This is an archive.';
+            }
+        }
     }
 </script>
 

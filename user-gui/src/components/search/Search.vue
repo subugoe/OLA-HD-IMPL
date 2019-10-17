@@ -1,20 +1,35 @@
 <template>
     <div class="container">
 
+        <!-- Error message -->
+        <div class="row my-3" v-if="error">
+            <div class="col">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Error!</strong> An error has occurred. Please try again.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Search status -->
-        <div class="row my-3" v-if="!loading">
-            <div class="col-6">15 results (20 ms)</div>
+        <div class="row my-3" v-if="!loading && !error">
+            <div class="col-6">{{ this.totalMessage }} ({{ time }} ms)</div>
             <div class="col-6 text-right">Showing 1 - 12</div>
         </div>
 
-        <!-- Search result -->
-        <div class="row">
-            <div class="col text-center" v-if="loading">
+        <div class="row" v-if="loading">
+            <div class="col text-center">
                 <img src="../../assets/images/spin-1s-100px.gif" alt="Searching">
             </div>
-            <div class="col-md-6 col-lg-4 mb-3" v-if="!loading"
-                 v-for="result in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" :key="result">
-                <app-search-result></app-search-result>
+        </div>
+
+        <!-- Search result -->
+        <div class="row mb-3" v-if="!loading"
+             v-for="(result, index) in results.hits" :key="index">
+            <div class="col">
+                <app-search-result :item="result"></app-search-result>
             </div>
         </div>
 
@@ -39,7 +54,10 @@
         data() {
             return {
                 loading: true,
-                error: null
+                error: null,
+                time: 0,
+                totalMessage: '',
+                results: {}
             }
         },
         components: {
@@ -47,11 +65,40 @@
         },
         methods: {
             search() {
+                // Reset the state
                 this.loading = true;
-                setTimeout(() => {
-                    this.loading = false;
-                    lzaApi.search();
-                }, 2000);
+                this.error = null;
+                this.results = {};
+
+                let start = performance.now();
+
+                // TODO: set a limit and implement pagination
+                lzaApi.search(this.query)
+                    .then(response => {
+
+                        // Calculate the elapsed time
+                        let end = performance.now();
+                        this.time = Math.round(end - start);
+
+                        // Display proper total message
+                        this.totalMessage = response.data.total;
+                        if (response.data.total > 1) {
+                            this.totalMessage += ' results';
+                        } else {
+                            this.totalMessage += ' result';
+                        }
+
+                        // Render the results
+                        console.log(response.data);
+                        this.results = response.data;
+                    })
+                    .catch(error => {
+                        this.error = true;
+                        console.log(error);
+                    })
+                    .finally(() => {
+                        this.loading = false;
+                    });
             }
         },
         created() {
