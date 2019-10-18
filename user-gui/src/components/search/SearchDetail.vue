@@ -49,6 +49,9 @@
     import SearchResult from './SearchResult';
 
     export default {
+        props: {
+            id: String
+        },
         data() {
             return {
                 value: [],

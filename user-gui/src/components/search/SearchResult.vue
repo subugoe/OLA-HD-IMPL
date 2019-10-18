@@ -2,7 +2,9 @@
     <div class="card">
         <div class="card-header">
             <i class="fas fa-download float-right"></i>
-            <h5>{{ title }}</h5>
+            <router-link :to="{ name: 'search-detail', params: { id: item.id }}">
+                <h5>{{ title }}</h5>
+            </router-link>
         </div>
         <div class="card-body">
             <table class="table table-borderless table-sm">
