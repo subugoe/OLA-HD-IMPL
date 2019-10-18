@@ -89,7 +89,6 @@
                         }
 
                         // Render the results
-                        console.log(response.data);
                         this.results = response.data;
                     })
                     .catch(error => {
