@@ -14,5 +14,13 @@ export default {
                 q: query
             }
         });
+    },
+
+    getArchiveInfo(id: String) {
+        return instance.get(`/search-archive/${id}`, {
+            params: {
+                withFile: true
+            }
+        });
     }
 };
