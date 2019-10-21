@@ -13,33 +13,36 @@
             </div>
         </div>
 
-        <!-- Search status -->
-        <div class="row my-3" v-if="!loading && !error">
-            <div class="col-6">{{ this.totalMessage }} ({{ time }} ms)</div>
-            <div class="col-6 text-right">Showing 1 - 12</div>
-        </div>
-
         <div class="row" v-if="loading">
             <div class="col text-center">
                 <img src="../../assets/images/spin-1s-100px.gif" alt="Searching">
             </div>
         </div>
 
-        <!-- Search result -->
-        <div class="row mb-3" v-if="!loading"
-             v-for="(result, index) in results.hits" :key="index">
-            <div class="col">
-                <app-search-result :item="result"></app-search-result>
-            </div>
-        </div>
+        <template v-if="!loading && !error">
 
-        <!-- Navigation -->
-        <div class="row mb-3" v-if="!loading">
-            <div class="col-12 text-center">
-                <button class="btn btn-primary mr-5">Previous</button>
-                <button class="btn btn-primary">Next</button>
+            <!-- Search status -->
+            <div class="row my-3">
+                <div class="col-6">{{ this.totalMessage }} ({{ time }} ms)</div>
+                <div class="col-6 text-right">Showing 1 - 12</div>
             </div>
-        </div>
+
+            <!-- Search result -->
+            <div class="row mb-3"
+                 v-for="(result, index) in results.hits" :key="index">
+                <div class="col">
+                    <app-search-result :item="result"></app-search-result>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="row mb-3">
+                <div class="col-12 text-center">
+                    <button class="btn btn-primary mr-5">Previous</button>
+                    <button class="btn btn-primary">Next</button>
+                </div>
+            </div>
+        </template>
     </div>
 </template>
 
