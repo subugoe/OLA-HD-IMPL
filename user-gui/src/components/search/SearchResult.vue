@@ -10,16 +10,16 @@
             <table class="table table-borderless table-sm">
                 <tbody>
                     <tr>
-                        <td>Archive ID:</td>
-                        <td>{{ item.id }}</td>
+                        <td class="w-25">Archive ID:</td>
+                        <td class="w-75">{{ item.id }}</td>
                     </tr>
                     <tr>
-                        <td>Type:</td>
-                        <td>{{ item.type }}</td>
+                        <td class="w-25">Type:</td>
+                        <td class="w-75">{{ item.type }}</td>
                     </tr>
-                    <tr>
-                        <td>Path to file:</td>
-                        <td>{{ item.name }}</td>
+                    <tr v-if="item.name">
+                        <td class="w-25">Path to file:</td>
+                        <td class="w-75">{{ item.name }}</td>
                     </tr>
                     <!-- TODO: Display created / modified date and size -->
 <!--                    <tr>-->
