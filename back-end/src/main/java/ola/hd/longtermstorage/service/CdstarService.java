@@ -632,7 +632,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         String fullUrl = url + vault;
 
         // Only search on archives on hard drive and on the latest version
-        //String query = String.format("(%s) AND profile:default AND NOT _exists_:dcRelation", searchRequest.getQuery());
+        // Search on hard drive by default because data on tapes are not indexed (upload and immediately close the archive)
         String query = String.format("(%s) AND NOT _exists_:dcRelation", searchRequest.getQuery());
 
         // Construct the URL
@@ -675,5 +675,33 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         }
 
         return isArchiveOpen(archiveId);
+    }
+
+    @Override
+    public String getArchiveInfo(String id, boolean withFile) throws IOException {
+        String fullUrl = url + vault + "/" + id + "?with=meta";
+
+        if (withFile) {
+            fullUrl += ",files";
+        }
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(fullUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .get()
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                if (response.body() != null) {
+                    return response.body().string();
+                }
+            }
+
+            // Cannot search? Throw exception
+            throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Error when getting archive info.");
+        }
     }
 }

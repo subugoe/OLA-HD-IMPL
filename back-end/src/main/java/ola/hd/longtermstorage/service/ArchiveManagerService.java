@@ -68,4 +68,13 @@ public interface ArchiveManagerService {
      * @throws IOException Thrown if something's wrong when connecting to the archive services
      */
     boolean isArchiveOnDisk(String identifier) throws IOException;
+
+    /**
+     * Get information about the archive
+     * @param id The internal ID of the archive
+     * @param withFile Should all files in the archive be returned or not
+     * @return A JSON contains information about the archive
+     * @throws IOException Thrown if something's wrong when connecting to the archive services
+     */
+    String getArchiveInfo(String id, boolean withFile) throws IOException;
 }
