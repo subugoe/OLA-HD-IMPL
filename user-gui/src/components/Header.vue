@@ -36,14 +36,20 @@
         },
         methods: {
             submit() {
-                // Don't submit the form if the query is empty
+                // Trim the query
+                if (this.query) {
+                    this.query = this.query.trim();
 
-                this.$router.push({
-                    name: 'search',
-                    query: {
-                        q: this.query
+                    // Only search if the query is not empty
+                    if (this.query.length > 0) {
+                        this.$router.push({
+                            name: 'search',
+                            query: {
+                                q: this.query
+                            }
+                        }).catch(() => {}); // To ignore the Navigation Duplicated error
                     }
-                }).catch(() => {}); // To ignore the Navigation Duplicated error
+                }
             }
         }
     }
