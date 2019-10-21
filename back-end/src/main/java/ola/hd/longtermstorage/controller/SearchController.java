@@ -47,7 +47,8 @@ public class SearchController {
 
     @ApiOperation(value = "Search for an archive based on its internal ID.")
     @ApiResponses({
-            @ApiResponse(code = 200, message = "Search success", response = String.class)
+            @ApiResponse(code = 200, message = "Search success", response = String.class),
+            @ApiResponse(code = 404, message = "Archive not found", response = String.class)
     })
     @GetMapping(value = "/search-archive/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> searchArchive(@ApiParam(value = "Internal ID of the archive.", required = true)

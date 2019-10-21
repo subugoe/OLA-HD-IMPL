@@ -700,6 +700,10 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                 }
             }
 
+            if (response.code() == HttpStatus.NOT_FOUND.value()) {
+                throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Archive not found.");
+            }
+
             // Cannot search? Throw exception
             throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Error when getting archive info.");
         }
