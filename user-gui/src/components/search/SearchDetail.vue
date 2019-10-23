@@ -58,7 +58,7 @@
             <div class="col">
                 <div class="card">
                     <div class="card-header">
-                        <i class="fas fa-download float-right"></i>
+                        <i class="fas fa-download float-right" @click="download"></i>
                         <h5>File structure</h5>
                     </div>
                     <div class="card-body">
@@ -94,6 +94,7 @@
     import moment from 'moment';
 
     import lzaApi from '@/services/lzaApi';
+    import emojiService from '@/services/emojiService';
     import SearchResult from './SearchResult';
 
     export default {
@@ -106,30 +107,7 @@
                 error: null,
                 loading: true,
                 value: [],
-                options: [
-                    {
-                        id: 'a',
-                        label: 'a',
-                        children: [
-                            {
-                                id: 'aa',
-                                label: 'aa',
-                            },
-                            {
-                                id: 'ab',
-                                label: 'ab',
-                            }
-                        ],
-                    },
-                    {
-                        id: 'b',
-                        label: 'b',
-                    },
-                    {
-                        id: 'c',
-                        label: 'c',
-                    }
-                ]
+                options: []
             }
         },
         components: {
@@ -143,10 +121,88 @@
                 }
             }
         },
+        methods: {
+            buildTree() {
+                let tree = [];
+
+                for (let i = 0; i < this.archiveInfo.files.length; i++) {
+                    let fullPath = this.archiveInfo.files[i].name;
+
+                    // Split the full path into many parts
+                    let parts = fullPath.split('/');
+
+                    // Start looking at the root
+                    let currentLevel = tree;
+
+                    for (let j = 0; j < parts.length; j++) {
+                        let part = parts[j];
+
+                        // Build the ID of each part. ID is the full path starting from root to that part
+                        let index = fullPath.indexOf(part);
+                        let partId = fullPath.substring(0, index + part.length);
+
+                        // Check if this part is already exist in the tree
+                        let existingPath = findWhere(currentLevel, 'id', partId);
+
+                        // If yes, looking deeper
+                        if (existingPath) {
+                            currentLevel = existingPath.children;
+                        } else {
+
+                            let newPart = {
+                                id: partId,
+                                label: part
+                            };
+
+                            // For non-leaf nodes
+                            if (j < parts.length - 1) {
+
+                                // Add children
+                                newPart.children = [];
+
+                                // Add folder emoji
+                                newPart.label = '📁 ' + newPart.label;
+                            }
+
+                            // Add emoji to leaf-node
+                            if (j === parts.length - 1) {
+                                newPart.label = emojiService.getEmoji(part) + ' ' + newPart.label;
+                            }
+
+                            currentLevel.push(newPart);
+
+                            // Only go deeper if this is not the leaf node
+                            if (j < parts.length - 1) {
+                                currentLevel = newPart.children;
+                            }
+                        }
+                    }
+                }
+
+                function findWhere(array, key, value) {
+                    let t = 0;
+                    while (t < array.length && array[t][key] !== value) {
+                        t++;
+                    }
+                    if (t < array.length) {
+                        return array[t]
+                    } else {
+                        return false;
+                    }
+                }
+
+                return tree;
+            },
+
+            download() {
+                console.log(this.value);
+            }
+        },
         created() {
             lzaApi.getArchiveInfo(this.id)
                 .then(response => {
                     this.archiveInfo = response.data;
+                    this.options = this.buildTree();
                 })
                 .catch(error => {
                     this.error = true;
