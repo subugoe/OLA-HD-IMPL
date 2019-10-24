@@ -64,6 +64,7 @@
                     <div class="card-body">
                         <app-tree-select v-model="value"
                                          :multiple="true"
+                                         :show-count="true"
                                          :options="options"
                                          placeholder="Click to view file structure. Type to search. Select to download."/>
                     </div>
@@ -94,6 +95,7 @@
     import moment from 'moment';
 
     import lzaApi from '@/services/lzaApi';
+    import treeService from '@/services/treeService';
     import emojiService from '@/services/emojiService';
     import SearchResult from './SearchResult';
 
@@ -150,8 +152,14 @@
                         } else {
 
                             let newPart = {
+                                // Full path to this node
                                 id: partId,
-                                label: part
+
+                                // How it is displayed on the UI
+                                label: part,
+
+                                // The name of this folder/file only
+                                name: part
                             };
 
                             // For non-leaf nodes
@@ -195,7 +203,28 @@
             },
 
             download() {
-                console.log(this.value);
+                let downloadSet = new Set();
+
+                // Evaluate each chosen option
+                for (let path of this.value) {
+
+                    // Select the node corresponding to the path
+                    let node = treeService.getNode(this.options, path);
+
+                    // If it's not a leaf node
+                    if (node['children']) {
+
+                        // Get all files under it
+                        let leafNodes = treeService.getLeafNodes(node);
+                        leafNodes.forEach(item => downloadSet.add(item.id));
+                    } else {
+
+                        // This is a leaf node, simply add it to the set
+                        downloadSet.add(node.id);
+                    }
+                }
+
+                console.log(downloadSet);
             }
         },
         created() {
