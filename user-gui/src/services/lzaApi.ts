@@ -8,7 +8,7 @@ const instance = axios.create({
 });
 
 export default {
-    search(query: String) {
+    search(query: string) {
         return instance.get('/search', {
             params: {
                 q: query
@@ -16,7 +16,7 @@ export default {
         });
     },
 
-    getArchiveInfo(id: String) {
+    getArchiveInfo(id: string) {
         return instance.get(`/search-archive/${id}`, {
             params: {
                 withFile: true
