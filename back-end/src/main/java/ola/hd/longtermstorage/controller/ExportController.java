@@ -8,6 +8,7 @@ import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.repository.mongo.ExportRequestRepository;
 import ola.hd.longtermstorage.service.ArchiveManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -106,14 +107,20 @@ public class ExportController {
 
     private ResponseEntity<StreamingResponseBody> exportData(String id, String type) {
 
-        AtomicLong contentLength = new AtomicLong(-1);
+        // Set proper file name
+        String contentDisposition = "attachment;filename=";
+        if (type.equals("quick")) {
+            contentDisposition += "quick-export.zip";
+        } else {
+            contentDisposition += "full-export.zip";
+        }
 
+        // Build the response stream
         StreamingResponseBody stream = outputStream -> {
 
             try (Response response = archiveManagerService.export(id, type)) {
                 if (response.body() != null) {
                     InputStream inputStream = response.body().byteStream();
-                    contentLength.set(response.body().contentLength());
 
                     int numberOfBytesToWrite;
                     byte[] data = new byte[1024];
@@ -126,9 +133,8 @@ public class ExportController {
         };
 
         return ResponseEntity.ok()
-                .contentLength(contentLength.longValue())
                 .contentType(MediaType.parseMediaType("application/zip"))
-                .header("Content-Disposition", "attachment;filename=export.zip")
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
                 .body(stream);
     }
 }
