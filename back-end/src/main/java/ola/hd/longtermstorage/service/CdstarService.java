@@ -440,7 +440,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
     }
 
     @Override
-    public byte[] export(String identifier, String type) throws IOException {
+    public Response export(String identifier, String type) throws IOException {
 
         String archiveId;
 
@@ -568,7 +568,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         }
     }
 
-    private byte[] exportArchive(String archiveId) throws IOException {
+    private Response exportArchive(String archiveId) throws IOException {
         String fullUrl = url + vault + "/" + archiveId;
 
         // Construct the URL
@@ -583,16 +583,14 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                 .build();
 
         OkHttpClient client = new OkHttpClient();
-        try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful()) {
-                if (response.body() != null) {
-                    return response.body().bytes();
-                }
-            }
+        Response response = client.newCall(request).execute();
 
-            // Cannot get the archive ID? Throw the exception
-            throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot export the archive " + archiveId);
+        if (response.isSuccessful()) {
+            return response;
         }
+
+        // Cannot export the archive? Throw the exception
+        throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot export the archive " + archiveId);
     }
 
     private boolean isArchiveOpen(String archiveId) throws IOException {

@@ -1,5 +1,7 @@
 package ola.hd.longtermstorage.service;
 
+import okhttp3.Response;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.AbstractMap;
@@ -36,14 +38,14 @@ public interface ArchiveManagerService {
                                                                          String prevPid) throws IOException;
 
     /**
-     * Export an archive from the hard drive
+     * Export an archive from the hard drive or tape.
      *
      * @param identifier   The public identifier of the archive (PID, PPN,...)
      * @param type         Full export or quick export
-     * @return             The zip file of the archive
+     * @return             The {@link Response} object to get the stream and close it properly.
      * @throws IOException Thrown if something's wrong when connecting to the archive system
      */
-    byte[] export(String identifier, String type) throws IOException;
+    Response export(String identifier, String type) throws IOException;
 
     /**
      * Move an archive from a tape to a hard drive
