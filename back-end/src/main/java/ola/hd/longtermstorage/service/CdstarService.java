@@ -514,8 +514,16 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                             while ((length = inputStream.read(bytes)) != -1) {
                                 zipOutputStream.write(bytes, 0, length);
                             }
+                        } catch (IOException ex) {
+
+                            // Catch the exception here so that if something's wrong with 1 file, the whole process still runs.
+                            ex.printStackTrace();
                         }
                     }
+                } catch (IOException ex) {
+
+                    // Catch the exception here so that if something's wrong with 1 file, the whole process still runs.
+                    ex.printStackTrace();
                 }
             }
         }
