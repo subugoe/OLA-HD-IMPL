@@ -21,7 +21,6 @@ import springfox.documentation.annotations.ApiIgnore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Api(description = "This endpoint is used to export data from the system.")
 @RestController
@@ -109,11 +108,12 @@ public class ExportController {
 
         // Set proper file name
         String contentDisposition = "attachment;filename=";
-        if (type.equals("quick")) {
-            contentDisposition += "quick-export.zip";
-        } else {
-            contentDisposition += "full-export.zip";
+        String fileName = "quick-export.zip";
+
+        if (type != null && type.equals("full")) {
+            fileName = "full-export.zip";
         }
+        contentDisposition += fileName;
 
         // Build the response stream
         StreamingResponseBody stream = outputStream -> {
