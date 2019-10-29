@@ -24,7 +24,7 @@
             <div class="col">
                 <div class="card">
                     <div class="card-header">
-                        <i class="fas fa-download float-right"></i>
+                        <i class="fas fa-download float-right" v-if="isOpen"></i>
                         <h5>Archive ID: {{ archiveInfo.id }}</h5>
                     </div>
                     <div class="card-body">
@@ -58,7 +58,7 @@
             <div class="col">
                 <div class="card">
                     <div class="card-header">
-                        <i class="fas fa-download float-right" @click="download"></i>
+                        <i class="fas fa-download float-right" v-if="isOpen" @click="download"></i>
                         <h5>File structure</h5>
                     </div>
                     <div class="card-body">
@@ -66,6 +66,7 @@
                                          :multiple="true"
                                          :show-count="true"
                                          :options="options"
+                                         :disable-branch-nodes="!isOpen"
                                          placeholder="Click to view file structure. Type to search. Select to download."/>
                     </div>
                 </div>
@@ -93,6 +94,7 @@
     import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
     import moment from 'moment';
+    import streamSaver from 'streamsaver';
 
     import lzaApi from '@/services/lzaApi';
     import treeService from '@/services/treeService';
@@ -102,6 +104,12 @@
     export default {
         props: {
             id: String
+        },
+        computed: {
+            isOpen() {
+                // Check if the archive is on disk
+                return this.archiveInfo.state !== 'archived';
+            }
         },
         data() {
             return {
@@ -203,7 +211,7 @@
             },
 
             download() {
-                let downloadSet = new Set();
+                let downloadItems = [];
 
                 // Evaluate each chosen option
                 for (let path of this.value) {
@@ -216,15 +224,48 @@
 
                         // Get all files under it
                         let leafNodes = treeService.getLeafNodes(node);
-                        leafNodes.forEach(item => downloadSet.add(item.id));
+                        leafNodes.forEach(item => downloadItems.push(item.id));
                     } else {
 
                         // This is a leaf node, simply add it to the set
-                        downloadSet.add(node.id);
+                        downloadItems.push(node.id);
                     }
                 }
 
-                console.log(downloadSet);
+                // TODO: Send the download set to server
+                lzaApi.downloadFiles(this.archiveInfo.id, downloadItems)
+                    .then(response => {
+                        const fileStream = streamSaver.createWriteStream('download.zip');
+                        const readableStream = response.data;
+
+                        console.log(response);
+
+                        // more optimized
+                        if (window.WritableStream && readableStream.pipeTo) {
+                            return readableStream.pipeTo(fileStream)
+                                .then(() => console.log('done writing'))
+                        }
+
+                        window.writer = fileStream.getWriter();
+
+                        const reader = response.data.getReader();
+
+                        const pump = () => reader.read()
+                            .then(res => res.done
+                                ? writer.close()
+                                : writer.write(res.value).then(pump));
+
+                        pump();
+
+                        //response.data.pipe(fileStream);
+                    })
+                    .catch(error => {
+                        this.error = true;
+                        console.log(error);
+                    })
+                    .finally(() => {
+                        //this.loading = false;
+                    });
             }
         },
         created() {

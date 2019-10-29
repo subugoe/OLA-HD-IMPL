@@ -22,5 +22,14 @@ export default {
                 withFile: true
             }
         });
+    },
+
+    downloadFiles(archiveId: string, files: []) {
+        return instance.post('/download', {
+            archiveId: archiveId,
+            files: files
+        }, {
+            responseType: 'stream'
+        });
     }
 };
