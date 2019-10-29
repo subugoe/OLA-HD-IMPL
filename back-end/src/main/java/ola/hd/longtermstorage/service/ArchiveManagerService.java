@@ -3,6 +3,7 @@ package ola.hd.longtermstorage.service;
 import okhttp3.Response;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.List;
@@ -48,6 +49,15 @@ public interface ArchiveManagerService {
     Response export(String identifier, String type) throws IOException;
 
     /**
+     * Get a list of files from the archive manager, pack them all in a zip file and return to the user.
+     *
+     * @param archiveId    The internal ID of the archive.
+     * @param files        The list of files to be downloaded.
+     * @param outputStream The stream to write the output to.
+     */
+    void downloadFiles(String archiveId, String[] files, OutputStream outputStream) throws IOException;
+
+    /**
      * Move an archive from a tape to a hard drive
      *
      * @param identifier   The public identifier of the archive (PID, PPN,...)
@@ -65,6 +75,7 @@ public interface ArchiveManagerService {
 
     /**
      * Check if an archive is on disk so that it can be exported.
+     *
      * @param identifier   The public identifier of the archive (PID, PPN,...)
      * @return             True if the archive is ready on the hard drive, false otherwise.
      * @throws IOException Thrown if something's wrong when connecting to the archive services
@@ -73,6 +84,7 @@ public interface ArchiveManagerService {
 
     /**
      * Get information about the archive
+     *
      * @param id The internal ID of the archive
      * @param withFile Should all files in the archive be returned or not
      * @return A JSON contains information about the archive

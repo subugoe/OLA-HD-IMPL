@@ -3,6 +3,7 @@ package ola.hd.longtermstorage.controller;
 import io.swagger.annotations.*;
 import okhttp3.Response;
 import ola.hd.longtermstorage.domain.ArchiveStatus;
+import ola.hd.longtermstorage.domain.DownloadRequest;
 import ola.hd.longtermstorage.domain.ExportRequest;
 import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.repository.mongo.ExportRequestRepository;
@@ -12,9 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -102,6 +101,26 @@ public class ExportController {
                                                @RequestParam("id") String id) {
 
         return exportData(id, "full");
+    }
+
+    @PostMapping(value = "/download", consumes = MediaType.APPLICATION_JSON_VALUE, produces = {
+            MediaType.APPLICATION_OCTET_STREAM_VALUE,
+            MediaType.APPLICATION_JSON_VALUE
+    })
+    public ResponseEntity<StreamingResponseBody> downloadFiles(@RequestBody DownloadRequest payload) {
+
+        // Set proper header
+        String contentDisposition = "attachment;filename=download.zip";
+
+        // Build the response stream
+        StreamingResponseBody stream = outputStream -> {
+            archiveManagerService.downloadFiles(payload.getArchiveId(), payload.getFiles(), outputStream);
+        };
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/zip"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+                .body(stream);
     }
 
     private ResponseEntity<StreamingResponseBody> exportData(String id, String type) {

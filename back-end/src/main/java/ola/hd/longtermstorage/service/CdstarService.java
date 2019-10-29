@@ -13,9 +13,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -24,6 +27,8 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class CdstarService implements ArchiveManagerService, SearchService {
@@ -463,6 +468,42 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         }
 
         return exportArchive(archiveId);
+    }
+
+    @Override
+    public void downloadFiles(String archiveId, String[] paths, OutputStream outputStream) throws IOException {
+        String baseUrl = url + vault + "/" + archiveId;
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request.Builder requestBuilder = new Request.Builder()
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .get();
+
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
+
+            for (String path : paths) {
+                String fullUrl = baseUrl + "/" + path;
+                Request request = requestBuilder.url(fullUrl).build();
+
+                try (Response response = client.newCall(request).execute()) {
+                    if (response.isSuccessful() && response.body() != null) {
+
+                        try (InputStream inputStream = response.body().byteStream()) {
+                            String fileName = path.substring(path.lastIndexOf('/') + 1);
+                            ZipEntry zipEntry = new ZipEntry(fileName);
+                            zipOutputStream.putNextEntry(zipEntry);
+
+                            byte[] bytes = new byte[1024];
+                            int length;
+                            while ((length = inputStream.read(bytes)) != -1) {
+                                zipOutputStream.write(bytes, 0, length);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Override

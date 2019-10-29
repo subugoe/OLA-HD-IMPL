@@ -43,6 +43,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(new JwtFilter(this.tokenProvider), BasicAuthenticationFilter.class)
                 .authorizeRequests()
                     .antMatchers("/export",
+                            "/download",
                             "/login",
                             "/search*/**",
                             "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
