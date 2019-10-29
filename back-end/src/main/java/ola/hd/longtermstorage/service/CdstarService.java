@@ -501,11 +501,8 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                         // Stream the response
                         try (InputStream inputStream = response.body().byteStream()) {
 
-                            // Build the file name from the path
-                            String fileName = path.substring(path.lastIndexOf('/') + 1);
-
-                            // Add new entry to the zip
-                            ZipEntry zipEntry = new ZipEntry(fileName);
+                            // Add new entry to the zip. Use full path as entry name so that the sub-directory can be created
+                            ZipEntry zipEntry = new ZipEntry(path);
                             zipOutputStream.putNextEntry(zipEntry);
 
                             // Write the response to the zip stream
@@ -516,13 +513,13 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                             }
                         } catch (IOException ex) {
 
-                            // Catch the exception here so that if something's wrong with 1 file, the whole process still runs.
+                            // Catch the exception here so that if something's wrong with 1 file, the whole process still runs
                             ex.printStackTrace();
                         }
                     }
                 } catch (IOException ex) {
 
-                    // Catch the exception here so that if something's wrong with 1 file, the whole process still runs.
+                    // Catch the exception here so that if something's wrong with 1 file, the whole process still runs
                     ex.printStackTrace();
                 }
             }
