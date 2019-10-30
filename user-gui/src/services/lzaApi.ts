@@ -25,11 +25,18 @@ export default {
     },
 
     downloadFiles(archiveId: string, files: []) {
-        return instance.post('/download', {
-            archiveId: archiveId,
-            files: files
-        }, {
-            responseType: 'stream'
+        let url = 'http://141.5.98.232:8080/download';
+        let data = {
+            archiveId,
+            files
+        };
+
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
         });
     }
 };
