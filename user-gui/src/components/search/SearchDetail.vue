@@ -250,6 +250,9 @@
                         // If the WritableStream is not available (Firefox, Safari), take it from the ponyfill
                         if (!window.WritableStream) {
                             streamSaver.WritableStream = WritableStream;
+
+                            // To use pipeTo later
+                            window.WritableStream = WritableStream;
                         }
 
                         const fileStream = streamSaver.createWriteStream(fileName);
