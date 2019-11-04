@@ -94,6 +94,7 @@
     import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
     import moment from 'moment';
+    import { WritableStream } from "web-streams-polyfill/ponyfill";
     import streamSaver from 'streamsaver';
 
     import lzaApi from '@/services/lzaApi';
@@ -245,6 +246,12 @@
 
                         // These code section is adapted from an example of the StreamSaver.js
                         // https://jimmywarting.github.io/StreamSaver.js/examples/fetch.html
+
+                        // If the WritableStream is not available (Firefox, Safari), take it from the ponyfill
+                        if (!window.WritableStream) {
+                            streamSaver.WritableStream = WritableStream;
+                        }
+
                         const fileStream = streamSaver.createWriteStream(fileName);
                         const readableStream = response.body;
 
