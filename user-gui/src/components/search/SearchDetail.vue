@@ -94,7 +94,7 @@
     import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
     import moment from 'moment';
-    import { WritableStream } from "web-streams-polyfill/ponyfill";
+    import { WritableStream } from 'web-streams-polyfill/ponyfill';
     import streamSaver from 'streamsaver';
 
     import lzaApi from '@/services/lzaApi';
