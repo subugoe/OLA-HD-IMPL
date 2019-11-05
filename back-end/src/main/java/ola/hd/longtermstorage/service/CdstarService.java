@@ -698,6 +698,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         HttpUrl httpUrl = HttpUrl.parse(fullUrl).newBuilder()
                 .addQueryParameter("q", query)
                 .addQueryParameter("limit", searchRequest.getLimit() + "")
+                .addQueryParameter("scroll", searchRequest.getScroll())
                 .build();
 
         OkHttpClient client = new OkHttpClient();

@@ -35,10 +35,16 @@ public class SearchController {
     })
     @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> search(@ApiParam(value = "The query used to search.", required = true)
-                                        @RequestParam(name = "q") String query,
-                                    @RequestParam(defaultValue = "1000") int limit) throws IOException {
+                                    @RequestParam(name = "q")
+                                            String query,
+                                    @ApiParam(value = "Max returned results.")
+                                    @RequestParam(defaultValue = "25")
+                                            int limit,
+                                    @ApiParam(value = "Scroll ID for pagination")
+                                    @RequestParam(defaultValue = "")
+                                            String scroll) throws IOException {
 
-        SearchRequest searchRequest = new SearchRequest(query, limit);
+        SearchRequest searchRequest = new SearchRequest(query, limit, scroll);
 
         SearchResults results = searchService.search(searchRequest);
 
@@ -52,7 +58,7 @@ public class SearchController {
     })
     @GetMapping(value = "/search-archive/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> searchArchive(@ApiParam(value = "Internal ID of the archive.", required = true)
-                                               @PathVariable String id,
+                                           @PathVariable String id,
                                            @ApiParam(value = "An option to include all files in return.")
                                            @RequestParam(defaultValue = "false") boolean withFile) throws IOException {
 

@@ -4,14 +4,11 @@ public class SearchRequest {
 
     private String query;
     private int limit;
+    private String scroll;
 
-    public SearchRequest(String query) {
+    public SearchRequest(String query, int limit, String scroll) {
         this.query = query;
-        this.limit = 1000;
-    }
-
-    public SearchRequest(String query, int limit) {
-        this.query = query;
+        this.scroll = scroll;
         setLimit(limit);
     }
 
@@ -34,5 +31,13 @@ public class SearchRequest {
             limit = 1000;
         }
         this.limit = limit;
+    }
+
+    public String getScroll() {
+        return scroll;
+    }
+
+    public void setScroll(String scroll) {
+        this.scroll = scroll;
     }
 }
