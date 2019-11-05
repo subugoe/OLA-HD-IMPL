@@ -8,10 +8,12 @@ const instance = axios.create({
 });
 
 export default {
-    search(query: string) {
+    search(query: string, limit: number, scroll: string) {
         return instance.get('/search', {
             params: {
-                q: query
+                q: query,
+                limit,
+                scroll
             }
         });
     },
