@@ -1,6 +1,9 @@
 package ola.hd.longtermstorage.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.*;
+import ola.hd.longtermstorage.domain.SearchHit;
+import ola.hd.longtermstorage.domain.SearchHitDetail;
 import ola.hd.longtermstorage.domain.SearchRequest;
 import ola.hd.longtermstorage.domain.SearchResults;
 import ola.hd.longtermstorage.service.ArchiveManagerService;
@@ -47,6 +50,20 @@ public class SearchController {
         SearchRequest searchRequest = new SearchRequest(query, limit, scroll);
 
         SearchResults results = searchService.search(searchRequest);
+
+        ObjectMapper mapper = new ObjectMapper();
+        for (SearchHit hit : results.getHits()) {
+            String data;
+
+            if (hit.getType().equals("file")) {
+                data = archiveManagerService.getFileInfo(hit.getId(), hit.getName());
+            } else {
+                data = archiveManagerService.getArchiveInfo(hit.getId(), false);
+            }
+
+            SearchHitDetail detail = mapper.readValue(data, SearchHitDetail.class);
+            hit.setDetail(detail);
+        }
 
         return ResponseEntity.ok(results);
     }

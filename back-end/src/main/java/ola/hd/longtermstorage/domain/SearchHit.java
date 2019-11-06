@@ -13,6 +13,8 @@ public class SearchHit {
 
     private float score;
 
+    private SearchHitDetail detail;
+
     public SearchHit() {
         // A default constructor is necessary for JSON deserialization
     }
@@ -47,5 +49,13 @@ public class SearchHit {
 
     public void setScore(float score) {
         this.score = score;
+    }
+
+    public SearchHitDetail getDetail() {
+        return detail;
+    }
+
+    public void setDetail(SearchHitDetail detail) {
+        this.detail = detail;
     }
 }

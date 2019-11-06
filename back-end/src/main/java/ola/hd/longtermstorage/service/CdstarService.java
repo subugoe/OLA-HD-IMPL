@@ -768,4 +768,32 @@ public class CdstarService implements ArchiveManagerService, SearchService {
             throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Error when getting archive info.");
         }
     }
+
+    @Override
+    public String getFileInfo(String id, String path) throws IOException {
+        String fullUrl = url + vault + "/" + id + "/" + path + "?info";
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(fullUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .get()
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                if (response.body() != null) {
+                    return response.body().string();
+                }
+            }
+
+            if (response.code() == HttpStatus.NOT_FOUND.value()) {
+                throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "File not found.");
+            }
+
+            // Cannot search? Throw exception
+            throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Error when getting file info.");
+        }
+    }
 }
