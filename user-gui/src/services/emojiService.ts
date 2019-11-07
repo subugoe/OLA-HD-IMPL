@@ -1,21 +1,21 @@
 export default {
-    getEmoji(fileName: String) {
-        let extension = fileName.substring(fileName.lastIndexOf('.') + 1);
+
+    getEmoji(mimeType: String) {
         let emoji = '';
 
-        switch (extension) {
+        switch (mimeType) {
             // Plain text
-            case 'txt':
-            case 'xml':
+            case 'text/plain':
+            case 'application/xml':
                 emoji = '🗒️';
                 break;
 
             // Images
-            case 'jpg':
-            case 'jpeg':
-            case 'png':
-            case 'tif':
-            case 'tiff':
+            case 'image/jpg':
+            case 'image/jpeg':
+            case 'image/png':
+            case 'image/tif':
+            case 'image/tiff':
                 emoji = '🖼️';
                 break;
 

@@ -183,7 +183,8 @@
 
                             // Add emoji to leaf-node
                             if (j === parts.length - 1) {
-                                newPart.label = emojiService.getEmoji(part) + ' ' + newPart.label;
+                                //newPart.label = emojiService.getEmoji(part) + ' ' + newPart.label;
+                                newPart.label = emojiService.getEmoji(this.archiveInfo.files[i].type) + ' ' + newPart.label;
                             }
 
                             currentLevel.push(newPart);
