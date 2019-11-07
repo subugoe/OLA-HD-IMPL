@@ -23,12 +23,22 @@
                             <td class="w-75">{{ item.detail.file_count }}</td>
                         </tr>
                         <tr>
-                            <td class="w-25">Created date:</td>
+                            <td class="w-25">Imported date:</td>
                             <td class="w-75">{{ item.detail.created | formatDate }}</td>
                         </tr>
                         <tr>
                             <td class="w-25">Last modified date:</td>
                             <td class="w-75">{{ item.detail.modified | formatDate }}</td>
+                        </tr>
+
+                        <tr v-if="item.detail.meta" v-for="(value, name) in item.detail.meta">
+                            <td class="w-25">{{ name }}:</td>
+                            <td class="w-75">
+                                <div v-for="data in value">
+                                    <span>{{ data }}</span>
+                                    <br/>
+                                </div>
+                            </td>
                         </tr>
                     </template>
 
@@ -50,7 +60,7 @@
                             <td class="w-75">{{ item.name }}</td>
                         </tr>
                         <tr>
-                            <td class="w-25">Created date:</td>
+                            <td class="w-25">Imported date:</td>
                             <td class="w-75">{{ item.detail.created | formatDate }}</td>
                         </tr>
                         <tr>
