@@ -475,6 +475,8 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         // Set the base URL up to the archive level
         String baseUrl = url + vault + "/" + archiveId;
 
+        // TODO: check the archive state. Throw an exception if the archive is in "archived" state
+
         OkHttpClient client = new OkHttpClient();
 
         // Build the GET request
@@ -770,8 +772,12 @@ public class CdstarService implements ArchiveManagerService, SearchService {
     }
 
     @Override
-    public String getFileInfo(String id, String path) throws IOException {
-        String fullUrl = url + vault + "/" + id + "/" + path + "?info";
+    public byte[] getFile(String id, String path, boolean infoOnly) throws IOException {
+        String fullUrl = url + vault + "/" + id + "/" + path;
+
+        if (infoOnly) {
+            fullUrl += "?info";
+        }
 
         OkHttpClient client = new OkHttpClient();
 
@@ -784,12 +790,17 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
                 if (response.body() != null) {
-                    return response.body().string();
+
+                    return response.body().bytes();
                 }
             }
 
             if (response.code() == HttpStatus.NOT_FOUND.value()) {
                 throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "File not found.");
+            }
+
+            if (response.code() == HttpStatus.CONFLICT.value()) {
+                throw new HttpClientErrorException(HttpStatus.CONFLICT, "Cannot get the file because it is on tape.");
             }
 
             // Cannot search? Throw exception

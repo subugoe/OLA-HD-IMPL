@@ -56,7 +56,7 @@ public class SearchController {
             String data;
 
             if (hit.getType().equals("file")) {
-                data = archiveManagerService.getFileInfo(hit.getId(), hit.getName());
+                data = new String(archiveManagerService.getFile(hit.getId(), hit.getName(), true));
             } else {
                 data = archiveManagerService.getArchiveInfo(hit.getId(), false);
             }

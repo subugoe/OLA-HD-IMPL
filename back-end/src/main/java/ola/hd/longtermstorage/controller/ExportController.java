@@ -9,6 +9,8 @@ import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.repository.mongo.ExportRequestRepository;
 import ola.hd.longtermstorage.service.ArchiveManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -122,6 +124,26 @@ public class ExportController {
                 .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
                 .body(stream);
+    }
+
+    @GetMapping(value = "/download-file/{id}", produces = {
+            MediaType.APPLICATION_XML_VALUE,
+            MediaType.TEXT_PLAIN_VALUE,
+            MediaType.APPLICATION_OCTET_STREAM_VALUE
+    })
+    public ResponseEntity<Resource> downloadFile(@ApiParam(value = "Internal ID of the archive.", required = true)
+                                                 @PathVariable String id,
+                                                 @ApiParam(value = "Path to the requested file", required = true)
+                                                 @RequestParam String path) throws IOException {
+
+        byte[] data = archiveManagerService.getFile(id, path, false);
+        ByteArrayResource resource = new ByteArrayResource(data);
+
+        // Set proper header
+        String contentDisposition = "inline";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+                .body(resource);
     }
 
     private ResponseEntity<StreamingResponseBody> exportData(String id, String type) {

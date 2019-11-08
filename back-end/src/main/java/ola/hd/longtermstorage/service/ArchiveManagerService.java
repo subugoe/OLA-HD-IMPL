@@ -97,8 +97,9 @@ public interface ArchiveManagerService {
      *
      * @param id           The internal ID of the archive
      * @param path         Path to the file
-     * @return             A JSON contains information about the file
+     * @param infoOnly     If true, return only the meta-data. Return the file otherwise
+     * @return             A byte array of the result, either it's a string (file info) or the actual file
      * @throws IOException Thrown if something's wrong when connecting to the archive services
      */
-    String getFileInfo(String id, String path) throws IOException;
+    byte[] getFile(String id, String path, boolean infoOnly) throws IOException;
 }

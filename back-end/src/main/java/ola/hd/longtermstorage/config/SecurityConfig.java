@@ -44,6 +44,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                     .antMatchers("/export",
                             "/download",
+                            "/download-file/**",
                             "/login",
                             "/search*/**",
                             "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
