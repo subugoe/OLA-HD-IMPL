@@ -27,5 +27,15 @@ services:
     env_file:
       - .env
 
+  user-gui:
+    build:
+      context: user-gui/
+    ports:
+      - "80:80"
+    depends_on:
+      - ola-hd
+    networks:
+      - ola-hd
+
 networks:
   ola-hd:
