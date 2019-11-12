@@ -1,7 +1,6 @@
 <template>
     <div class="card">
         <div class="card-header">
-            <i class="fas fa-download float-right"></i>
             <router-link :to="{ name: 'search-detail', params: { id: item.id }}">
                 <h5>{{ title }}</h5>
             </router-link>
@@ -107,11 +106,6 @@
 
 <style lang="scss" scoped>
     .card .card-header {
-        i {
-            color: $primary;
-            cursor: pointer;
-        }
-
         h5 {
             color: $primary;
         }

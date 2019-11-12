@@ -40,5 +40,12 @@ export default {
             },
             body: JSON.stringify(data)
         });
+    },
+
+    exportArchive(archiveId: string) {
+        let url = `http://141.5.98.232:8080/export?id=${archiveId}&isInternal=true`;
+        return fetch(url, {
+            method: 'GET'
+        });
     }
 };
