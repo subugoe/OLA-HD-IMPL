@@ -444,16 +444,22 @@ public class CdstarService implements ArchiveManagerService, SearchService {
     }
 
     @Override
-    public Response export(String identifier, String type) throws IOException {
+    public Response export(String identifier, String type, boolean isInternal) throws IOException {
 
         String archiveId;
 
-        // Quick export?
-        if (type.equals("quick")) {
-            archiveId = getArchiveIdFromIdentifier(identifier, onlineProfile);
+        // If it's an internal ID, just take it
+        if (isInternal) {
+            archiveId = identifier;
         } else {
-            // Full export
-            archiveId = getArchiveIdFromIdentifier(identifier, mirrorProfile);
+            // Otherwise get the internal ID from the public ID
+            // Quick export?
+            if (type.equals("quick")) {
+                archiveId = getArchiveIdFromIdentifier(identifier, onlineProfile);
+            } else {
+                // Full export
+                archiveId = getArchiveIdFromIdentifier(identifier, mirrorProfile);
+            }
         }
 
         // Archive not found

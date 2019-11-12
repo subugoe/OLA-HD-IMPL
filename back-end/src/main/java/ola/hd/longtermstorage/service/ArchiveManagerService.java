@@ -41,12 +41,13 @@ public interface ArchiveManagerService {
     /**
      * Export an archive from the hard drive or tape.
      *
-     * @param identifier   The public identifier of the archive (PID, PPN,...)
+     * @param identifier   The identifier of the archive
      * @param type         Full export or quick export
+     * @param isInternal   To indicate if the identifier is an internal ID or not (PID, PPN,...)
      * @return             The {@link Response} object to get the stream and close it properly.
      * @throws IOException Thrown if something's wrong when connecting to the archive system
      */
-    Response export(String identifier, String type) throws IOException;
+    Response export(String identifier, String type, boolean isInternal) throws IOException;
 
     /**
      * Get a list of files from the archive manager, pack them all in a zip file and return to the user.

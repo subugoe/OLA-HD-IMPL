@@ -292,7 +292,7 @@ public class ImportController {
 
         // Build the export URL
         ControllerLinkBuilder linkBuilder = ControllerLinkBuilder.linkTo(
-                ControllerLinkBuilder.methodOn(ExportController.class).export(pid));
+                ControllerLinkBuilder.methodOn(ExportController.class).export(pid, false));
         String exportUrl = linkBuilder.toString();
 
         if (prev != null) {

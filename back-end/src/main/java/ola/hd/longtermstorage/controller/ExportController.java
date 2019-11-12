@@ -48,9 +48,11 @@ public class ExportController {
             MediaType.APPLICATION_OCTET_STREAM_VALUE,
             MediaType.APPLICATION_JSON_VALUE
     })
-    public ResponseEntity<StreamingResponseBody> export(@ApiParam(value = "The PID or the PPN of the work.", required = true)
-                                           @RequestParam("id") String id) {
-        return exportData(id, "quick");
+    public ResponseEntity<StreamingResponseBody> export(@ApiParam(value = "The ID of the work.", required = true)
+                                                        @RequestParam String id,
+                                                        @ApiParam(value = "Is this an internal ID or not (PID, PPN).", required = true)
+                                                        @RequestParam(defaultValue = "false") boolean isInternal) {
+        return exportData(id, "quick", isInternal);
     }
 
     @ApiOperation(value = "Send a request to export data on tapes.",
@@ -68,7 +70,7 @@ public class ExportController {
     })
     @GetMapping(value = "/export-request", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> fullExportRequest(@ApiParam(value = "The PID or the PPN of the work.", required = true)
-                                               @RequestParam("id") String id,
+                                               @RequestParam String id,
                                                @ApiIgnore Principal principal) throws IOException {
 
         // Move the archive from tape to disk
@@ -100,9 +102,11 @@ public class ExportController {
             MediaType.APPLICATION_JSON_VALUE
     })
     public ResponseEntity<StreamingResponseBody> fullExport(@ApiParam(value = "The PID or the PPN of the work.", required = true)
-                                               @RequestParam("id") String id) {
+                                                            @RequestParam String id,
+                                                            @ApiParam(value = "Is this an internal ID or not (PID, PPN).", required = true)
+                                                            @RequestParam(defaultValue = "false") boolean isInternal) {
 
-        return exportData(id, "full");
+        return exportData(id, "full", isInternal);
     }
 
     @PostMapping(value = "/download", consumes = MediaType.APPLICATION_JSON_VALUE, produces = {
@@ -115,9 +119,7 @@ public class ExportController {
         String contentDisposition = "attachment;filename=download.zip";
 
         // Build the response stream
-        StreamingResponseBody stream = outputStream -> {
-            archiveManagerService.downloadFiles(payload.getArchiveId(), payload.getFiles(), outputStream);
-        };
+        StreamingResponseBody stream = outputStream -> archiveManagerService.downloadFiles(payload.getArchiveId(), payload.getFiles(), outputStream);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("application/zip"))
@@ -146,7 +148,7 @@ public class ExportController {
                 .body(resource);
     }
 
-    private ResponseEntity<StreamingResponseBody> exportData(String id, String type) {
+    private ResponseEntity<StreamingResponseBody> exportData(String id, String type, boolean isInternal) {
 
         // Set proper file name
         String contentDisposition = "attachment;filename=";
@@ -160,7 +162,7 @@ public class ExportController {
         // Build the response stream
         StreamingResponseBody stream = outputStream -> {
 
-            try (Response response = archiveManagerService.export(id, type)) {
+            try (Response response = archiveManagerService.export(id, type, isInternal)) {
                 if (response.body() != null) {
                     InputStream inputStream = response.body().byteStream();
 
