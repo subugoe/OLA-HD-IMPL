@@ -24,8 +24,17 @@
             <div class="col">
                 <div class="card">
                     <div class="card-header">
-                        <i class="fas fa-download float-right" v-if="isOpen"></i>
-                        <h5>Archive ID: {{ archiveInfo.id }}</h5>
+                        <div class="row align-items-center">
+                            <div class="col-8">
+                                <h5 class="m-0">Archive ID: {{ archiveInfo.id }}</h5>
+                            </div>
+                            <div class="col-4 text-right">
+                                <button type="button" class="btn btn-primary" :disabled="!isOpen" @click="exportArchive">
+                                    <i class="fas fa-download"></i>
+                                    Export
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <table class="table table-borderless table-sm">
@@ -58,8 +67,17 @@
             <div class="col">
                 <div class="card">
                     <div class="card-header">
-                        <i class="fas fa-download float-right" v-if="isOpen" @click="download"></i>
-                        <h5>File structure</h5>
+                        <div class="row align-items-center">
+                            <div class="col-8">
+                                <h5 class="m-0">File structure</h5>
+                            </div>
+                            <div class="col-4 text-right">
+                                <button type="button" class="btn btn-primary" :disabled="isDisabled" @click="download">
+                                    <i class="fas fa-download"></i>
+                                    Download
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <app-tree-select v-model="value"
@@ -81,7 +99,8 @@
                         <h5>Other versions</h5>
                     </div>
                     <div class="card-body">
-                        Show previous and next versions here.
+                        <!-- TODO: Show previous and next versions here. -->
+                        This archive does not have any other version.
                     </div>
                 </div>
             </div>
@@ -110,6 +129,11 @@
             isOpen() {
                 // Check if the archive is on disk
                 return this.archiveInfo.state !== 'archived';
+            },
+            isDisabled() {
+
+                // Check if the download button should be disabled or not
+                return !this.isOpen || this.value.length < 1;
             }
         },
         data() {
@@ -276,6 +300,10 @@
                         this.error = true;
                         console.log(error);
                     });
+            },
+
+            exportArchive() {
+
             }
         },
         created() {
@@ -297,11 +325,6 @@
 
 <style lang="scss" scoped>
     .card .card-header {
-        i {
-            color: $primary;
-            cursor: pointer;
-        }
-
         h5 {
             color: $primary;
         }
