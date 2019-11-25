@@ -19,8 +19,14 @@
             </div>
         </div>
 
+        <div class="row">
+            <div class="col">
+                <button type="button" class="btn btn-link" @click="$router.go(-1)">&laquo; Back</button>
+            </div>
+        </div>
+
         <!-- Full details -->
-        <div class="row mt-4">
+        <div class="row">
             <div class="col">
                 <div class="card">
                     <div class="card-header">
@@ -29,7 +35,8 @@
                                 <h5 class="m-0">Archive ID: {{ archiveInfo.id }}</h5>
                             </div>
                             <div class="col-4 text-right">
-                                <button type="button" class="btn btn-primary" :disabled="!isOpen" @click="exportArchive">
+                                <button type="button" class="btn btn-primary" :disabled="!isOpen"
+                                        @click="exportArchive">
                                     <i class="fas fa-download"></i>
                                     Export
                                 </button>
@@ -39,22 +46,22 @@
                     <div class="card-body">
                         <table class="table table-borderless table-sm">
                             <tbody>
-                                <tr>
-                                    <td class="w-25">State:</td>
-                                    <td class="w-75">{{ archiveInfo.state }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="w-25">Total file:</td>
-                                    <td class="w-75">{{ archiveInfo.file_count }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="w-25">Created time:</td>
-                                    <td class="w-75">{{ archiveInfo.created | formatDate }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="w-25">Last modified time:</td>
-                                    <td class="w-75">{{ archiveInfo.modified | formatDate }}</td>
-                                </tr>
+                            <tr>
+                                <td class="w-25">State:</td>
+                                <td class="w-75">{{ archiveInfo.state }}</td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">Total file:</td>
+                                <td class="w-75">{{ archiveInfo.file_count }}</td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">Created time:</td>
+                                <td class="w-75">{{ archiveInfo.created | formatDate }}</td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">Last modified time:</td>
+                                <td class="w-75">{{ archiveInfo.modified | formatDate }}</td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
@@ -84,8 +91,19 @@
                                          :multiple="true"
                                          :show-count="true"
                                          :options="options"
-                                         :disable-branch-nodes="!isOpen"
-                                         placeholder="Click to view file structure. Type to search. Select to download."/>
+                                         placeholder="Click to view file structure. Type to search. Select to download.">
+
+                            <label slot="option-label"
+                                   slot-scope="{ node, shouldShowCount, count, labelClassName, countClassName }"
+                                   :class="labelClassName">
+                                {{ node.label }}
+                                <template v-if="!node.isBranch">
+                                    <span> - </span>
+                                    <a :href="buildUrl(id, node.id)" target="_blank">View</a>
+                                </template>
+                                <span v-if="shouldShowCount" :class="countClassName">({{ count }})</span>
+                            </label>
+                        </app-tree-select>
                     </div>
                 </div>
             </div>
@@ -113,7 +131,7 @@
     import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
     import moment from 'moment';
-    import { WritableStream } from 'web-streams-polyfill/ponyfill';
+    import {WritableStream} from 'web-streams-polyfill/ponyfill';
     import streamSaver from 'streamsaver';
 
     import lzaApi from '@/services/lzaApi';
@@ -195,6 +213,11 @@
                                 name: part
                             };
 
+                            // Disable selection if the archive is not in open state
+                            if (!this.isOpen) {
+                                newPart.isDisabled = true;
+                            }
+
                             // For non-leaf nodes
                             if (j < parts.length - 1) {
 
@@ -207,7 +230,6 @@
 
                             // Add emoji to leaf-node
                             if (j === parts.length - 1) {
-                                //newPart.label = emojiService.getEmoji(part) + ' ' + newPart.label;
                                 newPart.label = emojiService.getEmoji(this.archiveInfo.files[i].type) + ' ' + newPart.label;
                             }
 
@@ -314,6 +336,18 @@
                         : writer.write(res.value).then(pump));
 
                 pump();
+            },
+
+            buildUrl(id, path) {
+                // Used to escape special characters
+                let esc = encodeURIComponent;
+
+                // TODO: Update the base URL after configure the Nginx. Maybe just remove it and use router-link instead
+
+                // Base URL for to view file
+                let base = "http://141.5.98.232:8080/download-file";
+
+                return `${base}/${id}?path=${esc(path)}`;
             }
         },
         created() {
