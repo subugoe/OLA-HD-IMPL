@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import ola.hd.longtermstorage.component.MutexFactory;
+import ola.hd.longtermstorage.domain.HttpFile;
 import ola.hd.longtermstorage.domain.SearchRequest;
 import ola.hd.longtermstorage.domain.SearchResults;
 import org.apache.tika.Tika;
@@ -778,7 +779,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
     }
 
     @Override
-    public byte[] getFile(String id, String path, boolean infoOnly) throws IOException {
+    public HttpFile getFile(String id, String path, boolean infoOnly) throws IOException {
         String fullUrl = url + vault + "/" + id + "/" + path;
 
         if (infoOnly) {
@@ -797,7 +798,13 @@ public class CdstarService implements ArchiveManagerService, SearchService {
             if (response.isSuccessful()) {
                 if (response.body() != null) {
 
-                    return response.body().bytes();
+                    HttpFile httpFile = new HttpFile(response.body().bytes());
+
+                    Headers headers = response.headers();
+                    httpFile.addHeaders("Content-Type", headers.get("Content-Type"));
+                    httpFile.addHeaders("Content-Length", headers.get("Content-Length"));
+
+                    return httpFile;
                 }
             }
 

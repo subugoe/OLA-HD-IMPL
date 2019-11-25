@@ -1,6 +1,7 @@
 package ola.hd.longtermstorage.service;
 
 import okhttp3.Response;
+import ola.hd.longtermstorage.domain.HttpFile;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -99,8 +100,9 @@ public interface ArchiveManagerService {
      * @param id           The internal ID of the archive
      * @param path         Path to the file
      * @param infoOnly     If true, return only the meta-data. Return the file otherwise
-     * @return             A byte array of the result, either it's a string (file info) or the actual file
+     * @return             An object wrapping necessary headers and an byte array of the result,
+     *                     either it's a string (file info) or the actual file
      * @throws IOException Thrown if something's wrong when connecting to the archive services
      */
-    byte[] getFile(String id, String path, boolean infoOnly) throws IOException;
+    HttpFile getFile(String id, String path, boolean infoOnly) throws IOException;
 }

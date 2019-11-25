@@ -2,10 +2,7 @@ package ola.hd.longtermstorage.controller;
 
 import io.swagger.annotations.*;
 import okhttp3.Response;
-import ola.hd.longtermstorage.domain.ArchiveStatus;
-import ola.hd.longtermstorage.domain.DownloadRequest;
-import ola.hd.longtermstorage.domain.ExportRequest;
-import ola.hd.longtermstorage.domain.ResponseMessage;
+import ola.hd.longtermstorage.domain.*;
 import ola.hd.longtermstorage.repository.mongo.ExportRequestRepository;
 import ola.hd.longtermstorage.service.ArchiveManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,13 +135,25 @@ public class ExportController {
                                                  @ApiParam(value = "Path to the requested file", required = true)
                                                  @RequestParam String path) throws IOException {
 
-        byte[] data = archiveManagerService.getFile(id, path, false);
-        ByteArrayResource resource = new ByteArrayResource(data);
+        //byte[] data = archiveManagerService.getFile(id, path, false);
+        HttpFile httpFile = archiveManagerService.getFile(id, path, false);
+        ByteArrayResource resource = new ByteArrayResource(httpFile.getContent());
 
-        // Set proper header
+        HttpHeaders headers = httpFile.getHeaders();
+
+        // Inline content-disposition: render the file directly on the browser if possible
         String contentDisposition = "inline";
+
+        // Get proper content-type, or use application/octet-stream by default.
+        // Without a proper content-type, the browser cannot display the file correctly.
+        String contentType = headers.getContentType() != null ? headers.getContentType().toString() : "application/octet-stream";
+
+        long contentLength = headers.getContentLength();
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+                .header(HttpHeaders.CONTENT_TYPE, contentType)
+                .header(HttpHeaders.CONTENT_LENGTH, contentLength + "")
                 .body(resource);
     }
 
