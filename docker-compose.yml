@@ -27,9 +27,9 @@ services:
     env_file:
       - .env
 
-  user-gui:
+  proxy:
     build:
-      context: user-gui/
+      context: nginx/
     ports:
       - "80:80"
     depends_on:
