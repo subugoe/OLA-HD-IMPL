@@ -4,7 +4,7 @@ WORKDIR /app
 COPY ./user-gui/package*.json ./
 COPY ./user-gui/yarn.lock ./
 RUN yarn install
-COPY ./user-gui/* .
+COPY ./user-gui/. .
 RUN yarn build
 
 # Build the admin-gui modul
