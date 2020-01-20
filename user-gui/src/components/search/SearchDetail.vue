@@ -19,6 +19,7 @@
             </div>
         </div>
 
+        <!-- TODO: Use component with keep-alive instead -->
         <div class="row">
             <div class="col">
                 <button type="button" class="btn btn-link" @click="$router.go(-1)">&laquo; Back</button>
@@ -97,7 +98,7 @@
                                    slot-scope="{ node, shouldShowCount, count, labelClassName, countClassName }"
                                    :class="labelClassName">
                                 {{ node.label }}
-                                <template v-if="!node.isBranch">
+                                <template v-if="!node.isBranch && isOpen">
                                     <span> - </span>
                                     <a :href="buildUrl(id, node.id)" target="_blank">View</a>
                                 </template>
