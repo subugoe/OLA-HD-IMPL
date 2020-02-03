@@ -1,53 +1,57 @@
 <template>
-    <div id="app">
-        <div id="page-top">
+    <div>
+        <app-login v-if="!isAuthenticated"/>
 
-            <!-- Page Wrapper -->
-            <div id="wrapper">
+        <div id="app" v-if="isAuthenticated">
+            <div id="page-top">
 
-                <app-sidebar/>
+                <!-- Page Wrapper -->
+                <div id="wrapper">
 
-                <!-- Content Wrapper -->
-                <div id="content-wrapper" class="d-flex flex-column">
+                    <app-sidebar/>
 
-                    <!-- Main Content -->
-                    <div id="content">
+                    <!-- Content Wrapper -->
+                    <div id="content-wrapper" class="d-flex flex-column">
 
-                        <app-topbar/>
+                        <!-- Main Content -->
+                        <div id="content">
 
-                        <!-- Begin Page Content -->
-                        <div class="container-fluid">
+                            <app-topbar/>
 
-                            <router-view/>
+                            <!-- Begin Page Content -->
+                            <div class="container-fluid">
+
+                                <router-view/>
+
+                            </div>
+                            <!-- /.container-fluid -->
 
                         </div>
-                        <!-- /.container-fluid -->
+                        <!-- End of Main Content -->
+
+                        <!-- Footer -->
+                        <footer class="sticky-footer bg-white">
+                            <div class="container my-auto">
+                                <div class="copyright text-center my-auto">
+                                    <span>Copyright &copy; GWDG 2020</span>
+                                </div>
+                            </div>
+                        </footer>
+                        <!-- End of Footer -->
 
                     </div>
-                    <!-- End of Main Content -->
-
-                    <!-- Footer -->
-                    <footer class="sticky-footer bg-white">
-                        <div class="container my-auto">
-                            <div class="copyright text-center my-auto">
-                                <span>Copyright &copy; GWDG 2020</span>
-                            </div>
-                        </div>
-                    </footer>
-                    <!-- End of Footer -->
+                    <!-- End of Content Wrapper -->
 
                 </div>
-                <!-- End of Content Wrapper -->
+                <!-- End of Page Wrapper -->
+
+                <!-- Scroll to Top Button-->
+                <a class="scroll-to-top rounded" href="#page-top">
+                    <i class="fas fa-angle-up"></i>
+                </a>
+
 
             </div>
-            <!-- End of Page Wrapper -->
-
-            <!-- Scroll to Top Button-->
-            <a class="scroll-to-top rounded" href="#page-top">
-                <i class="fas fa-angle-up"></i>
-            </a>
-
-
         </div>
     </div>
 </template>
@@ -55,6 +59,7 @@
 <script>
     import Sidebar from './components/Sidebar';
     import Topbar from './components/Topbar';
+    import Login from './views/Login';
 
     import $ from 'jquery';
     import 'jquery.easing';
@@ -62,7 +67,13 @@
     export default {
         components: {
             appSidebar: Sidebar,
-            appTopbar: Topbar
+            appTopbar: Topbar,
+            appLogin: Login
+        },
+        computed: {
+            isAuthenticated() {
+                return this.$store.getters.isAuthenticated;
+            }
         },
         mounted() {
 
