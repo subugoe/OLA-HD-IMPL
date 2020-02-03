@@ -73,6 +73,10 @@
                 return this.$store.getters.isAuthenticated;
             }
         },
+        created () {
+            // Try to log user in when they refresh the page
+            this.$store.dispatch('tryAutoLogin');
+        },
         mounted() {
 
             // Close any open menu accordions when window is resized below 768px
