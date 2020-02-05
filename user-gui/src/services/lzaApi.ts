@@ -18,10 +18,12 @@ export default {
         });
     },
 
-    getArchiveInfo(id: string) {
+    getArchiveInfo(id: string, limit: number, offset: number) {
         return instance.get(`/search-archive/${id}`, {
             params: {
-                withFile: true
+                withFile: true,
+                limit,
+                offset
             }
         });
     },

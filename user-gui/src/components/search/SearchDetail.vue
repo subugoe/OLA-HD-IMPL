@@ -360,19 +360,38 @@
                 return `${base}/${id}?path=${esc(path)}`;
             }
         },
-        created() {
-            lzaApi.getArchiveInfo(this.id)
-                .then(response => {
-                    this.archiveInfo = response.data;
-                    this.options = this.buildTree();
-                })
-                .catch(error => {
-                    this.error = true;
-                    console.log(error);
-                })
-                .finally(() => {
-                    this.loading = false;
-                });
+        async created() {
+            const limit = 1000;
+            let offset = 0, firstCall = true;
+
+            try {
+                while (true) {
+                    let response = await lzaApi.getArchiveInfo(this.id, limit, offset);
+
+                    if (firstCall) {
+                        // Store all data for the first call
+                        this.archiveInfo = response.data;
+                        firstCall = false;
+                    } else {
+                        // Otherwise, just add more files to the file array
+                        this.archiveInfo.files = this.archiveInfo.files.concat(response.data.files);
+                    }
+
+                    // There is no more file to get? Stop
+                    if (response.data.files.length < limit) {
+                        break;
+                    } else {
+                        // Get new files by increasing the offset
+                        offset += limit;
+                    }
+                }
+            } catch (error) {
+                this.error = true;
+                console.log(error);
+            } finally {
+                this.loading = false;
+            }
+            this.options = this.buildTree();
         }
     }
 </script>
