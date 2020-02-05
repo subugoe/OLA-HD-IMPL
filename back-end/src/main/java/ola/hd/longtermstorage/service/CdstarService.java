@@ -748,7 +748,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
 
     @Override
     public String getArchiveInfo(String id, boolean withFile) throws IOException {
-        String fullUrl = url + vault + "/" + id + "?limit=1000&with=meta";
+        String fullUrl = url + vault + "/" + id + "?limit=10000&with=meta";
 
         if (withFile) {
             fullUrl += ",files";
