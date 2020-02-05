@@ -63,6 +63,15 @@
                                 <td class="w-25">Last modified time:</td>
                                 <td class="w-75">{{ archiveInfo.modified | formatDate }}</td>
                             </tr>
+                            <tr v-if="archiveInfo.meta" v-for="(value, name) in archiveInfo.meta">
+                                <td class="w-25">{{ name }}:</td>
+                                <td class="w-75">
+                                    <div v-for="data in value">
+                                        <span>{{ data }}</span>
+                                        <br/>
+                                    </div>
+                                </td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
