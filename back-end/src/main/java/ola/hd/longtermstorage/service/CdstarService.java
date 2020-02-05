@@ -747,11 +747,13 @@ public class CdstarService implements ArchiveManagerService, SearchService {
     }
 
     @Override
-    public String getArchiveInfo(String id, boolean withFile) throws IOException {
-        String fullUrl = url + vault + "/" + id + "?limit=10000&with=meta";
+    public String getArchiveInfo(String id, boolean withFile, int limit, int offset) throws IOException {
+        String fullUrl = url + vault + "/" + id + "?with=meta";
 
         if (withFile) {
             fullUrl += ",files";
+            fullUrl += "&limit=" + limit;
+            fullUrl += "&offset=" + offset;
         }
 
         OkHttpClient client = new OkHttpClient();

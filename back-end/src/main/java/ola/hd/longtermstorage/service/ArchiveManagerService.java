@@ -89,10 +89,12 @@ public interface ArchiveManagerService {
      *
      * @param id           The internal ID of the archive
      * @param withFile     Should all files in the archive be returned or not
+     * @param limit        Number of files to be returned in one call
+     * @param offset       Number of files to skip from the beginning
      * @return             A JSON contains information about the archive
      * @throws IOException Thrown if something's wrong when connecting to the archive services
      */
-    String getArchiveInfo(String id, boolean withFile) throws IOException;
+    String getArchiveInfo(String id, boolean withFile, int limit, int offset) throws IOException;
 
     /**
      * Get information about a file in the specified archive

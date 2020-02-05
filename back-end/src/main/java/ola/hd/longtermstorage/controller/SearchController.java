@@ -58,7 +58,7 @@ public class SearchController {
             if (hit.getType().equals("file")) {
                 data = new String(archiveManagerService.getFile(hit.getId(), hit.getName(), true).getContent());
             } else {
-                data = archiveManagerService.getArchiveInfo(hit.getId(), false);
+                data = archiveManagerService.getArchiveInfo(hit.getId(), false, 0, 0);
             }
 
             SearchHitDetail detail = mapper.readValue(data, SearchHitDetail.class);
@@ -76,10 +76,17 @@ public class SearchController {
     @GetMapping(value = "/search-archive/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> searchArchive(@ApiParam(value = "Internal ID of the archive.", required = true)
                                            @PathVariable String id,
-                                           @ApiParam(value = "An option to include all files in return.")
-                                           @RequestParam(defaultValue = "false") boolean withFile) throws IOException {
 
-        String info = archiveManagerService.getArchiveInfo(id, withFile);
+                                           @ApiParam(value = "An option to include all files in return.")
+                                           @RequestParam(defaultValue = "false") boolean withFile,
+
+                                           @ApiParam(value = "How many files should be returned?")
+                                           @RequestParam(defaultValue = "1000") int limit,
+
+                                           @ApiParam(value = "How many files should be skipped from the beginning?")
+                                           @RequestParam(defaultValue = "0") int offset) throws IOException {
+
+        String info = archiveManagerService.getArchiveInfo(id, withFile, limit, offset);
 
         return ResponseEntity.ok(info);
     }
