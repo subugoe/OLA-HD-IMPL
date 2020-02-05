@@ -38,7 +38,7 @@
                             <div class="col-4 text-right">
                                 <button type="button" class="btn btn-primary" :disabled="!isOpen"
                                         @click="exportArchive">
-                                    <i class="fas fa-download"></i>
+                                    <i class="fas fa-download"/>
                                     Export
                                 </button>
                             </div>
@@ -81,7 +81,7 @@
                             </div>
                             <div class="col-4 text-right">
                                 <button type="button" class="btn btn-primary" :disabled="isDisabled" @click="download">
-                                    <i class="fas fa-download"></i>
+                                    <i class="fas fa-download"/>
                                     Download
                                 </button>
                             </div>
@@ -323,10 +323,10 @@
                 const fileStream = streamSaver.createWriteStream(fileName);
                 const readableStream = response.body;
 
-                // More optimized
-                if (readableStream.pipeTo) {
-                    return readableStream.pipeTo(fileStream);
-                }
+                // More optimized (but doesn't work on Safari!)
+                // if (readableStream.pipeTo) {
+                //     return readableStream.pipeTo(fileStream);
+                // }
 
                 window.writer = fileStream.getWriter();
 
