@@ -8,6 +8,7 @@ In addition, each uploaded zip get a persistent identifier (PID).
 This PID can be used for sharing, citing, and versioning purposes.
 
 A [Swagger](https://swagger.io/ "Swagger homepage") documentation is available at `/swagger-ui.html`.
+Please click [here](http://141.5.98.232/ "OLA-HD Prototype") to experience the prototype.
 
 ## Project structure
 ```
