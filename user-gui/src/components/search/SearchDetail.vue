@@ -19,7 +19,6 @@
             </div>
         </div>
 
-        <!-- TODO: Use component with keep-alive instead -->
         <div class="row">
             <div class="col">
                 <button type="button" class="btn btn-link" @click="$router.go(-1)">&laquo; Back</button>
@@ -330,7 +329,7 @@
                 }
 
                 const fileStream = streamSaver.createWriteStream(fileName);
-                const readableStream = response.body;
+                // const readableStream = response.body;
 
                 // More optimized (but doesn't work on Safari!)
                 // if (readableStream.pipeTo) {
@@ -352,10 +351,8 @@
                 // Used to escape special characters
                 let esc = encodeURIComponent;
 
-                // TODO: Update the base URL after configure the Nginx. Maybe just remove it and use router-link instead
-
                 // Base URL for to view file
-                let base = "http://141.5.98.232:8080/download-file";
+                let base = "/api/download-file";
 
                 return `${base}/${id}?path=${esc(path)}`;
             }
