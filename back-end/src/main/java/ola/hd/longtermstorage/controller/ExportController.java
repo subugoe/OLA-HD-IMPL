@@ -135,7 +135,6 @@ public class ExportController {
                                                  @ApiParam(value = "Path to the requested file", required = true)
                                                  @RequestParam String path) throws IOException {
 
-        //byte[] data = archiveManagerService.getFile(id, path, false);
         HttpFile httpFile = archiveManagerService.getFile(id, path, false);
         ByteArrayResource resource = new ByteArrayResource(httpFile.getContent());
 
@@ -147,6 +146,9 @@ public class ExportController {
         // Get proper content-type, or use application/octet-stream by default.
         // Without a proper content-type, the browser cannot display the file correctly.
         String contentType = headers.getContentType() != null ? headers.getContentType().toString() : "application/octet-stream";
+
+        // Set charset
+        contentType += ";charset=utf-8";
 
         long contentLength = headers.getContentLength();
 
