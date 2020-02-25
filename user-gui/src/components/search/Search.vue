@@ -19,7 +19,17 @@
             </div>
         </div>
 
-        <template v-if="!loading && !error">
+        <div class="row mt-3" v-if="!hasResult && !loading">
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="text-center">No Result Found!</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <template v-if="hasResult">
 
             <!-- Search status -->
             <div class="row my-3">
@@ -62,7 +72,7 @@
                 paginationLowerBound: 1,
                 scrolls: [''],
                 time: 0,
-                results: {}
+                results: null
             }
         },
         computed: {
@@ -91,6 +101,9 @@
                     paginationUpperBound = this.results.total;
                 }
                 return `Showing ${this.paginationLowerBound} - ${paginationUpperBound}`;
+            },
+            hasResult() {
+                return this.results && this.results.total > 0;
             }
         },
         components: {
