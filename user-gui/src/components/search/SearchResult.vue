@@ -98,7 +98,7 @@
                     }
                     return this.item.name;
                 }
-                return 'This is an archive.';
+                return `Archive ID: ${this.item.detail.meta['dc:identifier'][0]}`;
             }
         }
     }
