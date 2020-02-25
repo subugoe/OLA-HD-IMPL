@@ -735,13 +735,14 @@ public class CdstarService implements ArchiveManagerService, SearchService {
     public SearchResults search(SearchRequest searchRequest) throws IOException {
         String fullUrl = url + vault;
 
-        // Only search on archives on hard drive and on the latest version
-        // Search on hard drive by default because data on tapes are not indexed (upload and immediately close the archive)
-        String query = String.format("(%s) AND NOT _exists_:dcRelation", searchRequest.getQuery());
+        // For full-text, only search on hard drive by default because data on tapes are not indexed
+        // For meta-data search, both "open" and "archived" results are found because meta-data are always stored on hard drive
+        // Search for all versions because cannot limit "latest version" with full-text search
+        // String query = String.format("(%s) AND NOT _exists_:dcRelation", searchRequest.getQuery());
 
         // Construct the URL
         HttpUrl httpUrl = HttpUrl.parse(fullUrl).newBuilder()
-                .addQueryParameter("q", query)
+                .addQueryParameter("q", searchRequest.getQuery())
                 .addQueryParameter("limit", searchRequest.getLimit() + "")
                 .addQueryParameter("scroll", searchRequest.getScroll())
                 .build();
