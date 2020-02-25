@@ -19,119 +19,145 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col">
-                <button type="button" class="btn btn-link" @click="$router.go(-1)">&laquo; Back</button>
+        <template v-if="!loading">
+            <div class="row">
+                <div class="col">
+                    <button type="button" class="btn btn-link" @click="$router.go(-1)">&laquo; Back</button>
+                </div>
             </div>
-        </div>
 
-        <!-- Full details -->
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row align-items-center">
-                            <div class="col-8">
-                                <h5 class="m-0">Archive ID: {{ archiveInfo.id }}</h5>
-                            </div>
-                            <div class="col-4 text-right">
-                                <button type="button" class="btn btn-primary" :disabled="!isOpen"
-                                        @click="exportArchive">
-                                    <i class="fas fa-download"/>
-                                    Export
-                                </button>
+            <!-- Full details -->
+            <div class="row">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h5 class="m-0">Archive ID: {{ archiveInfo.id }}</h5>
+                                </div>
+                                <div class="col-4 text-right">
+                                    <button type="button" class="btn btn-primary" :disabled="!isOpen"
+                                            @click="exportArchive">
+                                        <i class="fas fa-download"/>
+                                        Export
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-borderless table-sm">
-                            <tbody>
-                            <tr>
-                                <td class="w-25">State:</td>
-                                <td class="w-75">{{ archiveInfo.state }}</td>
-                            </tr>
-                            <tr>
-                                <td class="w-25">Total file:</td>
-                                <td class="w-75">{{ archiveInfo.file_count }}</td>
-                            </tr>
-                            <tr>
-                                <td class="w-25">Created time:</td>
-                                <td class="w-75">{{ archiveInfo.created | formatDate }}</td>
-                            </tr>
-                            <tr>
-                                <td class="w-25">Last modified time:</td>
-                                <td class="w-75">{{ archiveInfo.modified | formatDate }}</td>
-                            </tr>
-                            <tr v-if="archiveInfo.meta" v-for="(value, name) in archiveInfo.meta">
-                                <td class="w-25">{{ name }}:</td>
-                                <td class="w-75">
-                                    <div v-for="data in value">
-                                        <span>{{ data }}</span>
-                                        <br/>
-                                    </div>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
+                        <div class="card-body">
+                            <table class="table table-borderless table-sm">
+                                <tbody>
+                                <tr>
+                                    <td class="w-25">State:</td>
+                                    <td class="w-75">{{ archiveInfo.state }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="w-25">Total file:</td>
+                                    <td class="w-75">{{ archiveInfo.file_count }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="w-25">Created time:</td>
+                                    <td class="w-75">{{ archiveInfo.created | formatDate }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="w-25">Last modified time:</td>
+                                    <td class="w-75">{{ archiveInfo.modified | formatDate }}</td>
+                                </tr>
+                                <tr v-if="archiveInfo.meta" v-for="(value, name) in archiveInfo.meta">
+                                    <td class="w-25">{{ name }}:</td>
+                                    <td class="w-75">
+                                        <div v-for="data in value">
+                                            <span>{{ data }}</span>
+                                            <br/>
+                                        </div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- File structure -->
-        <div class="row mt-4">
-            <div class="col">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row align-items-center">
-                            <div class="col-8">
-                                <h5 class="m-0">File structure</h5>
-                            </div>
-                            <div class="col-4 text-right">
-                                <button type="button" class="btn btn-primary" :disabled="isDisabled" @click="download">
-                                    <i class="fas fa-download"/>
-                                    Download
-                                </button>
+            <!-- File structure -->
+            <div class="row mt-4">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h5 class="m-0">File structure</h5>
+                                </div>
+                                <div class="col-4 text-right">
+                                    <button type="button" class="btn btn-primary" :disabled="isDisabled"
+                                            @click="download">
+                                        <i class="fas fa-download"/>
+                                        Download
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-body">
-                        <app-tree-select v-model="value"
-                                         :multiple="true"
-                                         :show-count="true"
-                                         :options="options"
-                                         placeholder="Click to view file structure. Type to search. Select to download.">
+                        <div class="card-body">
+                            <app-tree-select v-model="value"
+                                             :multiple="true"
+                                             :show-count="true"
+                                             :options="options"
+                                             placeholder="Click to view file structure. Type to search. Select to download.">
 
-                            <label slot="option-label"
-                                   slot-scope="{ node, shouldShowCount, count, labelClassName, countClassName }"
-                                   :class="labelClassName">
-                                {{ node.label }}
-                                <template v-if="!node.isBranch && isOpen">
-                                    <span> - </span>
-                                    <a :href="buildUrl(id, node.id)" target="_blank">View</a>
+                                <label slot="option-label"
+                                       slot-scope="{ node, shouldShowCount, count, labelClassName, countClassName }"
+                                       :class="labelClassName">
+                                    {{ node.label }}
+                                    <template v-if="!node.isBranch && isOpen">
+                                        <span> - </span>
+                                        <a :href="buildUrl(id, node.id)" target="_blank">View</a>
+                                    </template>
+                                    <span v-if="shouldShowCount" :class="countClassName">({{ count }})</span>
+                                </label>
+                            </app-tree-select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Version -->
+            <div class="row my-4">
+                <div class="col" v-if="isOpen">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Other versions</h5>
+                        </div>
+                        <div class="card-body">
+                            <span v-if="!hasOtherVersion">This archive does not have any other version.</span>
+                            <ul>
+                                <template v-if="archiveInfo.meta['dc:source']">
+                                    <li>
+                                        Previous version:
+                                        <router-link
+                                                :to="{name: 'search', query: {q: buildMetadataSearch('dcIdentifier', archiveInfo.meta['dc:source'][0])}}">
+                                            {{ archiveInfo.meta['dc:source'][0] }}
+                                        </router-link>
+                                    </li>
                                 </template>
-                                <span v-if="shouldShowCount" :class="countClassName">({{ count }})</span>
-                            </label>
-                        </app-tree-select>
+                                <template v-if="archiveInfo.meta['dc:relation']">
+                                    <li>
+                                        Next version:
+                                        <ul>
+                                            <li v-for="value in archiveInfo.meta['dc:relation']">
+                                                <router-link
+                                                        :to="{name: 'search', query: {q: buildMetadataSearch('dcIdentifier', value)}}">
+                                                    {{ value }}
+                                                </router-link>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Version -->
-        <div class="row my-4">
-            <div class="col">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Other versions</h5>
-                    </div>
-                    <div class="card-body">
-                        <!-- TODO: Show previous and next versions here. -->
-                        This archive does not have any other version.
-                    </div>
-                </div>
-            </div>
-        </div>
+        </template>
     </div>
 </template>
 
@@ -152,17 +178,6 @@
         props: {
             id: String
         },
-        computed: {
-            isOpen() {
-                // Check if the archive is on disk
-                return this.archiveInfo.state !== 'archived';
-            },
-            isDisabled() {
-
-                // Check if the download button should be disabled or not
-                return !this.isOpen || this.value.length < 1;
-            }
-        },
         data() {
             return {
                 archiveInfo: {},
@@ -170,6 +185,26 @@
                 loading: true,
                 value: [],
                 options: []
+            }
+        },
+        computed: {
+            isOpen() {
+                // Check if the archive is on disk
+                return this.archiveInfo.state !== 'archived';
+            },
+            isDisabled() {
+                // Check if the download button should be disabled or not
+                return !this.isOpen || this.value.length < 1;
+            },
+            hasOtherVersion() {
+                let hasVersion = true;
+                if (!this.archiveInfo.meta) {
+                    hasVersion = false;
+                } else if (!this.archiveInfo.meta['dc:source'] && !this.archiveInfo.meta['dc:relation']) {
+                    hasVersion = false;
+                }
+
+                return hasVersion;
             }
         },
         components: {
@@ -355,6 +390,12 @@
                 let base = "/api/download-file";
 
                 return `${base}/${id}?path=${esc(path)}`;
+            },
+            buildMetadataSearch(metadata, searchTerm) {
+                // Put the term in quotation marks for exact search
+                searchTerm = `"${searchTerm}"`;
+
+                return `${metadata}:${searchTerm}`;
             }
         },
         async created() {
