@@ -353,28 +353,40 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                     case "ocrd-identifier":
                     case "dc.identifier":
                         builder.addFormDataPart("meta:dc:identifier", item.getValue());
+                        break;
                     case "dc.title":
                         builder.addFormDataPart("meta:dc:title", item.getValue());
+                        break;
                     case "dc.publisher":
                         builder.addFormDataPart("meta:dc:publisher", item.getValue());
+                        break;
                     case "dc.rights":
                         builder.addFormDataPart("meta:dc:rights", item.getValue());
+                        break;
                     case "dc.contributor":
                         builder.addFormDataPart("meta:dc:contributor", item.getValue());
+                        break;
                     case "dc.coverage":
                         builder.addFormDataPart("meta:dc:coverage", item.getValue());
+                        break;
                     case "dc.creator":
                         builder.addFormDataPart("meta:dc:creator", item.getValue());
+                        break;
                     case "dc.description":
                         builder.addFormDataPart("meta:dc:description", item.getValue());
+                        break;
                     case "dc.format":
                         builder.addFormDataPart("meta:dc:format", item.getValue());
+                        break;
                     case "dc.language":
                         builder.addFormDataPart("meta:dc:language", item.getValue());
+                        break;
                     case "dc.subject":
                         builder.addFormDataPart("meta:dc:subject", item.getValue());
+                        break;
                     case "dc.type":
                         builder.addFormDataPart("meta:dc:type", item.getValue());
+                        break;
                 }
             }
         }
