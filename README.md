@@ -7,9 +7,12 @@ The separation rules are defined in the configuration file.
 In addition, each uploaded zip get a persistent identifier (PID).
 This PID can be used for sharing, citing, and versioning purposes.
 
-A [Swagger](https://swagger.io/ "Swagger homepage") documentation is available at `/swagger-ui.html`.
+If you deploy your own instance, a [Swagger](https://swagger.io/ "Swagger homepage") documentation is
+available at `/swagger-ui.html`.
 
-Please click [here](http://141.5.98.232/ "OLA-HD Prototype") to experience the prototype.
+For the prototype:
+* Please click [here](http://141.5.98.232/ "OLA-HD Prototype") to experience it.
+* Please click [here](http://141.5.98.232/api/swagger-ui.html "OLA-HD Prototype") for the current Swagger documentation.
 
 ## Project structure
 ```
