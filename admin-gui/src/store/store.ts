@@ -5,6 +5,8 @@ import router from '../router'
 
 Vue.use(Vuex);
 
+let authInterceptor: any;
+
 const store = new Vuex.Store({
     state: {
         token: null,
@@ -12,12 +14,36 @@ const store = new Vuex.Store({
     },
     mutations: {
         authUser(state, userData) {
+
+            // Save the state
             state.token = userData.token;
-            state.username = userData.username
+            state.username = userData.username;
+
+            // Save to local storage
+            localStorage.setItem('token', userData.token);
+            localStorage.setItem('username', userData.username);
+
+            // TODO: Implement expiration time
+
+            // Add authentication interceptor
+            authInterceptor = axios.interceptors.request.use(config => {
+                config.headers.Authorization = `Bearer ${userData.token}`;
+                return config;
+            });
         },
         clearAuthData(state) {
+
+            // Remove state
             state.token = null;
-            state.username = null
+            state.username = null;
+
+            // Clear local storage
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            //localStorage.removeItem('expirationDate')
+
+            // Remove the interceptor
+            axios.interceptors.request.eject(authInterceptor);
         }
     },
     actions: {
@@ -28,12 +54,6 @@ const store = new Vuex.Store({
 
             // Try to login
             axios.post('/login', data).then(response => {
-                // Save the token to local storage
-                localStorage.setItem('token', response.data.accessToken);
-                localStorage.setItem('username', authData.username);
-
-                // TODO: Implement expiration time
-
                 // Save the information to Vuex
                 commit('authUser', {
                     token: response.data.accessToken,
@@ -67,12 +87,9 @@ const store = new Vuex.Store({
         logout({ commit }) {
             // Clear all authentication information
             commit('clearAuthData');
-            //localStorage.removeItem('expirationDate')
-            localStorage.removeItem('token');
-            //localStorage.removeItem('username')
 
             // Go to root (login page)
-            router.replace('/');
+            router.replace('/').catch(error => {});
         },
     },
     getters: {
