@@ -11,42 +11,47 @@
                 <div class="table-responsive">
                     <table class="table table-bordered">
                         <thead>
-                            <tr>
-                                <th>Timestamp</th>
-                                <th>PID</th>
-                                <th>Status</th>
-                                <th>Previous version</th>
-                                <th>Next version</th>
-                                <th>Note</th>
-                            </tr>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>PID</th>
+                            <th>Status</th>
+                            <th>Previous version</th>
+                            <th>Next version</th>
+                            <th>Note</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <template v-if="this.records.length > 0">
-                                <tr v-for="(record, index) in records" :key="index">
-                                    <td>{{ record.timestamp | formatDate }}</td>
-                                    <td>{{ record.pid }}</td>
-                                    <td>
-                                        <span class="badge badge-pill" :class="getCssState(record.status)">{{ record.status }}</span>
-                                    </td>
-                                    <td>{{ record.previousVersion }}</td>
-                                    <td>Next version here</td>
-                                    <td>{{ record.message }}</td>
-                                </tr>
-                            </template>
-                            <template v-else>
-                                <tr>
-                                    <td colspan="6" class="text-center">
-                                        <h3>There is no data to show</h3>
-                                    </td>
-                                </tr>
-                            </template>
+                        <template v-if="this.records.length > 0">
+                            <tr v-for="(record, index) in records" :key="index">
+                                <td>{{ record.timestamp | formatDate }}</td>
+                                <td>{{ record.pid }}</td>
+                                <td>
+                                    <span class="badge badge-pill" :class="getCssState(record.status)">{{ record.status }}</span>
+                                </td>
+                                <td>{{ record.previousVersion }}</td>
+                                <td>
+                                    <div v-for="(version, index) in record.nextVersion" :key="index">
+                                        {{ version }}
+                                    </div>
+                                </td>
+                                <td>{{ record.message }}</td>
+                            </tr>
+                        </template>
+                        <template v-else>
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    <h3>There is no data to show</h3>
+                                </td>
+                            </tr>
+                        </template>
                         </tbody>
                     </table>
                 </div>
                 <nav aria-label="Import status pagination">
                     <ul class="pagination justify-content-end">
                         <li class="page-item">
-                            <button class="page-link" aria-label="Previous" @click="switchPage(-1)" v-if="hasPreviousPage">
+                            <button class="page-link" aria-label="Previous" @click="switchPage(-1)"
+                                    v-if="hasPreviousPage">
                                 <span aria-hidden="true">&laquo; Previous</span>
                                 <span class="sr-only">Previous</span>
                             </button>
@@ -116,9 +121,9 @@
                     this.error = true;
                     console.log(error);
                 })
-                .finally(() => {
-                    this.loading = false;
-                });
+                    .finally(() => {
+                        this.loading = false;
+                    });
             },
             getCssState(status) {
                 let cssClass = 'badge-success';
