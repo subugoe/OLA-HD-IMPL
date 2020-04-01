@@ -31,9 +31,9 @@
                     <router-link tag="li" class="nav-item px-2" active-class="active" to="/contact">
                         <a class="nav-link">Contact</a>
                     </router-link>
-                    <router-link tag="li" class="nav-item px-2" active-class="active" to="/login">
-                        <a class="nav-link">Login</a>
-                    </router-link>
+                    <li class="nav-item px-2">
+                        <a class="nav-link" href="/admin/login">Login</a>
+                    </li>
                 </ul>
             </div>
         </nav>
