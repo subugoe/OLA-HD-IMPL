@@ -32,7 +32,8 @@
                                         <div class="form-group">
                                             <div class="custom-control custom-checkbox small">
                                                 <input type="checkbox" class="custom-control-input" id="customCheck">
-                                                <label class="custom-control-label" for="customCheck">Remember Me</label>
+                                                <label class="custom-control-label" for="customCheck">Remember
+                                                    Me</label>
                                             </div>
                                         </div>
                                         <button class="btn btn-primary btn-user btn-block" type="submit">Login</button>
@@ -66,6 +67,9 @@
 
 <script>
     export default {
+        props: {
+            redirect: String
+        },
         data() {
             return {
                 username: '',
@@ -78,7 +82,14 @@
                     username: this.username,
                     password: this.password,
                 };
-                this.$store.dispatch('login', {username: formData.username, password: formData.password});
+                this.$store.dispatch('login', {
+                    username: formData.username,
+                    password: formData.password
+                }).then(result => {
+                    this.$router.replace(this.redirect ? this.redirect : '/');
+                }).catch(() => {
+                    // TODO: implement invalid login
+                });
             },
             toggleBodyClass(addRemoveClass, className) {
                 const el = document.body;

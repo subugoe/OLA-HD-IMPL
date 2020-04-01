@@ -1,29 +1,62 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Dashboard from '../views/Dashboard.vue'
+import Dashboard from '@/views/Dashboard.vue'
+import Login from '@/views/Login.vue'
+import DashView from '@/components/DashView.vue'
+
+import store from '@/store/store'
 
 Vue.use(VueRouter);
-
-const routes = [
-    {
-        path: '/',
-        name: 'dashboard',
-        component: Dashboard
-    },
-    {
-        path: '/about',
-        name: 'about',
-        // route level code-splitting
-        // this generates a separate chunk (about.[hash].js) for this route
-        // which is lazy-loaded when the route is visited.
-        component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
-    }
-];
 
 const router = new VueRouter({
     mode: 'history',
     base: process.env.BASE_URL,
-    routes
+    routes: [
+        {
+            path: '/login',
+            name: 'login',
+            component: Login,
+            props: route => ({ redirect: route.query.redirect })
+        },
+        {
+            path: '/',
+            component: DashView,
+            children: [
+                {
+                    path: '',
+                    component: Dashboard,
+                    name: 'home'
+                },
+                {
+                    path: 'dashboard',
+                    component: Dashboard,
+                    name: 'dashboard'
+                }
+            ]
+        }
+    ]
+});
+
+router.beforeEach((to, from, next) => {
+
+    // Check authentication for every route, except login
+    if (to.name != 'login' && !store.getters.isAuthenticated) {
+
+        // If not authenticated, try auto login using data in localStorage
+        store.dispatch('tryAutoLogin').then(isSuccess => {
+            // Auto login failed
+            if (!isSuccess) {
+                next({
+                    path: '/login',
+                    query: { redirect: to.fullPath }
+                });
+            } else {
+                next();
+            }
+        });
+    } else {
+        next();
+    }
 });
 
 export default router

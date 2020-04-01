@@ -53,7 +53,7 @@ const store = new Vuex.Store({
             data.append('password', authData.password);
 
             // Try to login
-            axios.post('/login', data).then(response => {
+            return axios.post('/login', data).then(response => {
                 // Save the information to Vuex
                 commit('authUser', {
                     token: response.data.accessToken,
@@ -65,7 +65,7 @@ const store = new Vuex.Store({
             // Check if token is already here
             const token = localStorage.getItem('token');
             if (!token) {
-                return
+                return false;
             }
 
             // TODO: check for token expiration
@@ -82,14 +82,12 @@ const store = new Vuex.Store({
             commit('authUser', {
                 token: token,
                 username: username
-            })
+            });
+            return true;
         },
         logout({ commit }) {
             // Clear all authentication information
             commit('clearAuthData');
-
-            // Go to root (login page)
-            router.replace('/').catch(error => {});
         },
     },
     getters: {
