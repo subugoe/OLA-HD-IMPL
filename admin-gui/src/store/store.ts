@@ -58,7 +58,10 @@ const store = new Vuex.Store({
                     token: response.data.accessToken,
                     username: authData.username
                 })
-            }).catch(error => console.log(error));
+            }).catch(error => {
+                console.log(error);
+                throw error;
+            });
         },
         tryAutoLogin({ commit }) {
             // Check if token is already here

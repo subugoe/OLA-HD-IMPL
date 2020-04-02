@@ -33,11 +33,14 @@
                                                    placeholder="Password"
                                                    v-model="password">
                                         </div>
-                                        <div class="form-group">
+                                        <!--<div class="form-group">
                                             <div class="custom-control custom-checkbox small">
                                                 <input type="checkbox" class="custom-control-input" id="customCheck">
                                                 <label class="custom-control-label" for="customCheck">Remember Me</label>
                                             </div>
+                                        </div>-->
+                                        <div class="invalid-feedback text-center d-block mb-2" v-if="isFailed">
+                                            Login failed. Please check your credentials.
                                         </div>
                                         <button class="btn btn-primary btn-user btn-block" type="submit">Login</button>
                                     </form>
@@ -67,11 +70,15 @@
         data() {
             return {
                 username: '',
-                password: ''
+                password: '',
+                isFailed: false
             }
         },
         methods: {
             onSubmit() {
+                // Hide the error message
+                this.isFailed = false;
+
                 const formData = {
                     username: this.username,
                     password: this.password,
@@ -82,7 +89,7 @@
                 }).then(result => {
                     this.$router.replace(this.redirect ? this.redirect : '/');
                 }).catch(() => {
-                    // TODO: implement invalid login
+                    this.isFailed = true;
                 });
             },
             toggleBodyClass(addRemoveClass, className) {
