@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-    baseURL: 'http://141.5.98.232:8080',
+    baseURL: '/api/',
     headers: {
         'Content-Type': 'application/json'
     }
@@ -29,7 +29,7 @@ export default {
     },
 
     downloadFiles(archiveId: string, files: []) {
-        let url = 'http://141.5.98.232:8080/download';
+        let url = '/api/download';
         let data = {
             archiveId,
             files
@@ -45,7 +45,7 @@ export default {
     },
 
     exportArchive(archiveId: string) {
-        let url = `http://141.5.98.232:8080/export?id=${archiveId}&isInternal=true`;
+        let url = `/api/export?id=${archiveId}&isInternal=true`;
         return fetch(url, {
             method: 'GET'
         });
