@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Dashboard from '@/views/Dashboard.vue'
+import Import from '@/views/Import.vue'
 import Login from '@/views/Login.vue'
 import DashView from '@/components/DashView.vue'
 
@@ -31,6 +32,11 @@ const router = new VueRouter({
                     path: 'dashboard',
                     component: Dashboard,
                     name: 'dashboard'
+                },
+                {
+                    path: 'import',
+                    component: Import,
+                    name: 'import'
                 }
             ]
         }
