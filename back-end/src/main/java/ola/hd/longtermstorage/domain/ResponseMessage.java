@@ -20,6 +20,9 @@ public class ResponseMessage {
     @ApiModelProperty(value = "The message used to provide more information")
     private String message;
 
+    @ApiModelProperty(value = "PID of the uploaded data")
+    private String pid;
+
     @ApiModelProperty(value = "The time when the request was made")
     private Instant timestamp;
 
@@ -51,6 +54,14 @@ public class ResponseMessage {
 
     public String getMessage() {
         return message;
+    }
+
+    public String getPid() {
+        return pid;
+    }
+
+    public void setPid(String pid) {
+        this.pid = pid;
     }
 
     public Instant getTimestamp() {

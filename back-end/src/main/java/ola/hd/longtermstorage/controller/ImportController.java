@@ -12,8 +12,8 @@ import net.lingala.zip4j.exception.ZipException;
 import ola.hd.longtermstorage.component.ExecutorWrapper;
 import ola.hd.longtermstorage.component.MutexFactory;
 import ola.hd.longtermstorage.domain.ResponseMessage;
-import ola.hd.longtermstorage.domain.TrackingStatus;
 import ola.hd.longtermstorage.domain.TrackingInfo;
+import ola.hd.longtermstorage.domain.TrackingStatus;
 import ola.hd.longtermstorage.repository.mongo.TrackingRepository;
 import ola.hd.longtermstorage.service.ArchiveManagerService;
 import ola.hd.longtermstorage.service.PidService;
@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +48,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -381,14 +379,10 @@ public class ImportController {
 
         trackingRepository.save(info);
 
-        // Put PID in the Location header
-        URI uri = new URI(pid);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(uri);
+        ResponseMessage responseMessage = new ResponseMessage(HttpStatus.ACCEPTED, "Your data is being processed.");
+        responseMessage.setPid(pid);
 
-        return ResponseEntity.accepted()
-                .headers(headers)
-                .body(new ResponseMessage(HttpStatus.ACCEPTED, "Your data is being processed."));
+        return ResponseEntity.accepted().body(responseMessage);
     }
 
     private void handleFailedImport(Exception ex, String pid, TrackingInfo info) {
