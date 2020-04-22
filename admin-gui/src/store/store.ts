@@ -9,7 +9,8 @@ let authInterceptor: any;
 const store = new Vuex.Store({
     state: {
         token: null,
-        username: null
+        username: null,
+        expiredTime: 0
     },
     mutations: {
         authUser(state, userData) {
@@ -17,12 +18,12 @@ const store = new Vuex.Store({
             // Save the state
             state.token = userData.token;
             state.username = userData.username;
+            state.expiredTime = userData.expiredTime;
 
             // Save to local storage
             localStorage.setItem('token', userData.token);
             localStorage.setItem('username', userData.username);
-
-            // TODO: Implement expiration time
+            localStorage.setItem('expiredTime', userData.expiredTime);
 
             // Add authentication interceptor
             authInterceptor = axios.interceptors.request.use(config => {
@@ -35,11 +36,12 @@ const store = new Vuex.Store({
             // Remove state
             state.token = null;
             state.username = null;
+            state.expiredTime = 0;
 
             // Clear local storage
             localStorage.removeItem('token');
             localStorage.removeItem('username');
-            //localStorage.removeItem('expirationDate')
+            localStorage.removeItem('expiredTime');
 
             // Remove the interceptor
             axios.interceptors.request.eject(authInterceptor);
@@ -56,6 +58,7 @@ const store = new Vuex.Store({
                 // Save the information to Vuex
                 commit('authUser', {
                     token: response.data.accessToken,
+                    expiredTime: response.data.expiredTime,
                     username: authData.username
                 })
             }).catch(error => {
@@ -70,12 +73,16 @@ const store = new Vuex.Store({
                 return false;
             }
 
-            // TODO: check for token expiration
-            // const expirationDate = localStorage.getItem('expirationDate')
-            // const now = new Date()
-            // if (now >= expirationDate) {
-            //     return
-            // }
+            // Check for token expiration
+            const expiredTime = localStorage.getItem('expiredTime');
+            if (!expiredTime) {
+                return false;
+            }
+            const expirationDate = parseInt(expiredTime);
+            const now = Date.now();
+            if (now >= expirationDate) {
+                return false;
+            }
 
             // Get username to display
             const username = localStorage.getItem('username');
@@ -83,7 +90,8 @@ const store = new Vuex.Store({
             // Log user in
             commit('authUser', {
                 token: token,
-                username: username
+                username: username,
+                expiredTime: expiredTime
             });
             return true;
         },
@@ -97,7 +105,20 @@ const store = new Vuex.Store({
             return state.username
         },
         isAuthenticated(state) {
-            return state.token !== null
+            let isLoggedIn = true;
+
+            // Check for token
+            if (!state.token) {
+                isLoggedIn = false;
+            }
+
+            // Check for expiration time
+            const now = Date.now();
+            if (now >= state.expiredTime) {
+                isLoggedIn = false;
+            }
+
+            return isLoggedIn;
         }
     }
 });
