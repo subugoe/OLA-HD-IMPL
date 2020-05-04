@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +48,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URISyntaxException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,7 +72,7 @@ public class ImportController {
 
     private final ExecutorWrapper executor;
 
-    private MutexFactory<String> mutexFactory;
+    private final MutexFactory<String> mutexFactory;
 
     @Value("${ola.hd.upload.dir}")
     private String uploadDir;
@@ -111,7 +110,7 @@ public class ImportController {
     })
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     @PostMapping(value = "/bag", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> importData(HttpServletRequest request, @ApiIgnore Principal principal) throws IOException, FileUploadException, URISyntaxException {
+    public ResponseEntity<?> importData(HttpServletRequest request, @ApiIgnore Principal principal) throws IOException, FileUploadException {
 
         String username = principal.getName();
         TrackingInfo info = new TrackingInfo(username, TrackingStatus.PROCESSING, "Processing...", null);
@@ -289,8 +288,8 @@ public class ImportController {
         info.setPid(pid);
 
         // Build the export URL
-        ControllerLinkBuilder linkBuilder = ControllerLinkBuilder.linkTo(
-                ControllerLinkBuilder.methodOn(ExportController.class).export(pid, false));
+        WebMvcLinkBuilder linkBuilder = WebMvcLinkBuilder.linkTo(
+                WebMvcLinkBuilder.methodOn(ExportController.class).export(pid, false));
         String exportUrl = linkBuilder.toString();
 
         if (prev != null) {
