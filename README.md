@@ -1,4 +1,4 @@
-## OLA-HD: A Long-term Archive System
+# OLA-HD: A Long-term Archive System
 OLA-HD is a mixture between an archive system and a repository.
 The input is a `.zip` file whose content is structure as [BagIt](https://tools.ietf.org/html/rfc8493 "BagIt RFC").
 The zip content will be validated before any further actions take place.
@@ -51,6 +51,9 @@ git clone https://gitlab.gwdg.de/pwieder/ola-hd.git
 cd ola-hd
 ./build.sh
 ```
+
+## System architecture
+![System architecture](https://gitlab.gwdg.de/pwieder/ola-hd/-/wikis/uploads/355c72d476a74427f367fa9c87b38e62/architecture.png)
 
 ## Recipes
 ### Import a file
