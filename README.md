@@ -53,7 +53,7 @@ cd ola-hd
 ```
 
 ## System architecture
-![System architecture](https://gitlab.gwdg.de/pwieder/ola-hd/-/wikis/uploads/355c72d476a74427f367fa9c87b38e62/architecture.png)
+![System architecture](/images/architecture.png?raw=true "System architecture")
 
 ## Recipes
 ### Import a file
