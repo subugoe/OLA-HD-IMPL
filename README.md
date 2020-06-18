@@ -47,6 +47,7 @@ cd ola-hd
 
 ## System overview
 ![System overview](/images/overview.png?raw=true "System overview")
+
 All requests go first to the Nginx proxy.
 Depending on the URL path, it will either forward the request to the back-end service, or serves static HTML files.
 As depicted in the image, there are four components: Nginx, back-end, front-end for normal user, and front-end for admin.

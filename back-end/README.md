@@ -26,6 +26,7 @@ For more information about endpoints, please visit [this documentation][1].
 
 ## Back-end architecture
 ![Back-end architecture](/images/architecture.png?raw=true "System architecture")
+
 * **User**: since this is the REST API, the expected users are other systems.
 However, human users are also possible.
 * **Identity management**: currently, users are authenticated against [GWDG OpenLDAP][2].
