@@ -26,34 +26,34 @@ For more information about endpoints, please visit [this documentation][1].
 
 ## Back-end architecture
 ![Back-end architecture](/images/architecture.png?raw=true "System architecture")
-* User: since this is the REST API, the expected users are other systems.
+* **User**: since this is the REST API, the expected users are other systems.
 However, human users are also possible.
-* Identity management: currently, users are authenticated against [GWDG OpenLDAP][2].
+* **Identity management**: currently, users are authenticated against [GWDG OpenLDAP][2].
 Users have to provide proper credentials to import data to the system or to download full copy of the data.
-* Import API: an endpoint where users call when they want to import data to the system.
+* **Import API**: an endpoint where users call when they want to import data to the system.
 This component will call the PID Service to get a Persistent Identifier (PID) for the imported data, save some information to the database, and send the data to the Archive Manager.
-* PID Service: we use [GWDG PID Service][3].
+* **PID Service**: we use [GWDG PID Service][3].
 Each PID is a handle and can be resolved using a service from [Handle.Net][4].
-* Database: the database of the back-end.
+* **Database**: the database of the back-end.
 It stores all import and export information.
-* Archive manager: the service which facilitates the communication with the storage.
+* **Archive manager**: the service which facilitates the communication with the storage.
 This service is called [CDSTAR][5] and maintained by GWDG.
 When data is imported, everything will be stored on tapes.
 To provide quick access to users, some data are copied to hard drive.
 In the current configuration, the system does not store TIFF images on hard drive.
-* Export API: this API allows users to download data from the system.
-    * Quick export: users can quickly get data stored on hard drive.
+* **Export API**: this API allows users to download data from the system.
+    * **Quick export**: users can quickly get data stored on hard drive.
     Authentication is not required.
-    * Full export: this component is responsible for delivering data on tape to users.
+    * **Full export**: this component is responsible for delivering data on tape to users.
     Users must provide valid credentials to use this component.
-    * Full export request: when users request data stored on tapes, first the system must copy the data to hard drive.
+    * **Full export request**: when users request data stored on tapes, first the system must copy the data to hard drive.
     This process takes a lot of time (hours, or even days).
     Therefore, before being able to download a full export, users have to make a full export request to trigger the copy process.
     After that, users can try downloading the data.
     If the copy process is not finished yet, users will get an error response.
     A copy is available on hard drive for some time, depending on the configuration.
     After that time, the system will delete that copy.
-* Search API: users can call this endpoint to search for data.
+* **Search API**: users can call this endpoint to search for data.
 
 ## Recipes
 ### Import a file
