@@ -219,12 +219,12 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                         if (offlineTypes.contains(mimeType)) {
 
                             // Only send to offline archive
-                            sendRquest(offlineUrl, txId, file, mimeType);
+                            sendRequest(offlineUrl, txId, file, mimeType);
                         } else {
 
                             // For other files, send to both archives
-                            sendRquest(offlineUrl, txId, file, mimeType);
-                            sendRquest(onlineUrl, txId, file, mimeType);
+                            sendRequest(offlineUrl, txId, file, mimeType);
+                            sendRequest(onlineUrl, txId, file, mimeType);
                         }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -232,7 +232,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                 });
     }
 
-    private void sendRquest(String url, String txId, File file, String mimeType) throws IOException {
+    private void sendRequest(String url, String txId, File file, String mimeType) throws IOException {
         OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()
