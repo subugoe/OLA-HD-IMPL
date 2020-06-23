@@ -219,12 +219,12 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                         if (offlineTypes.contains(mimeType)) {
 
                             // Only send to offline archive
-                            sendRequest(offlineUrl, txId, file, mimeType);
+                            sendRequest(offlineUrl, txId, file, mimeType, true);
                         } else {
 
                             // For other files, send to both archives
-                            sendRequest(offlineUrl, txId, file, mimeType);
-                            sendRequest(onlineUrl, txId, file, mimeType);
+                            sendRequest(offlineUrl, txId, file, mimeType, true);
+                            sendRequest(onlineUrl, txId, file, mimeType, false);
                         }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -232,9 +232,10 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                 });
     }
 
-    private void sendRequest(String url, String txId, File file, String mimeType) throws IOException {
+    private void sendRequest(String url, String txId, File file, String mimeType, boolean isOffline) throws IOException {
         OkHttpClient client = new OkHttpClient();
 
+        // Request to upload a file
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("Authorization", Credentials.basic(username, password))
@@ -248,6 +249,33 @@ public class CdstarService implements ArchiveManagerService, SearchService {
 
                 // Something is wrong, throw the exception
                 throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot send data to CDSTAR. URL: " + url);
+            }
+        }
+
+        // After a file is uploaded, set proper meta-data for dc:type
+        String storage = "online";
+        if (isOffline) {
+            storage = "offline";
+        }
+
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("meta:dc:type", storage)
+                .build();
+
+        Request metaRequest = new Request.Builder()
+                .url(url + "?meta")
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .addHeader("X-Transaction", txId)
+                .put(requestBody)
+                .build();
+
+        try (Response response = client.newCall(metaRequest).execute()) {
+            if (!response.isSuccessful()) {
+
+                // Something is wrong, throw the exception
+                throw new HttpServerErrorException(
+                        HttpStatus.valueOf(response.code()), "Cannot set meta-data for a file. URL: " + url);
             }
         }
     }
@@ -735,14 +763,12 @@ public class CdstarService implements ArchiveManagerService, SearchService {
     public SearchResults search(SearchRequest searchRequest) throws IOException {
         String fullUrl = url + vault;
 
-        // For full-text, only search on hard drive by default because data on tapes are not indexed
-        // For meta-data search, both "open" and "archived" results are found because meta-data are always stored on hard drive
-        // Search for all versions because cannot limit "latest version" with full-text search
-        // String query = String.format("(%s) AND NOT _exists_:dcRelation", searchRequest.getQuery());
+        // Search on online storage only
+        String query = String.format("(%s) AND (dcType:online OR profile:%s)", searchRequest.getQuery(), onlineProfile);
 
         // Construct the URL
         HttpUrl httpUrl = HttpUrl.parse(fullUrl).newBuilder()
-                .addQueryParameter("q", searchRequest.getQuery())
+                .addQueryParameter("q", query)
                 .addQueryParameter("limit", searchRequest.getLimit() + "")
                 .addQueryParameter("scroll", searchRequest.getScroll())
                 .build();
