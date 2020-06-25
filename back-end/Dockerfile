@@ -16,4 +16,4 @@ ENV OLA_HD_MIN_MEMORY 6G
 ENV OLA_HD_MAX_MEMORY 6G
 ENV OLA_HD_PORT 8080
 EXPOSE ${OLA_HD_PORT}
-CMD ["java", "-Xms${OLA_HD_MIN_MEMORY}", "-Xmx${OLA_HD_MAX_MEMORY}", "-jar", "-Dserver.port=${OLA_HD_PORT}", "app.jar"]
+CMD java -Xms${OLA_HD_MIN_MEMORY} -Xmx${OLA_HD_MAX_MEMORY} -jar -Dserver.port=${OLA_HD_PORT} app.jar
