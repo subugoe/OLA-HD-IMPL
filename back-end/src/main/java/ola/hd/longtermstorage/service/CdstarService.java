@@ -264,16 +264,13 @@ public class CdstarService implements ArchiveManagerService, SearchService {
             storage = "offline";
         }
 
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("meta:dc:type", storage)
-                .build();
+        String payload = String.format("{\"dc:type\":\"%s\"}", storage);
 
         Request metaRequest = new Request.Builder()
                 .url(url + "?meta")
                 .addHeader("Authorization", Credentials.basic(username, password))
                 .addHeader("X-Transaction", txId)
-                .put(requestBody)
+                .put(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), payload))
                 .build();
 
         try (Response response = client.newCall(metaRequest).execute()) {
