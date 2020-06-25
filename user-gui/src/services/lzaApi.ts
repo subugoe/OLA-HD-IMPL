@@ -29,7 +29,7 @@ export default {
     },
 
     getTrackingInfo(id: string) {
-        return instance.get('/get-tracking-info', {
+        return instance.get('/search-tracking-info', {
             params: {
                 id
             }
