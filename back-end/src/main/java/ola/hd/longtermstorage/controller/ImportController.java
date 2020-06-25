@@ -11,6 +11,7 @@ import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import ola.hd.longtermstorage.component.ExecutorWrapper;
 import ola.hd.longtermstorage.component.MutexFactory;
+import ola.hd.longtermstorage.domain.ImportResult;
 import ola.hd.longtermstorage.domain.ResponseMessage;
 import ola.hd.longtermstorage.domain.TrackingInfo;
 import ola.hd.longtermstorage.domain.TrackingStatus;
@@ -299,8 +300,11 @@ public class ImportController {
             executor.submit(() -> {
                 try {
                     // Import files
-                    List<AbstractMap.SimpleImmutableEntry<String, String>> metaData =
-                            Failsafe.with(retryPolicy).get(() -> archiveManagerService.importZipFile(Paths.get(destination), pid, bagInfos, finalPrev));
+                    ImportResult importResult = Failsafe.with(retryPolicy).get(
+                            () -> archiveManagerService.importZipFile(
+                                    Paths.get(destination), pid, bagInfos, finalPrev));
+
+                    List<AbstractMap.SimpleImmutableEntry<String, String>> metaData = importResult.getMetaData();
 
                     // Point to the previous version
                     metaData.add(new AbstractMap.SimpleImmutableEntry<>("PREVIOUS-VERSION", finalPrev));
@@ -324,6 +328,9 @@ public class ImportController {
                     info.setStatus(TrackingStatus.SUCCESS);
                     info.setMessage("Data has been successfully imported.");
                     info.setPreviousVersion(finalPrev);
+                    info.setOnlineId(importResult.getOnlineId());
+                    info.setOfflineId(importResult.getOfflineId());
+
                     trackingRepository.save(info);
 
                     // Execute sequentially if it tries to append to the same document
@@ -350,8 +357,10 @@ public class ImportController {
             executor.submit(() -> {
                 try {
                     // Import files
-                    List<AbstractMap.SimpleImmutableEntry<String, String>> metaData =
-                            Failsafe.with(retryPolicy).get(() -> archiveManagerService.importZipFile(Paths.get(destination), pid, bagInfos));
+                    ImportResult importResult = Failsafe.with(retryPolicy).get(
+                            () -> archiveManagerService.importZipFile(Paths.get(destination), pid, bagInfos));
+
+                    List<AbstractMap.SimpleImmutableEntry<String, String>> metaData = importResult.getMetaData();
 
                     // Meta-data from the bag-info.txt
                     metaData.addAll(bagInfos);
@@ -365,6 +374,9 @@ public class ImportController {
                     // Save success data to the tracking database
                     info.setStatus(TrackingStatus.SUCCESS);
                     info.setMessage("Data has been successfully imported.");
+                    info.setOnlineId(importResult.getOnlineId());
+                    info.setOfflineId(importResult.getOfflineId());
+
                     trackingRepository.save(info);
 
                 } catch (Exception ex) {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import ola.hd.longtermstorage.component.MutexFactory;
 import ola.hd.longtermstorage.domain.HttpFile;
+import ola.hd.longtermstorage.domain.ImportResult;
 import ola.hd.longtermstorage.domain.SearchRequest;
 import ola.hd.longtermstorage.domain.SearchResults;
 import org.apache.tika.Tika;
@@ -65,9 +66,9 @@ public class CdstarService implements ArchiveManagerService, SearchService {
     }
 
     @Override
-    public List<AbstractMap.SimpleImmutableEntry<String, String>> importZipFile(Path extractedDir,
-                                                                                String pid,
-                                                                                List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws IOException {
+    public ImportResult importZipFile(Path extractedDir,
+                                      String pid,
+                                      List<AbstractMap.SimpleImmutableEntry<String, String>> metaData) throws IOException {
 
         String txId = null;
 
@@ -87,12 +88,12 @@ public class CdstarService implements ArchiveManagerService, SearchService {
             // Commit the transaction
             commitTransaction(txId);
 
-            // Meta-data to return
-            List<AbstractMap.SimpleImmutableEntry<String, String>> results = new ArrayList<>();
-            results.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
-            results.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
+            // Meta-data for PID
+            List<AbstractMap.SimpleImmutableEntry<String, String>> pidMetaData = new ArrayList<>();
+            pidMetaData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
+            pidMetaData.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
 
-            return results;
+            return new ImportResult(onlineArchiveId, offlineArchiveId, pidMetaData);
         } catch (Exception ex) {
             if (txId != null) {
                 rollbackTransaction(txId);
@@ -103,9 +104,9 @@ public class CdstarService implements ArchiveManagerService, SearchService {
     }
 
     @Override
-    public List<AbstractMap.SimpleImmutableEntry<String, String>> importZipFile(Path extractedDir, String pid,
-                                                                                List<AbstractMap.SimpleImmutableEntry<String, String>> metaData,
-                                                                                String prevPid) throws IOException {
+    public ImportResult importZipFile(Path extractedDir, String pid,
+                                      List<AbstractMap.SimpleImmutableEntry<String, String>> metaData,
+                                      String prevPid) throws IOException {
 
         String txId = null;
 
@@ -137,12 +138,12 @@ public class CdstarService implements ArchiveManagerService, SearchService {
             // Commit the transaction
             commitTransaction(txId);
 
-            // Meta-data to return
-            List<AbstractMap.SimpleImmutableEntry<String, String>> results = new ArrayList<>();
-            results.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
-            results.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
+            // Meta-data for PID
+            List<AbstractMap.SimpleImmutableEntry<String, String>> pidMetaData = new ArrayList<>();
+            pidMetaData.add(new AbstractMap.SimpleImmutableEntry<>("ONLINE-URL", url + vault + "/" + onlineArchiveId + "?with=files,meta"));
+            pidMetaData.add(new AbstractMap.SimpleImmutableEntry<>("OFFLINE-URL", url + vault + "/" + offlineArchiveId + "?with=files,meta"));
 
-            return results;
+            return new ImportResult(onlineArchiveId, offlineArchiveId, pidMetaData);
 
         } catch (IOException ex) {
             if (txId != null) {

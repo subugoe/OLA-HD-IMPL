@@ -28,6 +28,12 @@ public class TrackingInfo {
     // The PID of the file
     private String pid;
 
+    // CDSTAR-ID of an online archive
+    private String onlineId;
+
+    // CDSTAR-ID of an offline archive
+    private String offlineId;
+
     // PID of the previous version
     private String previousVersion;
 
@@ -92,6 +98,22 @@ public class TrackingInfo {
 
     public void setPid(String pid) {
         this.pid = pid;
+    }
+
+    public String getOnlineId() {
+        return onlineId;
+    }
+
+    public void setOnlineId(String onlineId) {
+        this.onlineId = onlineId;
+    }
+
+    public String getOfflineId() {
+        return offlineId;
+    }
+
+    public void setOfflineId(String offlineId) {
+        this.offlineId = offlineId;
     }
 
     public Instant getTimestamp() {
