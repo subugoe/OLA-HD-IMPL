@@ -96,7 +96,7 @@ public class SearchController {
             @ApiResponse(code = 200, message = "Information found", response = String.class),
             @ApiResponse(code = 404, message = "Information not found", response = String.class)
     })
-    @GetMapping(value = "/get-tracking-info", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/search-tracking-info", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<TrackingInfo> getTrackingInfo(@ApiParam(value = "Internal ID of the archive.", required = true)
                                                         @RequestParam String id) {
         TrackingInfo info = trackingRepository.findByOnlineIdOrOfflineId(id, id);
