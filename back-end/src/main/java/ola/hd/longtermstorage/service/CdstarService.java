@@ -108,6 +108,8 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                                       List<AbstractMap.SimpleImmutableEntry<String, String>> metaData,
                                       String prevPid) throws IOException {
 
+        // TODO: Check if prevPid exists
+
         String txId = null;
 
         try {
@@ -467,7 +469,8 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
+            if (!response.isSuccessful() && response.code() != 404) {
+
                 // Something is wrong, throw the exception
                 throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot delete archive");
             }
