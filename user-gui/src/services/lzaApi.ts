@@ -28,6 +28,14 @@ export default {
         });
     },
 
+    getTrackingInfo(id: string) {
+        return instance.get('/get-tracking-info', {
+            params: {
+                id
+            }
+        });
+    },
+
     downloadFiles(archiveId: string, files: []) {
         let url = '/api/download';
         let data = {

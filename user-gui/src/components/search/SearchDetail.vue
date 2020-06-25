@@ -130,20 +130,20 @@
                         <div class="card-body">
                             <span v-if="!hasOtherVersion">This archive does not have any other version.</span>
                             <ul>
-                                <template v-if="archiveInfo.meta['dc:source']">
+                                <template v-if="trackingInfo.previousVersion">
                                     <li>
                                         Previous version:
                                         <router-link
-                                                :to="{name: 'search', query: {q: buildMetadataSearch('dcIdentifier', archiveInfo.meta['dc:source'][0])}}">
-                                            {{ archiveInfo.meta['dc:source'][0] }}
+                                                :to="{name: 'search', query: {q: buildMetadataSearch('dcIdentifier', trackingInfo.previousVersion)}}">
+                                            {{ trackingInfo.previousVersion }}
                                         </router-link>
                                     </li>
                                 </template>
-                                <template v-if="archiveInfo.meta['dc:relation']">
+                                <template v-if="trackingInfo.nextVersion">
                                     <li>
                                         Next version:
                                         <ul>
-                                            <li v-for="value in archiveInfo.meta['dc:relation']">
+                                            <li v-for="value in trackingInfo.nextVersion">
                                                 <router-link
                                                         :to="{name: 'search', query: {q: buildMetadataSearch('dcIdentifier', value)}}">
                                                     {{ value }}
@@ -181,6 +181,7 @@
         data() {
             return {
                 archiveInfo: {},
+                trackingInfo: {},
                 error: null,
                 loading: true,
                 value: [],
@@ -197,11 +198,9 @@
                 return !this.isOpen || this.value.length < 1;
             },
             hasOtherVersion() {
-                let hasVersion = true;
-                if (!this.archiveInfo.meta) {
-                    hasVersion = false;
-                } else if (!this.archiveInfo.meta['dc:source'] && !this.archiveInfo.meta['dc:relation']) {
-                    hasVersion = false;
+                let hasVersion = false;
+                if (this.trackingInfo.previousVersion || this.trackingInfo.nextVersion) {
+                    hasVersion = true;
                 }
 
                 return hasVersion;
@@ -429,6 +428,17 @@
             } finally {
                 this.loading = false;
             }
+
+            // Get tracking information for versioning
+            lzaApi.getTrackingInfo(this.id)
+                .then(response => {
+                    this.trackingInfo = response.data;
+                })
+                .catch(error => {
+                    this.error = true;
+                    console.log(error);
+                });
+
             this.options = this.buildTree();
         }
     }
