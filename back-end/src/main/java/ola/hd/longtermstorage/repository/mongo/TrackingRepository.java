@@ -12,6 +12,6 @@ import java.util.List;
 public interface TrackingRepository extends MongoRepository<TrackingInfo, String> {
 
     TrackingInfo findByPid(String pid);
-    TrackingInfo findByPidAndStatus(String pid, TrackingStatus status);
+    TrackingInfo findByOnlineIdOrOfflineId(String onlineId, String offlineId);
     List<TrackingInfo> findByUsername(String username, Pageable pageable);
 }

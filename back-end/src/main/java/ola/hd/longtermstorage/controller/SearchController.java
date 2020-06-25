@@ -97,9 +97,9 @@ public class SearchController {
             @ApiResponse(code = 404, message = "Information not found", response = String.class)
     })
     @GetMapping(value = "/get-tracking-info", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<TrackingInfo> getTrackingInfo(@ApiParam(value = "PID of the archive.", required = true)
-                                                        @RequestParam String pid) {
-        TrackingInfo info = trackingRepository.findByPidAndStatus(pid, TrackingStatus.SUCCESS);
+    public ResponseEntity<TrackingInfo> getTrackingInfo(@ApiParam(value = "Internal ID of the archive.", required = true)
+                                                        @RequestParam String id) {
+        TrackingInfo info = trackingRepository.findByOnlineIdOrOfflineId(id, id);
         return ResponseEntity.ok(info);
     }
 }
