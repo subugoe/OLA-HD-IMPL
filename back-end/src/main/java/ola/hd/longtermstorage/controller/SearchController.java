@@ -2,10 +2,8 @@ package ola.hd.longtermstorage.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.*;
-import ola.hd.longtermstorage.domain.SearchHit;
-import ola.hd.longtermstorage.domain.SearchHitDetail;
-import ola.hd.longtermstorage.domain.SearchRequest;
-import ola.hd.longtermstorage.domain.SearchResults;
+import ola.hd.longtermstorage.domain.*;
+import ola.hd.longtermstorage.repository.mongo.TrackingRepository;
 import ola.hd.longtermstorage.service.ArchiveManagerService;
 import ola.hd.longtermstorage.service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,13 +21,15 @@ import java.io.IOException;
 public class SearchController {
 
     private final SearchService searchService;
-
     private final ArchiveManagerService archiveManagerService;
+    private final TrackingRepository trackingRepository;
 
     @Autowired
-    public SearchController(SearchService searchService, ArchiveManagerService archiveManagerService) {
+    public SearchController(SearchService searchService, ArchiveManagerService archiveManagerService,
+                            TrackingRepository trackingRepository) {
         this.searchService = searchService;
         this.archiveManagerService = archiveManagerService;
+        this.trackingRepository = trackingRepository;
     }
 
     @ApiOperation(value = "Search on archive.")
@@ -88,6 +88,18 @@ public class SearchController {
 
         String info = archiveManagerService.getArchiveInfo(id, withFile, limit, offset);
 
+        return ResponseEntity.ok(info);
+    }
+
+    @ApiOperation(value = "Get the information of an archive from the system database.")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Information found", response = String.class),
+            @ApiResponse(code = 404, message = "Information not found", response = String.class)
+    })
+    @GetMapping(value = "/get-tracking-info", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<TrackingInfo> getTrackingInfo(@ApiParam(value = "PID of the archive.", required = true)
+                                                        @RequestParam String pid) {
+        TrackingInfo info = trackingRepository.findByPidAndStatus(pid, TrackingStatus.SUCCESS);
         return ResponseEntity.ok(info);
     }
 }

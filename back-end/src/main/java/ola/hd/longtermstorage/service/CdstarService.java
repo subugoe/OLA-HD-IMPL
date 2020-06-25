@@ -122,12 +122,17 @@ public class CdstarService implements ArchiveManagerService, SearchService {
             uploadData(extractedDir, txId, onlineArchiveId, offlineArchiveId);
 
             // Update archive meta-data of current version
+            // TODO: don't track version in CDSTAR.
             setArchiveMetaData(onlineArchiveId, metaData, pid, txId, prevPid, null);
             setArchiveMetaData(offlineArchiveId, metaData, pid, txId, prevPid, null);
 
             // Update archive meta-data of previous version. Update the online archive only because it's not possible
             // to update meta-data of an offline archive
-            linkToNextVersion(prevOnlineArchiveId, txId, pid);
+            // linkToNextVersion(prevOnlineArchiveId, txId, pid);
+
+            // Delete the previous version on the hard drive
+            // Only store the latest version on the hard drive
+            deleteArchive(prevOnlineArchiveId, txId);
 
             // Commit the transaction
             commitTransaction(txId);
@@ -448,6 +453,25 @@ public class CdstarService implements ArchiveManagerService, SearchService {
 
                 // Something is wrong, throw the exception
                 throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot set archive meta-data");
+            }
+        }
+    }
+
+    private void deleteArchive(String archiveId, String txId) throws IOException {
+        String fullUrl = url + vault + "/" + archiveId;
+
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(fullUrl)
+                .addHeader("Authorization", Credentials.basic(username, password))
+                .addHeader("X-Transaction", txId)
+                .delete()
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                // Something is wrong, throw the exception
+                throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot delete archive");
             }
         }
     }
