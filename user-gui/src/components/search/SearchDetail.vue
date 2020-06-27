@@ -122,7 +122,7 @@
 
             <!-- Version -->
             <div class="row my-4">
-                <div class="col" v-if="isOpen">
+                <div class="col">
                     <div class="card">
                         <div class="card-header">
                             <h5>Other versions</h5>
@@ -130,23 +130,23 @@
                         <div class="card-body">
                             <span v-if="!hasOtherVersion">This archive does not have any other version.</span>
                             <ul>
-                                <template v-if="trackingInfo.previousVersion">
+                                <template v-if="versionInfo.previousVersion">
                                     <li>
                                         Previous version:
                                         <router-link
-                                                :to="{name: 'search', query: {q: buildMetadataSearch('dcIdentifier', trackingInfo.previousVersion)}}">
-                                            {{ trackingInfo.previousVersion }}
+                                                :to="{name: 'search-detail', params: {id: versionInfo.previousVersion.offlineId}}">
+                                            {{ versionInfo.previousVersion.pid }}
                                         </router-link>
                                     </li>
                                 </template>
-                                <template v-if="trackingInfo.nextVersion">
+                                <template v-if="versionInfo.nextVersions">
                                     <li>
                                         Next version:
                                         <ul>
-                                            <li v-for="value in trackingInfo.nextVersion">
+                                            <li v-for="value in versionInfo.nextVersions">
                                                 <router-link
-                                                        :to="{name: 'search', query: {q: buildMetadataSearch('dcIdentifier', value)}}">
-                                                    {{ value }}
+                                                        :to="{name: 'search-detail', params: {id: value.onlineId ? value.onlineId : value.offlineId}}">
+                                                    {{ value.pid }}
                                                 </router-link>
                                             </li>
                                         </ul>
@@ -181,7 +181,7 @@
         data() {
             return {
                 archiveInfo: {},
-                trackingInfo: {},
+                versionInfo: {},
                 error: null,
                 loading: true,
                 value: [],
@@ -199,7 +199,7 @@
             },
             hasOtherVersion() {
                 let hasVersion = false;
-                if (this.trackingInfo.previousVersion || this.trackingInfo.nextVersion) {
+                if (this.versionInfo.previousVersion || this.versionInfo.nextVersions) {
                     hasVersion = true;
                 }
 
@@ -218,6 +218,51 @@
             }
         },
         methods: {
+            async loadData() {
+                const limit = 1000;
+                let offset = 0, firstCall = true;
+
+                try {
+                    while (true) {
+                        let response = await lzaApi.getArchiveInfo(this.id, limit, offset);
+
+                        if (firstCall) {
+                            // Store all data for the first call
+                            this.archiveInfo = response.data;
+                            firstCall = false;
+                        } else {
+                            // Otherwise, just add more files to the file array
+                            this.archiveInfo.files = this.archiveInfo.files.concat(response.data.files);
+                        }
+
+                        // There is no more file to get? Stop
+                        if (response.data.files.length < limit) {
+                            break;
+                        } else {
+                            // Get new files by increasing the offset
+                            offset += limit;
+                        }
+                    }
+                } catch (error) {
+                    this.error = true;
+                    console.log(error);
+                } finally {
+                    this.loading = false;
+                }
+
+                // Get version information
+                lzaApi.getVersionInfo(this.id)
+                    .then(response => {
+                        this.versionInfo = response.data;
+                    })
+                    .catch(error => {
+                        this.error = true;
+                        console.log(error);
+                    });
+
+                this.options = this.buildTree();
+            },
+
             buildTree() {
                 let tree = [];
 
@@ -390,56 +435,12 @@
 
                 return `${base}/${id}?path=${esc(path)}`;
             },
-            buildMetadataSearch(metadata, searchTerm) {
-                // Put the term in quotation marks for exact search
-                searchTerm = `"${searchTerm}"`;
-
-                return `${metadata}:${searchTerm}`;
-            }
         },
         async created() {
-            const limit = 1000;
-            let offset = 0, firstCall = true;
-
-            try {
-                while (true) {
-                    let response = await lzaApi.getArchiveInfo(this.id, limit, offset);
-
-                    if (firstCall) {
-                        // Store all data for the first call
-                        this.archiveInfo = response.data;
-                        firstCall = false;
-                    } else {
-                        // Otherwise, just add more files to the file array
-                        this.archiveInfo.files = this.archiveInfo.files.concat(response.data.files);
-                    }
-
-                    // There is no more file to get? Stop
-                    if (response.data.files.length < limit) {
-                        break;
-                    } else {
-                        // Get new files by increasing the offset
-                        offset += limit;
-                    }
-                }
-            } catch (error) {
-                this.error = true;
-                console.log(error);
-            } finally {
-                this.loading = false;
-            }
-
-            // Get tracking information for versioning
-            lzaApi.getTrackingInfo(this.id)
-                .then(response => {
-                    this.trackingInfo = response.data;
-                })
-                .catch(error => {
-                    this.error = true;
-                    console.log(error);
-                });
-
-            this.options = this.buildTree();
+            await this.loadData();
+        },
+        watch: {
+            '$route.params.id': 'loadData'
         }
     }
 </script>
