@@ -11,10 +11,8 @@ import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import ola.hd.longtermstorage.component.ExecutorWrapper;
 import ola.hd.longtermstorage.component.MutexFactory;
-import ola.hd.longtermstorage.domain.ImportResult;
-import ola.hd.longtermstorage.domain.ResponseMessage;
-import ola.hd.longtermstorage.domain.TrackingInfo;
-import ola.hd.longtermstorage.domain.TrackingStatus;
+import ola.hd.longtermstorage.domain.*;
+import ola.hd.longtermstorage.repository.mongo.ArchiveRepository;
 import ola.hd.longtermstorage.repository.mongo.TrackingRepository;
 import ola.hd.longtermstorage.service.ArchiveManagerService;
 import ola.hd.longtermstorage.service.PidService;
@@ -69,6 +67,8 @@ public class ImportController {
 
     private final TrackingRepository trackingRepository;
 
+    private final ArchiveRepository archiveRepository;
+
     private final PidService pidService;
 
     private final ExecutorWrapper executor;
@@ -79,10 +79,11 @@ public class ImportController {
     private String uploadDir;
 
     @Autowired
-    public ImportController(ArchiveManagerService archiveManagerService, TrackingRepository trackingRepository, PidService pidService,
+    public ImportController(ArchiveManagerService archiveManagerService, TrackingRepository trackingRepository, ArchiveRepository archiveRepository, PidService pidService,
                             ExecutorWrapper executor, MutexFactory<String> mutexFactory) {
         this.archiveManagerService = archiveManagerService;
         this.trackingRepository = trackingRepository;
+        this.archiveRepository = archiveRepository;
         this.pidService = pidService;
         this.executor = executor;
         this.mutexFactory = mutexFactory;
@@ -327,22 +328,29 @@ public class ImportController {
                     // Save success data to the tracking database
                     info.setStatus(TrackingStatus.SUCCESS);
                     info.setMessage("Data has been successfully imported.");
-                    info.setPreviousVersion(finalPrev);
-                    info.setOnlineId(importResult.getOnlineId());
-                    info.setOfflineId(importResult.getOfflineId());
-
                     trackingRepository.save(info);
+
+                    // Create new archive in the database
+                    Archive archive = new Archive(pid, importResult.getOnlineId(), importResult.getOfflineId());
+
+                    // Find the previous version
+                    Archive prevVersion = archiveRepository.findByPid(finalPrev);
+
+                    // Link to previous version
+                    archive.setPreviousVersion(prevVersion);
+
+                    // Remove online-id of the previous version
+                    prevVersion.setOnlineId(null);
 
                     // Execute sequentially if it tries to append to the same document
                     synchronized (mutexFactory.getMutex(finalPrev)) {
 
                         // Set Next Version field
-                        TrackingInfo prevInfo = trackingRepository.findByPid(finalPrev);
-                        if (prevInfo != null) {
-                            prevInfo.addNextVersion(pid);
-                            trackingRepository.save(prevInfo);
-                        }
+                        prevVersion.addNextVersion(archive);
                     }
+
+                    archiveRepository.save(archive);
+                    archiveRepository.save(prevVersion);
 
                 } catch (Exception ex) {
                     handleFailedImport(ex, pid, info);
@@ -374,10 +382,11 @@ public class ImportController {
                     // Save success data to the tracking database
                     info.setStatus(TrackingStatus.SUCCESS);
                     info.setMessage("Data has been successfully imported.");
-                    info.setOnlineId(importResult.getOnlineId());
-                    info.setOfflineId(importResult.getOfflineId());
-
                     trackingRepository.save(info);
+
+                    // Create new archive in the database
+                    Archive archive = new Archive(pid, importResult.getOnlineId(), importResult.getOfflineId());
+                    archiveRepository.save(archive);
 
                 } catch (Exception ex) {
                     handleFailedImport(ex, pid, info);

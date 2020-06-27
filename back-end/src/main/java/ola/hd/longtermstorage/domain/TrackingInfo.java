@@ -28,18 +28,6 @@ public class TrackingInfo {
     // The PID of the file
     private String pid;
 
-    // CDSTAR-ID of an online archive
-    private String onlineId;
-
-    // CDSTAR-ID of an offline archive
-    private String offlineId;
-
-    // PID of the previous version
-    private String previousVersion;
-
-    // PID of the previous version
-    private List<String> nextVersion;
-
     protected TrackingInfo() {
         // no-args constructor required by JPA spec
         // this one is protected since it shouldn't be used directly
@@ -51,13 +39,6 @@ public class TrackingInfo {
         this.message = message;
         this.pid = pid;
         this.timestamp = Instant.now();
-    }
-
-    public void addNextVersion(String nextVersion) {
-        if (this.nextVersion == null) {
-            this.nextVersion = new ArrayList<>();
-        }
-        this.nextVersion.add(nextVersion);
     }
 
     public String getId() {
@@ -100,44 +81,12 @@ public class TrackingInfo {
         this.pid = pid;
     }
 
-    public String getOnlineId() {
-        return onlineId;
-    }
-
-    public void setOnlineId(String onlineId) {
-        this.onlineId = onlineId;
-    }
-
-    public String getOfflineId() {
-        return offlineId;
-    }
-
-    public void setOfflineId(String offlineId) {
-        this.offlineId = offlineId;
-    }
-
     public Instant getTimestamp() {
         return timestamp;
     }
 
     public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
-    }
-
-    public String getPreviousVersion() {
-        return previousVersion;
-    }
-
-    public void setPreviousVersion(String previousVersion) {
-        this.previousVersion = previousVersion;
-    }
-
-    public List<String> getNextVersion() {
-        return nextVersion;
-    }
-
-    public void setNextVersion(List<String> nextVersion) {
-        this.nextVersion = nextVersion;
     }
 }
 

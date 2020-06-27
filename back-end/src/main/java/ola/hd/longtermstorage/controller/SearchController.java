@@ -3,7 +3,7 @@ package ola.hd.longtermstorage.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.*;
 import ola.hd.longtermstorage.domain.*;
-import ola.hd.longtermstorage.repository.mongo.TrackingRepository;
+import ola.hd.longtermstorage.repository.mongo.ArchiveRepository;
 import ola.hd.longtermstorage.service.ArchiveManagerService;
 import ola.hd.longtermstorage.service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +22,14 @@ public class SearchController {
 
     private final SearchService searchService;
     private final ArchiveManagerService archiveManagerService;
-    private final TrackingRepository trackingRepository;
+    private final ArchiveRepository archiveRepository;
 
     @Autowired
     public SearchController(SearchService searchService, ArchiveManagerService archiveManagerService,
-                            TrackingRepository trackingRepository) {
+                            ArchiveRepository archiveRepository) {
         this.searchService = searchService;
         this.archiveManagerService = archiveManagerService;
-        this.trackingRepository = trackingRepository;
+        this.archiveRepository = archiveRepository;
     }
 
     @ApiOperation(value = "Search on archive.")
@@ -96,10 +96,10 @@ public class SearchController {
             @ApiResponse(code = 200, message = "Information found", response = String.class),
             @ApiResponse(code = 404, message = "Information not found", response = String.class)
     })
-    @GetMapping(value = "/search-tracking-info", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<TrackingInfo> getTrackingInfo(@ApiParam(value = "Internal ID of the archive.", required = true)
-                                                        @RequestParam String id) {
-        TrackingInfo info = trackingRepository.findByOnlineIdOrOfflineId(id, id);
-        return ResponseEntity.ok(info);
+    @GetMapping(value = "/search-archive-info", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Archive> getTrackingInfo(@ApiParam(value = "Internal ID of the archive.", required = true)
+                                                   @RequestParam String id) {
+        Archive archive = archiveRepository.findByOnlineIdOrOfflineId(id, id);
+        return ResponseEntity.ok(archive);
     }
 }
