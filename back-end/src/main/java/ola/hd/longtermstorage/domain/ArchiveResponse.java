@@ -1,17 +1,11 @@
 package ola.hd.longtermstorage.domain;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-import java.util.ArrayList;
 import java.util.List;
 
-@Document(collection = "archive")
-public class Archive {
-
-    @Id
-    private String id;
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+public class ArchiveResponse {
 
     // PID of the archive
     private String pid;
@@ -22,36 +16,12 @@ public class Archive {
     // CDSTAR-ID of an offline archive
     private String offlineId;
 
-    @DBRef(lazy = true)
     private Archive previousVersion;
 
-    @DBRef(lazy = true)
     private List<Archive> nextVersions;
 
-    protected Archive() {
-        // no-args constructor required by JPA spec
-        // this one is protected since it shouldn't be used directly
-    }
-
-    public Archive(String pid, String onlineId, String offlineId) {
-        this.pid = pid;
-        this.onlineId = onlineId;
-        this.offlineId = offlineId;
-    }
-
-    public void addNextVersion(Archive nextVersion) {
-        if (nextVersions == null) {
-            nextVersions = new ArrayList<>();
-        }
-        nextVersions.add(nextVersion);
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
+    public ArchiveResponse() {
+        // A default constructor is necessary for JSON deserialization
     }
 
     public String getPid() {
