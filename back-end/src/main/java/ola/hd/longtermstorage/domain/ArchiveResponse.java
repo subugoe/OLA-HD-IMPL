@@ -2,6 +2,7 @@ package ola.hd.longtermstorage.domain;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -16,12 +17,19 @@ public class ArchiveResponse {
     // CDSTAR-ID of an offline archive
     private String offlineId;
 
-    private Archive previousVersion;
+    private ArchiveResponse previousVersion;
 
-    private List<Archive> nextVersions;
+    private List<ArchiveResponse> nextVersions;
 
     public ArchiveResponse() {
         // A default constructor is necessary for JSON deserialization
+    }
+
+    public void addNextVersion(ArchiveResponse nextVersion) {
+        if (nextVersions == null) {
+            nextVersions = new ArrayList<>();
+        }
+        nextVersions.add(nextVersion);
     }
 
     public String getPid() {
@@ -48,19 +56,19 @@ public class ArchiveResponse {
         this.offlineId = offlineId;
     }
 
-    public Archive getPreviousVersion() {
+    public ArchiveResponse getPreviousVersion() {
         return previousVersion;
     }
 
-    public void setPreviousVersion(Archive previousVersion) {
+    public void setPreviousVersion(ArchiveResponse previousVersion) {
         this.previousVersion = previousVersion;
     }
 
-    public List<Archive> getNextVersions() {
+    public List<ArchiveResponse> getNextVersions() {
         return nextVersions;
     }
 
-    public void setNextVersions(List<Archive> nextVersions) {
+    public void setNextVersions(List<ArchiveResponse> nextVersions) {
         this.nextVersions = nextVersions;
     }
 }

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.List;
 
 @Api(description = "This endpoint is used to search in the system.")
 @RestController
@@ -99,14 +100,40 @@ public class SearchController {
     @GetMapping(value = "/search-archive-info", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ArchiveResponse> searchArchiveInfo(@ApiParam(value = "Internal ID of the archive.", required = true)
                                                      @RequestParam String id) {
+        // Get the data
         Archive archive = archiveRepository.findByOnlineIdOrOfflineId(id, id);
 
+        // Build the response
         ArchiveResponse response = new ArchiveResponse();
+
+        // Set some data
         response.setPid(archive.getPid());
         response.setOnlineId(archive.getOnlineId());
         response.setOfflineId(archive.getOfflineId());
-        response.setPreviousVersion(archive.getPreviousVersion());
-        response.setNextVersions(archive.getNextVersions());
+
+        // Set previous version
+        Archive prevArchive = archive.getPreviousVersion();
+        if (prevArchive != null) {
+            ArchiveResponse prevRes = new ArchiveResponse();
+            prevRes.setPid(prevArchive.getPid());
+            prevRes.setOnlineId(prevArchive.getOnlineId());
+            prevRes.setOfflineId(prevArchive.getOfflineId());
+
+            response.setPreviousVersion(prevRes);
+        }
+
+        // Set next versions
+        List<Archive> nextVersions = archive.getNextVersions();
+        if (nextVersions != null) {
+            for (Archive nextArchive : nextVersions) {
+                ArchiveResponse nextRes = new ArchiveResponse();
+                nextRes.setPid(nextArchive.getPid());
+                nextRes.setOnlineId(nextArchive.getOnlineId());
+                nextRes.setOfflineId(nextArchive.getOfflineId());
+
+                response.addNextVersion(nextRes);
+            }
+        }
 
         return ResponseEntity.ok(response);
     }
