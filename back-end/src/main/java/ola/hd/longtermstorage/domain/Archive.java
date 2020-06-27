@@ -1,6 +1,7 @@
 package ola.hd.longtermstorage.domain;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
@@ -21,8 +22,10 @@ public class Archive {
     // CDSTAR-ID of an offline archive
     private String offlineId;
 
+    @DBRef(lazy = true)
     private Archive previousVersion;
 
+    @DBRef(lazy = true)
     private List<Archive> nextVersions;
 
     protected Archive() {
@@ -41,6 +44,14 @@ public class Archive {
             nextVersions = new ArrayList<>();
         }
         nextVersions.add(nextVersion);
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getPid() {
