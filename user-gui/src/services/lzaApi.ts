@@ -28,12 +28,8 @@ export default {
         });
     },
 
-    getTrackingInfo(id: string) {
-        return instance.get('/search-tracking-info', {
-            params: {
-                id
-            }
-        });
+    getVersionInfo(id: string) {
+        return instance.get(`/search-archive-info/${id}`);
     },
 
     downloadFiles(archiveId: string, files: []) {
