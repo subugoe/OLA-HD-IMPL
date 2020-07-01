@@ -3,13 +3,11 @@ package ola.hd.longtermstorage.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
-import ola.hd.longtermstorage.component.MutexFactory;
 import ola.hd.longtermstorage.domain.HttpFile;
 import ola.hd.longtermstorage.domain.ImportResult;
 import ola.hd.longtermstorage.domain.SearchRequest;
 import ola.hd.longtermstorage.domain.SearchResults;
 import org.apache.tika.Tika;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -57,13 +55,6 @@ public class CdstarService implements ArchiveManagerService, SearchService {
 
     @Value("${offline.mimeTypes}")
     private String offlineMimeTypes;
-
-    private final MutexFactory<String> mutexFactory;
-
-    @Autowired
-    public CdstarService(MutexFactory<String> mutexFactory) {
-        this.mutexFactory = mutexFactory;
-    }
 
     @Override
     public ImportResult importZipFile(Path extractedDir,
@@ -468,47 +459,6 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                 // Something is wrong, throw the exception
                 throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot delete archive");
             }
-        }
-    }
-
-    private List<String> getCurrentNextVersions(String archiveId, String txId) throws IOException {
-
-        List<String> results = new ArrayList<>();
-        String fullUrl = url + vault + "/" + archiveId + "?meta";
-
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url(fullUrl)
-                .addHeader("Authorization", Credentials.basic(username, password))
-                .addHeader("X-Transaction", txId)
-                .get()
-                .build();
-        try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful()) {
-                if (response.body() != null) {
-
-                    // Parse the returned JSON
-                    ObjectMapper mapper = new ObjectMapper();
-                    JsonNode root = mapper.readTree(response.body().string());
-
-                    // Get the array of the dc:relation
-                    JsonNode relations = root.get("dc:relation");
-
-                    // There is no relation, return empty list
-                    if (relations == null) {
-                        return results;
-                    }
-
-                    for (JsonNode item : relations) {
-                        results.add(item.asText());
-                    }
-                    return results;
-                }
-            }
-
-            // Cannot get the archive meta-data? Throw the exception
-            throw new HttpServerErrorException(HttpStatus.valueOf(response.code()),
-                    "Error when getting the archive meta-data with the identifier " + archiveId);
         }
     }
 
