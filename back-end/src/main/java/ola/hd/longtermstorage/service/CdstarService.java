@@ -446,16 +446,21 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         }
     }
 
-    private void deleteArchive(String archiveId, String txId) throws IOException {
+    @Override
+    public void deleteArchive(String archiveId, String txId) throws IOException {
         String fullUrl = url + vault + "/" + archiveId;
 
         OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
+        Request.Builder builder = new Request.Builder()
                 .url(fullUrl)
                 .addHeader("Authorization", Credentials.basic(username, password))
-                .addHeader("X-Transaction", txId)
-                .delete()
-                .build();
+                .delete();
+
+        if (txId != null) {
+            builder.addHeader("X-Transaction", txId);
+        }
+
+        Request request = builder.build();
 
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful() && response.code() != 404) {
@@ -463,21 +468,6 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                 // Something is wrong, throw the exception
                 throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Cannot delete archive");
             }
-        }
-    }
-
-    private void linkToNextVersion(String archiveId, String txId, String nextPid) throws IOException {
-
-        // Execute sequentially if it tries to append to the same archive
-        synchronized (mutexFactory.getMutex(archiveId)) {
-
-            // Get the list of current next version (meta:dc:relation)
-            List<String> nextVersions = getCurrentNextVersions(archiveId, txId);
-
-            // Add another next version
-            nextVersions.add(nextPid);
-
-            setArchiveMetaData(archiveId, null, null, txId);
         }
     }
 

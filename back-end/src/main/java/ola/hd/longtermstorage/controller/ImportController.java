@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.context.request.ServletWebRequest;
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -183,6 +184,9 @@ public class ImportController {
                 try (InputStream uploadedStream = item.openStream();
                      OutputStream out = FileUtils.openOutputStream(targetFile)) {
                     IOUtils.copy(uploadedStream, out);
+                } catch (IOException ex) {
+                    throw new HttpServerErrorException(
+                            HttpStatus.INTERNAL_SERVER_ERROR, "The upload process was interupted. Please try again.");
                 }
 
             } else {
@@ -299,9 +303,10 @@ public class ImportController {
             // Import a new version of a bag
             String finalPrev = prev;
             executor.submit(() -> {
+                ImportResult importResult = null;
                 try {
                     // Import files
-                    ImportResult importResult = Failsafe.with(retryPolicy).get(
+                    importResult = Failsafe.with(retryPolicy).get(
                             () -> archiveManagerService.importZipFile(
                                     Paths.get(destination), pid, bagInfos, finalPrev));
 
@@ -353,7 +358,7 @@ public class ImportController {
                     archiveRepository.save(prevVersion);
 
                 } catch (Exception ex) {
-                    handleFailedImport(ex, pid, info);
+                    handleFailedImport(ex, pid, importResult, info);
                 } finally {
                     // Clean up the temp
                     FileSystemUtils.deleteRecursively(new File(tempDir));
@@ -363,9 +368,10 @@ public class ImportController {
 
             // Import an individual bag
             executor.submit(() -> {
+                ImportResult importResult = null;
                 try {
                     // Import files
-                    ImportResult importResult = Failsafe.with(retryPolicy).get(
+                    importResult = Failsafe.with(retryPolicy).get(
                             () -> archiveManagerService.importZipFile(Paths.get(destination), pid, bagInfos));
 
                     List<AbstractMap.SimpleImmutableEntry<String, String>> metaData = importResult.getMetaData();
@@ -389,7 +395,7 @@ public class ImportController {
                     archiveRepository.save(archive);
 
                 } catch (Exception ex) {
-                    handleFailedImport(ex, pid, info);
+                    handleFailedImport(ex, pid, importResult, info);
                 } finally {
                     // Clean up the temp
                     FileSystemUtils.deleteRecursively(new File(tempDir));
@@ -405,11 +411,18 @@ public class ImportController {
         return ResponseEntity.accepted().body(responseMessage);
     }
 
-    private void handleFailedImport(Exception ex, String pid, TrackingInfo info) {
+    private void handleFailedImport(Exception ex, String pid, ImportResult importResult, TrackingInfo info) {
 
-        // Delete the PID
         try {
+            // Delete the PID
             pidService.deletePid(pid);
+
+            // Delete the archive
+            if (importResult != null) {
+                archiveManagerService.deleteArchive(importResult.getOnlineId(), null);
+                archiveManagerService.deleteArchive(importResult.getOfflineId(), null);
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }

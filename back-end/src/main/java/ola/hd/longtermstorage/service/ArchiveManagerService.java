@@ -108,4 +108,13 @@ public interface ArchiveManagerService {
      * @throws IOException Thrown if something's wrong when connecting to the archive services
      */
     HttpFile getFile(String id, String path, boolean infoOnly) throws IOException;
+
+    /**
+     * Delete an archive
+     *
+     * @param archiveId    The internal ID of the archive
+     * @param txId         Transaction ID. Can be null
+     * @throws IOException Thrown if something's wrong when connecting to the archive services
+     */
+    void deleteArchive(String archiveId, String txId) throws IOException;
 }
