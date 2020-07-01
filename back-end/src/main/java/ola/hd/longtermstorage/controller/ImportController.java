@@ -186,7 +186,7 @@ public class ImportController {
                     IOUtils.copy(uploadedStream, out);
                 } catch (IOException ex) {
                     throw new HttpServerErrorException(
-                            HttpStatus.INTERNAL_SERVER_ERROR, "The upload process was interupted. Please try again.");
+                            HttpStatus.INTERNAL_SERVER_ERROR, "The upload process was interrupted. Please try again.");
                 }
 
             } else {
