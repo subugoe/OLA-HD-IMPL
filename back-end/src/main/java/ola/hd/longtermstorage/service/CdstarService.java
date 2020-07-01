@@ -82,8 +82,8 @@ public class CdstarService implements ArchiveManagerService, SearchService {
             uploadData(extractedDir, txId, onlineArchiveId, offlineArchiveId);
 
             // Update archive meta-data
-            setArchiveMetaData(onlineArchiveId, metaData, pid, txId, null, null);
-            setArchiveMetaData(offlineArchiveId, metaData, pid, txId, null, null);
+            setArchiveMetaData(onlineArchiveId, metaData, pid, txId);
+            setArchiveMetaData(offlineArchiveId, metaData, pid, txId);
 
             // Commit the transaction
             commitTransaction(txId);
@@ -108,8 +108,6 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                                       List<AbstractMap.SimpleImmutableEntry<String, String>> metaData,
                                       String prevPid) throws IOException {
 
-        // TODO: Check if prevPid exists
-
         String txId = null;
 
         try {
@@ -125,13 +123,8 @@ public class CdstarService implements ArchiveManagerService, SearchService {
             uploadData(extractedDir, txId, onlineArchiveId, offlineArchiveId);
 
             // Update archive meta-data of current version
-            // TODO: don't track version in CDSTAR.
-            setArchiveMetaData(onlineArchiveId, metaData, pid, txId, prevPid, null);
-            setArchiveMetaData(offlineArchiveId, metaData, pid, txId, prevPid, null);
-
-            // Update archive meta-data of previous version. Update the online archive only because it's not possible
-            // to update meta-data of an offline archive
-            // linkToNextVersion(prevOnlineArchiveId, txId, pid);
+            setArchiveMetaData(onlineArchiveId, metaData, pid, txId);
+            setArchiveMetaData(offlineArchiveId, metaData, pid, txId);
 
             // Delete the previous version on the hard drive
             // Only store the latest version on the hard drive
@@ -367,7 +360,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
     }
 
     private void setArchiveMetaData(String archiveId, List<AbstractMap.SimpleImmutableEntry<String, String>> metaData,
-                                    String pid, String txId, String prevPid, List<String> nextVersions) throws IOException {
+                                    String pid, String txId) throws IOException {
         String fullUrl = url + vault + "/" + archiveId;
         OkHttpClient client = new OkHttpClient();
 
@@ -420,6 +413,12 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                     case "dc.type":
                         builder.addFormDataPart("meta:dc:type", item.getValue());
                         break;
+                    case "dc.source":
+                        builder.addFormDataPart("meta:dc:source", item.getValue());
+                        break;
+                    case "dc.relation":
+                        builder.addFormDataPart("meta:dc:relation", item.getValue());
+                        break;
                 }
             }
         }
@@ -427,16 +426,6 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         // Set identifier
         if (pid != null) {
             builder.addFormDataPart("meta:dc:identifier", pid);
-        }
-
-        // Link with other versions if necessary
-        if (prevPid != null) {
-            builder.addFormDataPart("meta:dc:source", prevPid);
-        }
-        if (nextVersions != null) {
-            for (String nextVersion : nextVersions) {
-                builder.addFormDataPart("meta:dc:relation", nextVersion);
-            }
         }
 
         RequestBody requestBody = builder.build();
@@ -488,7 +477,7 @@ public class CdstarService implements ArchiveManagerService, SearchService {
             // Add another next version
             nextVersions.add(nextPid);
 
-            setArchiveMetaData(archiveId, null, null, txId, null, nextVersions);
+            setArchiveMetaData(archiveId, null, null, txId);
         }
     }
 
@@ -702,6 +691,11 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
+            if (response.code() == 404) {
+                // Archive not found
+                throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Archive with PID " + identifier + " does not exist.");
+            }
+
             if (response.isSuccessful()) {
                 if (response.body() != null) {
                     String bodyString = response.body().string();
@@ -716,9 +710,6 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                     if (firstElement != null) {
                         return firstElement.get("id").asText();
                     }
-
-                    // Archive not found
-                    return "NOT_FOUND";
                 }
             }
 
