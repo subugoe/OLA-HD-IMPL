@@ -338,24 +338,24 @@ public class ImportController {
                     // Create new archive in the database
                     Archive archive = new Archive(pid, importResult.getOnlineId(), importResult.getOfflineId());
 
-                    // Find the previous version
-                    Archive prevVersion = archiveRepository.findByPid(finalPrev);
-
-                    // Link to previous version
-                    archive.setPreviousVersion(prevVersion);
-
-                    // Remove online-id of the previous version
-                    prevVersion.setOnlineId(null);
-
-                    // Execute sequentially if it tries to append to the same document
+                    // Execute sequentially if it tries to change the same document
                     synchronized (mutexFactory.getMutex(finalPrev)) {
+
+                        // Find the previous version
+                        Archive prevVersion = archiveRepository.findByPid(finalPrev);
+
+                        // Link to previous version
+                        archive.setPreviousVersion(prevVersion);
+
+                        // Remove online-id of the previous version
+                        prevVersion.setOnlineId(null);
 
                         // Set Next Version field
                         prevVersion.addNextVersion(archive);
-                    }
 
-                    archiveRepository.save(archive);
-                    archiveRepository.save(prevVersion);
+                        archiveRepository.save(archive);
+                        archiveRepository.save(prevVersion);
+                    }
 
                 } catch (Exception ex) {
                     handleFailedImport(ex, pid, importResult, info);
