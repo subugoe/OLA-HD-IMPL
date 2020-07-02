@@ -185,6 +185,7 @@ public class ImportController {
                      OutputStream out = FileUtils.openOutputStream(targetFile)) {
                     IOUtils.copy(uploadedStream, out);
                 } catch (IOException ex) {
+                    ex.printStackTrace();
                     throw new HttpServerErrorException(
                             HttpStatus.INTERNAL_SERVER_ERROR, "The upload process was interrupted. Please try again.");
                 }
