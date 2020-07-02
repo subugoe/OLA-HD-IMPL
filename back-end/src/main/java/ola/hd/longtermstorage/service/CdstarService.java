@@ -104,6 +104,10 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         try {
             // Get the online archive of the previous version
             String prevOnlineArchiveId = getArchiveIdFromIdentifier(prevPid, onlineProfile);
+            if (prevOnlineArchiveId.equals("NOT_FOUND")) {
+                throw new HttpClientErrorException(
+                        HttpStatus.BAD_REQUEST, "Previous version with PID " + prevPid + " was not found.");
+            }
 
             // Get the transaction ID
             txId = getTransactionId();
@@ -631,10 +635,6 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            if (response.code() == 404) {
-                // Archive not found
-                throw new HttpServerErrorException(HttpStatus.valueOf(response.code()), "Archive with PID " + identifier + " does not exist.");
-            }
 
             if (response.isSuccessful()) {
                 if (response.body() != null) {
@@ -650,6 +650,9 @@ public class CdstarService implements ArchiveManagerService, SearchService {
                     if (firstElement != null) {
                         return firstElement.get("id").asText();
                     }
+
+                    // Archive not found
+                    return "NOT_FOUND";
                 }
             }
 
