@@ -158,7 +158,7 @@
                 let esc = encodeURIComponent;
 
                 // URL for searching
-                return `/home/search?q=dcIdentifier:${esc(pid)}`;
+                return `/home/search?q=dcIdentifier:"${esc(pid)}"`;
             }
         }
     }
