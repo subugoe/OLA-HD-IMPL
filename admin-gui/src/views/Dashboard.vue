@@ -15,8 +15,6 @@
                             <th>Timestamp</th>
                             <th>PID</th>
                             <th>Status</th>
-                            <th>Previous version</th>
-                            <th>Next version</th>
                             <th>Note</th>
                         </tr>
                         </thead>
@@ -24,15 +22,13 @@
                         <template v-if="this.records.length > 0">
                             <tr v-for="(record, index) in records" :key="index">
                                 <td>{{ record.timestamp | formatDate }}</td>
-                                <td>{{ record.pid }}</td>
+                                <td>
+                                    <a :href="buildUrl(record.pid)" target="_blank">
+                                        {{ record.pid }}
+                                    </a>
+                                </td>
                                 <td>
                                     <span class="badge badge-pill" :class="getCssState(record.status)">{{ record.status }}</span>
-                                </td>
-                                <td>{{ record.previousVersion }}</td>
-                                <td>
-                                    <div v-for="(version, index) in record.nextVersion" :key="index">
-                                        {{ version }}
-                                    </div>
                                 </td>
                                 <td>{{ record.message }}</td>
                             </tr>
@@ -156,6 +152,15 @@
                         this.page = 0;
                 }
                 this.fetchData(this.page, this.limit);
+            },
+            buildUrl(pid) {
+                // Used to escape special characters
+                let esc = encodeURIComponent;
+
+                // URL for searching
+                let url = `/home/search?q=dcIdentifier:${pid}`;
+
+                return esc(url);
             }
         }
     }
