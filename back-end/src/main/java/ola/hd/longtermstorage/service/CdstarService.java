@@ -104,7 +104,8 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         try {
             // Get the online archive of the previous version
             String prevOnlineArchiveId = getArchiveIdFromIdentifier(prevPid, onlineProfile);
-            if (prevOnlineArchiveId.equals("NOT_FOUND")) {
+            String prevOfflineArchiveId = getArchiveIdFromIdentifier(prevPid, offlineProfile);
+            if (prevOnlineArchiveId.equals("NOT_FOUND") && prevOfflineArchiveId.equals("NOT_FOUND")) {
                 throw new HttpClientErrorException(
                         HttpStatus.BAD_REQUEST, "Previous version with PID " + prevPid + " was not found.");
             }
@@ -123,7 +124,9 @@ public class CdstarService implements ArchiveManagerService, SearchService {
 
             // Delete the previous version on the hard drive
             // Only store the latest version on the hard drive
-            deleteArchive(prevOnlineArchiveId, txId);
+            if (!prevOnlineArchiveId.equals("NOT_FOUND")) {
+                deleteArchive(prevOnlineArchiveId, txId);
+            }
 
             // Commit the transaction
             commitTransaction(txId);
