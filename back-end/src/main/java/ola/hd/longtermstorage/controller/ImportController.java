@@ -112,7 +112,11 @@ public class ImportController {
             @ApiImplicitParam(dataType = "string", name = "prev", value = "The PID of the previous version", paramType = "form")
     })
     @ResponseStatus(value = HttpStatus.ACCEPTED)
-    @PostMapping(value = "/bag", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(
+            value = "/bag",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<?> importData(HttpServletRequest request, @ApiIgnore Principal principal) throws IOException, FileUploadException {
 
         String username = principal.getName();
