@@ -5,11 +5,11 @@
                 <div class="col-md-7 align-self-center text-center text-md-left">
                     <ul class="list-inline mb-0">
                         <li class="list-inline-item mx-0">
-                            <router-link to="/about">About</router-link>
+                            <router-link to="/about">Über das Projekt</router-link>
                             <span class="mx-2">&#183;</span>
                         </li>
                         <li class="list-inline-item mx-0">
-                            <router-link to="/contact">Contact</router-link>
+                            <router-link to="/contact">Kontakt</router-link>
                             <span class="mx-2">&#183;</span>
                         </li>
                         <li class="list-inline-item mx-0">
@@ -17,7 +17,7 @@
                             <span class="mx-2">&#183;</span>
                         </li>
                         <li class="list-inline-item mx-0">
-                            <router-link to="/privacy">Privacy Policy</router-link>
+                            <router-link to="/impressum">Impressum</router-link>
                         </li>
                     </ul>
                 </div>

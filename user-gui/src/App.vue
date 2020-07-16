@@ -27,10 +27,13 @@
                         <a class="nav-link">Home</a>
                     </router-link>
                     <router-link tag="li" class="nav-item px-2" active-class="active" to="/about">
-                        <a class="nav-link">About</a>
+                        <a class="nav-link">Über das Projekt</a>
                     </router-link>
                     <router-link tag="li" class="nav-item px-2" active-class="active" to="/contact">
-                        <a class="nav-link">Contact</a>
+                        <a class="nav-link">Kontakt</a>
+                    </router-link>
+                    <router-link tag="li" class="nav-item px-2" active-class="active" to="/faq">
+                        <a class="nav-link">FAQ</a>
                     </router-link>
                     <li class="nav-item px-2">
                         <a class="nav-link" href="/admin/login">Login</a>
