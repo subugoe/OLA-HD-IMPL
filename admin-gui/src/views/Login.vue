@@ -13,8 +13,10 @@
                             <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
                             <div class="col-lg-6">
                                 <div class="login-logo pt-3">
-                                    <img src="../assets/images/logo-gwdg.png" class="mr-4" alt="GWDG Logo"/>
-                                    <img src="../assets/images/logo-sub.png" alt="SUB Logo"/>
+                                    <a href="/home">
+                                        <img src="../assets/images/logo-gwdg.png" class="mr-4" alt="GWDG Logo"/>
+                                        <img src="../assets/images/logo-sub.png" alt="SUB Logo"/>
+                                    </a>
                                 </div>
                                 <div class="p-5">
                                     <div class="text-center">
