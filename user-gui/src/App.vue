@@ -5,7 +5,8 @@
         <nav class="navbar navbar-expand-md bg-light p-0">
             <router-link tag="a" to="/" class="navbar-brand p-2">
                 <img src="./assets/logo-gwdg-full.png" alt="Brand logo" class="mr-2 mr-md-4">
-                <img src="./assets/logo-sub.png" alt="Brand logo">
+                <img src="./assets/logo-sub.png" alt="Brand logo" class="mr-2 mr-md-4">
+                <img src="./assets/logo-dfg.png" alt="Brand logo">
             </router-link>
 
             <!-- Hamburger button -->
