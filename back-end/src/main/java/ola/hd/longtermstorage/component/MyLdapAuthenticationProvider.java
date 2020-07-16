@@ -1,7 +1,9 @@
 package ola.hd.longtermstorage.component;
 
 import ola.hd.longtermstorage.domain.LdapUser;
+import ola.hd.longtermstorage.domain.MongoUser;
 import ola.hd.longtermstorage.repository.ldap.LdapUserRepository;
+import ola.hd.longtermstorage.repository.mongo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ldap.core.LdapTemplate;
@@ -23,11 +25,13 @@ public class MyLdapAuthenticationProvider implements AuthenticationProvider {
 
     private final LdapUserRepository ldapUserRepository;
     private final LdapTemplate ldapTemplate;
+    private final UserRepository userRepository;
 
     @Autowired
-    public MyLdapAuthenticationProvider(LdapUserRepository ldapUserRepository, LdapTemplate ldapTemplate) {
+    public MyLdapAuthenticationProvider(LdapUserRepository ldapUserRepository, LdapTemplate ldapTemplate, UserRepository userRepository) {
         this.ldapUserRepository = ldapUserRepository;
         this.ldapTemplate = ldapTemplate;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -41,8 +45,9 @@ public class MyLdapAuthenticationProvider implements AuthenticationProvider {
         String username = authentication.getName();
         String password = authentication.getCredentials().toString();
 
-        // TODO: move the default user setup to the config file
-        if (username.equals("admin") && password.equals("admin")) {
+        // Check for test users
+        MongoUser testUser = userRepository.findByUsernameAndPassword(username, password);
+        if (testUser != null) {
             return new UsernamePasswordAuthenticationToken(username, password, AuthorityUtils.createAuthorityList("ROLE_USER"));
         }
 
