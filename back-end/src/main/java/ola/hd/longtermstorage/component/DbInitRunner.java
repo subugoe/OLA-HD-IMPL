@@ -26,7 +26,7 @@ public class DbInitRunner implements CommandLineRunner {
 
         MongoUser olahd = userRepository.findByUsername("admin");
         if (olahd == null) {
-            olahd = new MongoUser("olahd", "ja+bw>3L");;
+            olahd = new MongoUser("olahd", "ja+bw>3L");
             userRepository.save(olahd);
         }
     }
