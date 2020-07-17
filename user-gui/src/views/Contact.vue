@@ -1,7 +1,7 @@
 <template>
     <section id="contact">
         <div class="container">
-            <div class="row">
+            <div class="row mt-3">
                 <div class="col">
                     <h2>Kontakt</h2>
                     <hr>

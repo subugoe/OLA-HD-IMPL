@@ -1,7 +1,7 @@
 <template>
     <section id="about">
         <div class="container">
-            <div class="row">
+            <div class="row mt-3">
                 <div class="col">
                     <h2>
                         OLA-HD: <small class="text-muted">Über das Projekt</small>
