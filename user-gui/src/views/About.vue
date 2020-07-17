@@ -6,6 +6,7 @@
                     <h2>
                         OLA-HD: <small class="text-muted">Über das Projekt</small>
                     </h2>
+                    <hr>
                     <p>
                         OLA-HD ist ein Kooperationsprojekt der Niedersächsischen Staats- und Universitätsbibliothek
                         Göttingen und der <a href="https://www.gwdg.de/">Gesellschaft für wissenschaftliche
@@ -33,7 +34,7 @@
                         verknüpft, so dass das Datenmanagementsystem die Versionierung in einer Baumstruktur abbilden kann.
                     </p>
 
-                    <h2>Über die OLA-HD Implementierung</h2>
+                    <h4>Über die OLA-HD Implementierung</h4>
                     <ul>
                         <li>Autor: SUB Göttingen und GWDG</li>
                         <li>Lizenz: Apache License 2.0</li>
