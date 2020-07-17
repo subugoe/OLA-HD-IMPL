@@ -8,9 +8,9 @@
                     <div class="card text-center">
                         <div class="card-body">
                             <i class="fas fa-cogs fa-3x mb-3"></i>
-                            <h3 class="card-title">PID Support</h3>
+                            <h3 class="card-title">Integrierter PID Dienst</h3>
                             <p class="card-text lead">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                Garantiert dauerhafte und eindeutige Adressierung
                             </p>
                         </div>
                     </div>
@@ -21,9 +21,9 @@
                     <div class="card text-center">
                         <div class="card-body">
                             <i class="fas fa-archive fa-3x mb-3"></i>
-                            <h3 class="card-title">Long Term Archive</h3>
+                            <h3 class="card-title">Langzeitarchiv</h3>
                             <p class="card-text lead">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                Langfristige Archivierung von OCR-Ergebnissen
                             </p>
                         </div>
                     </div>
@@ -34,9 +34,9 @@
                     <div class="card text-center">
                         <div class="card-body">
                             <i class="far fa-check-circle fa-3x mb-3"></i>
-                            <h3 class="card-title">Easy to Use</h3>
+                            <h3 class="card-title">Einfache Benutzung</h3>
                             <p class="card-text lead">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                Einfacher Upload und Download von von ZIP-Dateien
                             </p>
                         </div>
                     </div>

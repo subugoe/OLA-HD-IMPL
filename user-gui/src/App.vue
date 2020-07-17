@@ -5,7 +5,8 @@
         <nav class="navbar navbar-expand-md bg-light p-0">
             <router-link tag="a" to="/" class="navbar-brand p-2">
                 <img src="./assets/logo-gwdg-full.png" alt="Brand logo" class="mr-2 mr-md-4">
-                <img src="./assets/logo-sub.png" alt="Brand logo">
+                <img src="./assets/logo-sub.png" alt="Brand logo" class="mr-2 mr-md-4">
+                <img src="./assets/logo-dfg.png" alt="Brand logo">
             </router-link>
 
             <!-- Hamburger button -->
@@ -26,10 +27,13 @@
                         <a class="nav-link">Home</a>
                     </router-link>
                     <router-link tag="li" class="nav-item px-2" active-class="active" to="/about">
-                        <a class="nav-link">About</a>
+                        <a class="nav-link">Über das Projekt</a>
                     </router-link>
                     <router-link tag="li" class="nav-item px-2" active-class="active" to="/contact">
-                        <a class="nav-link">Contact</a>
+                        <a class="nav-link">Kontakt</a>
+                    </router-link>
+                    <router-link tag="li" class="nav-item px-2" active-class="active" to="/faq">
+                        <a class="nav-link">FAQ</a>
                     </router-link>
                     <li class="nav-item px-2">
                         <a class="nav-link" href="/admin/login">Login</a>
