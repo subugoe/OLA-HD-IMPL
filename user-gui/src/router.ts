@@ -39,6 +39,11 @@ export default new Router({
             path: '/contact',
             name: 'contact',
             component: () => import(/* webpackChunkName: "about" */ './views/Contact.vue')
+        },
+        {
+            path: '/impressum',
+            name: 'impressum',
+            component: () => import(/* webpackChunkName: "about" */ './views/Impressum.vue')
         }
     ]
 });
