@@ -4,7 +4,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-sm-12 col-lg-8 mx-lg-auto">
-                    <h1 class="header-text mb-5">OLA-HD - A Long Term Archive System</h1>
+                    <h1 class="header-text mb-5">OLA-HD - OCR Langzeitarchiv</h1>
                 </div>
             </div>
 
@@ -13,7 +13,8 @@
                     <form @submit.prevent="submit">
                         <div class="input-group position-relative">
                             <label for="search-box" class="sr-only">Search box</label>
-                            <input type="text" id="search-box" class="form-control" placeholder="Enter your search here" v-model="query">
+                            <input type="text" id="search-box" class="form-control"
+                                   placeholder="Suchen" v-model="query">
                             <div class="input-group-append">
                                 <button class="btn btn-sm btn-link" type="submit">
                                     <i class="fas fa-search fa-lg"></i>
