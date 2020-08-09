@@ -9,9 +9,12 @@
                         <div class="card-body">
                             <h3 class="card-title">Über das Projekt</h3>
                             <p class="card-text lead">
-                                Von der gefördertes Projekt zur Entwicklung eines integrierten Konzeptes für
-                                die Langzeitarchivierung und persistente Identifizierung von OCR-Objekten sowie
-                                die prototypische Implementierung dieses Konzepts.
+                                Von der <a href="https://www.dfg.de/">Deutschen Forschungsgemeinschaft</a> gefördertes
+                                Projekt zur Entwicklung eines integrierten Konzeptes für die Langzeitarchivierung und
+                                persistente Identifizierung von OCR-Objekten sowie die prototypische Implementierung
+                                dieses Konzepts. (
+                                <router-link to="/about">Mehr...</router-link>
+                                )
                             </p>
                         </div>
                     </div>
@@ -29,11 +32,11 @@
                             <h3 class="card-title">Konzept</h3>
                             <p class="card-text lead">
                                 Das schriftliche Konzept "Langzeitarchivierung und persistente Identifizierung von
-                                OCR-Objekten"
-                                (<a href="https://github.com/subugoe/OLA-HD-IMPL/blob/master/docs/OLA-HD_Konzept.pdf" target="_blank">Konzept</a>)
-                                enthält die Anforderungen, die Spezifikationen, die Dokumentationen zu den technischen,
-                                organisatorischen und wirtschaftlichen Aspekten der Umsetzung, sowohl bei der
-                                Langzeitarchivierung als auch bei der persistenten Identifikation.
+                                OCR-Objekten" enthält die Anforderungen, die Spezifikationen, die Dokumentationen zu den
+                                technischen, organisatorischen und wirtschaftlichen Aspekten der Umsetzung, sowohl bei
+                                der Langzeitarchivierung als auch bei der persistenten Identifikation. (<a
+                                    href="https://github.com/subugoe/OLA-HD-IMPL/blob/master/docs/OLA-HD_Konzept.pdf"
+                                    target="_blank">Konzept</a>)
                             </p>
                         </div>
                     </div>
