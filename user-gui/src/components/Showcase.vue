@@ -36,7 +36,7 @@
                             <i class="far fa-check-circle fa-3x mb-3"></i>
                             <h3 class="card-title">Einfache Benutzung</h3>
                             <p class="card-text lead">
-                                Einfacher Upload und Download von von ZIP-Dateien
+                                Einfacher Upload und Download von ZIP-Dateien
                             </p>
                         </div>
                     </div>
