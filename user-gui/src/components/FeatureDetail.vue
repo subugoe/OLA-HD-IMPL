@@ -31,12 +31,12 @@
                         <div class="card-body">
                             <h3 class="card-title">Konzept</h3>
                             <p class="card-text lead">
-                                Das schriftliche Konzept "Langzeitarchivierung und persistente Identifizierung von
-                                OCR-Objekten" enthält die Anforderungen, die Spezifikationen, die Dokumentationen zu den
-                                technischen, organisatorischen und wirtschaftlichen Aspekten der Umsetzung, sowohl bei
-                                der Langzeitarchivierung als auch bei der persistenten Identifikation. (<a
+                                Das schriftliche Konzept "<a
                                     href="https://github.com/subugoe/OLA-HD-IMPL/blob/master/docs/OLA-HD_Konzept.pdf"
-                                    target="_blank">Konzept</a>)
+                                    target="_blank">Langzeitarchivierung und persistente Identifizierung von
+                                OCR-Objekten</a>" enthält die Anforderungen, die Spezifikationen, die Dokumentationen zu
+                                den technischen, organisatorischen und wirtschaftlichen Aspekten der Umsetzung, sowohl
+                                bei der Langzeitarchivierung als auch bei der persistenten Identifikation.
                             </p>
                         </div>
                     </div>
