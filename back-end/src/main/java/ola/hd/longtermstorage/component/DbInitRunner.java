@@ -18,10 +18,16 @@ public class DbInitRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        MongoUser admin = new MongoUser("admin", "JW24G.xR");
-        MongoUser olahd = new MongoUser("olahd", "ja+bw>3L");
+        MongoUser admin = userRepository.findByUsername("admin");
+        if (admin == null) {
+            admin = new MongoUser("admin", "JW24G.xR");
+            userRepository.save(admin);
+        }
 
-        userRepository.save(admin);
-        userRepository.save(olahd);
+        MongoUser olahd = userRepository.findByUsername("olahd");
+        if (olahd == null) {
+            olahd = new MongoUser("olahd", "ja+bw>3L");
+            userRepository.save(olahd);
+        }
     }
 }

@@ -48,8 +48,14 @@
                                     </form>
                                     <hr>
                                     <div class="text-center small">
-                                        If you forget your password or want to create an account, please contact
-                                        <a href="mailto:support@gwdg.de">support@gwdg.de</a>
+                                        If you forget your password or want to create a test account, please contact
+                                        <a href="mailto:triet.doan@gwdg.de">triet.doan@gwdg.de</a>
+                                    </div>
+                                    <hr>
+                                    <div class="login-logo">
+                                        <img src="../assets/images/logo-dfg.png"
+                                             class="w-100"
+                                             alt="DFG Logo"/>
                                     </div>
                                 </div>
                             </div>

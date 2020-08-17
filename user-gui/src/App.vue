@@ -32,9 +32,9 @@
                     <router-link tag="li" class="nav-item px-2" active-class="active" to="/contact">
                         <a class="nav-link">Kontakt</a>
                     </router-link>
-                    <router-link tag="li" class="nav-item px-2" active-class="active" to="/faq">
+                    <!--<router-link tag="li" class="nav-item px-2" active-class="active" to="/faq">
                         <a class="nav-link">FAQ</a>
-                    </router-link>
+                    </router-link>-->
                     <li class="nav-item px-2">
                         <a class="nav-link" href="/admin/login">Login</a>
                     </li>

@@ -21,16 +21,19 @@
                         <tbody>
                         <template v-if="this.records.length > 0">
                             <tr v-for="(record, index) in records" :key="index">
-                                <td>{{ record.timestamp | formatDate }}</td>
+                                <td>{{ record.trackingInfo.timestamp | formatDate }}</td>
                                 <td>
-                                    <a :href="buildUrl(record.pid)" target="_blank">
-                                        {{ record.pid }}
+                                    <a :href="buildUrl(record)" target="_blank">
+                                        {{ record.trackingInfo.pid }}
                                     </a>
                                 </td>
                                 <td>
-                                    <span class="badge badge-pill" :class="getCssState(record.status)">{{ record.status }}</span>
+                                    <span class="badge badge-pill"
+                                          :class="getCssState(record.trackingInfo.status)">
+                                        {{ record.trackingInfo.status }}
+                                    </span>
                                 </td>
-                                <td>{{ record.message }}</td>
+                                <td>{{ record.trackingInfo.message }}</td>
                             </tr>
                         </template>
                         <template v-else>
@@ -153,12 +156,19 @@
                 }
                 this.fetchData(this.page, this.limit);
             },
-            buildUrl(pid) {
+            buildUrl(record) {
                 // Used to escape special characters
                 let esc = encodeURIComponent;
+                let url = '#';
 
-                // URL for searching
-                return `/home/search?q=dcIdentifier:"${esc(pid)}"`;
+                // If there is more information (successful import)
+                if (record.archiveResponse) {
+                    let archiveId = record.archiveResponse.onlineId ?
+                        record.archiveResponse.onlineId : record.archiveResponse.offlineId
+                    url = `/home/search-detail/${esc(archiveId)}`;
+                }
+
+                return url;
             }
         }
     }

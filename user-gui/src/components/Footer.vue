@@ -12,10 +12,10 @@
                             <router-link to="/contact">Kontakt</router-link>
                             <span class="mx-2">&#183;</span>
                         </li>
-                        <li class="list-inline-item mx-0">
+                        <!--<li class="list-inline-item mx-0">
                             <router-link to="/terms-of-use">Terms of Use</router-link>
                             <span class="mx-2">&#183;</span>
-                        </li>
+                        </li>-->
                         <li class="list-inline-item mx-0">
                             <router-link to="/impressum">Impressum</router-link>
                         </li>
