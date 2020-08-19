@@ -1,0 +1,16 @@
+version: '2.2'
+services:
+
+  packager:
+    build:
+      context: ../packager
+    command: ./goapp startedViaDocker
+    #command: tail -f /dev/null
+    container_name: packager
+    working_dir: /go/src/api/
+    network_mode: host
+    volumes:
+      - ./app.env:/go/src/api/cfg/app.env
+      - ~/.ssh/cloud-id_rsa:/go/src/api/cfg/.ssh/cloud-id_rsa
+      - ~/.ssh/known_hosts:/go/src/api/cfg/.ssh/known_hosts
+      #- /Volumes/digizeit-ocr:/Volumes/digizeit-ocr:ro

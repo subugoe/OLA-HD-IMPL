@@ -3,3 +3,5 @@ logs/
 .idea/
 sample_data/
 docker/ola-hd_service/code/
+packaging-tool/cfg/app.env
+!packaging-tool/packager/tmp/.gitkeep
