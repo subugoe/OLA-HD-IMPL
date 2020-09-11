@@ -241,7 +241,8 @@ public class ImportController {
         }
 
         // Where to extract the file
-        String destination = tempDir + File.separator + FilenameUtils.getBaseName(targetFile.getName());
+        // Add the _extracted to avoid naming conflict with the targetFile.
+        String destination = tempDir + File.separator + FilenameUtils.getBaseName(targetFile.getName()) + "_extracted";
 
         Bag bag;
         try {
