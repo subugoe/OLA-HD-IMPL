@@ -42,3 +42,4 @@ services:
 
 networks:
   ola-hd:
+    name: ola-hd
