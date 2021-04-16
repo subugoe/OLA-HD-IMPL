@@ -574,8 +574,9 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         // Change the profile of the archive to a mirror profile
         if (!archiveId.equals("NOT_FOUND")) {
             updateProfile(archiveId, mirrorProfile);
+        } else {
+            throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Archive not found.");
         }
-        throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Archive not found.");
     }
 
     @Override
@@ -587,8 +588,9 @@ public class CdstarService implements ArchiveManagerService, SearchService {
         // Change the profile of the archive to a cold profile
         if (!archiveId.equals("NOT_FOUND")) {
             updateProfile(archiveId, offlineProfile);
+        } else {
+            throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Archive not found.");
         }
-        throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Archive not found.");
     }
 
     private void updateProfile(String archiveId, String newProfile) throws IOException {
