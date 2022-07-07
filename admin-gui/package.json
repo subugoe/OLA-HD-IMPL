@@ -14,7 +14,7 @@
     "core-js": "^3.4.4",
     "jquery": "^3.4.1",
     "jquery.easing": "^1.4.1",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "popper.js": "^1.16.0",
     "vue": "^2.6.10",
     "vue-class-component": "^7.0.2",
